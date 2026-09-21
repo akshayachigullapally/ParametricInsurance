@@ -1,0 +1,135 @@
+package org.example.triggerservice.handler;
+
+import org.example.triggerservice.dto.TriggerEvaluationResponse;
+import org.example.triggerservice.exception.ForbiddenException;
+import org.example.triggerservice.exception.ValidationException;
+import org.example.triggerservice.model.TriggerEvaluationResult;
+import org.example.triggerservice.service.TriggerEvaluationService;
+import org.example.triggerservice.util.RequestValidationUtil;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class TriggerEvaluationHandlerTest {
+
+    @Mock
+    private TriggerEvaluationService triggerEvaluationService;
+
+    @Mock
+    private RequestValidationUtil validationUtil;
+
+    @InjectMocks
+    private TriggerEvaluationHandler triggerEvaluationHandler;
+
+    private ServerRequest createRequest(String method, String path) {
+        MockServerHttpRequest httpRequest = MockServerHttpRequest.method(
+                org.springframework.http.HttpMethod.valueOf(method), path).build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
+        return ServerRequest.create(exchange, List.of());
+    }
+
+    @Test
+    void getAll_shouldReturnEvaluationsForAdmin() {
+        TriggerEvaluationResponse response = TriggerEvaluationResponse.builder()
+                .id(1L)
+                .evaluationReference("EVAL-001")
+                .result(TriggerEvaluationResult.MATCHED)
+                .build();
+
+        when(triggerEvaluationService.getAll()).thenReturn(Flux.just(response));
+
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations");
+
+        StepVerifier.create(
+                        triggerEvaluationHandler.getAll(request)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        new UsernamePasswordAuthenticationToken("1", null,
+                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
+                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+
+    @Test
+    void getAll_shouldReturnForbiddenForCustomer() {
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations");
+
+        StepVerifier.create(
+                        triggerEvaluationHandler.getAll(request)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        new UsernamePasswordAuthenticationToken("1", null,
+                                                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))))))
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    void getById_shouldReturnEvaluation() {
+        TriggerEvaluationResponse response = TriggerEvaluationResponse.builder()
+                .id(1L)
+                .evaluationReference("EVAL-001")
+                .build();
+
+        when(triggerEvaluationService.getById(1L)).thenReturn(Mono.just(response));
+
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/1");
+
+        StepVerifier.create(
+                        triggerEvaluationHandler.getById(request)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        new UsernamePasswordAuthenticationToken("1", null,
+                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
+                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+
+    @Test
+    void getById_shouldReturnValidationForInvalidId() {
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/abc");
+
+        StepVerifier.create(
+                        triggerEvaluationHandler.getById(request)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        new UsernamePasswordAuthenticationToken("1", null,
+                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
+                .expectError(ValidationException.class)
+                .verify();
+    }
+
+    @Test
+    void getByDefinitionId_shouldReturnEvaluations() {
+        TriggerEvaluationResponse response = TriggerEvaluationResponse.builder()
+                .id(1L)
+                .triggerDefinitionId(1L)
+                .build();
+
+        when(triggerEvaluationService.getByDefinitionId(1L)).thenReturn(Flux.just(response));
+
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/definition/1");
+
+        StepVerifier.create(
+                        triggerEvaluationHandler.getByDefinitionId(request)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        new UsernamePasswordAuthenticationToken("1", null,
+                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
+                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+}

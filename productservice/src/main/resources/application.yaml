@@ -1,0 +1,58 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: PRODUCT-SERVICE
+  r2dbc:
+    url: r2dbc:h2:file:///./data/productdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+#  instance:
+#    hostname: localhost
+#    prefer-ip-address: false
+#    instance-id: ${spring.application.name}:${server.port}
+#    health-check-url: http://localhost:${server.port}/actuator/health
+#    status-page-url: http://localhost:${server.port}/actuator/info
+#    home-page-url: http://localhost:${server.port}/
+
+#eureka:
+#  client:
+#    register-with-eureka: true
+#    fetch-registry: true
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka/
+#  instance:
+#    prefer-ip-address: true
+
+gateway:
+  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  require-gateway-key: ${GATEWAY_REQUIRE_KEY:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
+    org.springframework.data.r2dbc: DEBUG
+    io.r2dbc.h2: DEBUG

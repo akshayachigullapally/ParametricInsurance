@@ -1,0 +1,26 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///itnotifdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+  instance:
+    enabled: false
+
+gateway:
+  internal-key: test-gateway-key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,23 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  main:
+    allow-bean-definition-overriding: true
+  eureka:
+    client:
+      register-with-eureka: false
+      fetch-registry: false
+
+gateway:
+  internal-key: cityshield-local-gateway-key
+  require-gateway-key: false
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG

@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: CLAIMS-SERVICE-TEST
+
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  eureka:
+    client:
+      register-with-eureka: false
+      fetch-registry: false
+
+gateway:
+  internal-key: cityshield-local-gateway-key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

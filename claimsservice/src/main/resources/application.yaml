@@ -1,0 +1,46 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: CLAIMS-SERVICE
+  r2dbc:
+    url: r2dbc:h2:file:///./data/claimsdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+gateway:
+  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+info:
+  application:
+    name: CityShield Claims Service
+    description: Reactive insurance claim management service
+    version: 1.0.0
+
+logging:
+  level:
+    org.springframework.r2dbc: INFO
+    org.springframework.security: INFO

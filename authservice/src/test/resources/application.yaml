@@ -1,0 +1,138 @@
+#server:
+#  port: 8081
+#
+#spring:
+#  application:
+#    name: AUTH-SERVICE
+#  r2dbc:
+#    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+#    username: sa
+#    password:
+#  data:
+#    r2dbc:
+#      repositories:
+#        enabled: true
+#  sql:
+#    init:
+#      mode: always
+#      schema-locations: classpath:schema.sql
+#
+#gateway:
+#  internal-key: test-gateway-key
+#
+#jwt:
+#  secret: TestSecretKeyForTestingPurposesOnlyMinimum32Characters123456
+#  access-expiration-ms: 900000
+#  refresh-expiration-ms: 604800000
+#
+#email:
+#  verification-token-expiration-hours: 24
+#
+#password:
+#  reset-token-expiration-hours: 1
+#
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,info,metrics
+#  endpoint:
+#    health:
+#      show-details: always
+#  info:
+#    app:
+#      name: CityShield Auth Service
+#      description: Reactive JWT authentication service
+#      version: 1.0.0
+#
+#eureka:
+#  client:
+#    register-with-eureka: false
+#    fetch-registry: false
+#
+#logging:
+#  level:
+#    org.springframework.r2dbc: DEBUG
+#    org.springframework.data.r2dbc: DEBUG
+
+
+server:
+  port: 8081
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: AUTH-SERVICE
+
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+gateway:
+  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+
+jwt:
+  secret: ${JWT_SECRET:CityShieldAuthServiceDevelopmentSecretKeyMinimum32Characters123456}
+  access-expiration-ms: 900000
+  refresh-expiration-ms: 604800000
+
+email:
+  verification-token-expiration-hours: 24
+
+password:
+  reset-token-expiration-hours: 1
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+#  instance:
+#    hostname: localhost
+#    prefer-ip-address: false
+#    instance-id: ${spring.application.name}:${server.port}
+#    health-check-url: http://localhost:${server.port}/actuator/health
+#    status-page-url: http://localhost:${server.port}/actuator/info
+#    home-page-url: http://localhost:${server.port}/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+  endpoint:
+    health:
+      show-details: always
+
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: CityShield Auth Service
+    description: Reactive JWT authentication service
+    version: 1.0.0
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
+    org.springframework.data.r2dbc: DEBUG
+    com.netflix.discovery: INFO
+    org.springframework.cloud.loadbalancer: DEBUG

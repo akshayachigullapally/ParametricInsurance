@@ -1,0 +1,70 @@
+package org.example.financialservice.service;
+
+import org.example.financialservice.dto.InternalPolicyResponse;
+import org.example.financialservice.dto.InternalProductResponse;
+import org.example.financialservice.exception.ConflictException;
+import org.example.financialservice.exception.NotFoundException;
+import org.example.financialservice.util.GatewayHeaders;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Component
+public class ProductServiceClient{
+    private final WebClient webClient;
+
+    public ProductServiceClient(
+            WebClient.Builder builder,
+            @Value("${gateway.internal-key}") String internalKey
+    ){
+        this.webClient=builder
+                .baseUrl("http://PRODUCT-SERVICE")
+                .defaultHeader(
+                        GatewayHeaders.GATEWAY_KEY,
+                        internalKey
+                )
+                .build();
+    }
+
+    public Mono<InternalProductResponse> findProduct(Long productId){
+        return webClient.get()
+                .uri("/internal/products/{productId}",productId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        response->Mono.error(
+                                new NotFoundException(
+                                        "Product "+productId+" not found"
+                                )
+                        )
+                )
+                .bodyToMono(InternalProductResponse.class);
+    }
+
+    public Mono<Void> requireActiveProduct(Long productId){
+        return findProduct(productId)
+                .flatMap(product->"ACTIVE".equals(
+                        product.getStatus()
+                )
+                        ?Mono.empty()
+                        :Mono.error(new ConflictException(
+                        "Product is not active"
+                ))
+                );
+    }
+
+    public Mono<InternalPolicyResponse> findPolicy(Long policyId){
+        return webClient.get()
+                .uri("/internal/policies/{policyId}",policyId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        response->Mono.error(
+                                new NotFoundException(
+                                        "Policy "+policyId+" not found"
+                                )
+                        )
+                )
+                .bodyToMono(InternalPolicyResponse.class);
+    }
+}
