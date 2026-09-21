@@ -98,6 +98,34 @@ public class TriggerEvaluationService{
                                 userId)));
     }
 
+        public Mono<TriggerEvaluationResponse> evaluateProductOverride(
+                        Long productId,
+                        org.example.productservice.dto.ProductTriggerSyncRequest productPayload,
+                        Long userId
+        ){
+                if(productPayload==null||productId==null||productId<=0){
+                        return Mono.error(new ValidationException("Invalid product evaluation request"));
+                }
+
+                // Build a transient TriggerDefinition-like structure from the product payload
+                TriggerDefinition temp=new TriggerDefinition();
+                temp.setId(null);
+                temp.setProductId(productId);
+                temp.setMeasurementType(org.example.triggerservice.model.MeasurementType.valueOf(productPayload.getMeasurementType()));
+                temp.setMeasurementUnit(org.example.triggerservice.model.MeasurementUnit.fromText(productPayload.getMeasurementUnit()));
+                temp.setAggregationType(org.example.triggerservice.model.AggregationType.valueOf(productPayload.getAggregationType()));
+                temp.setComparisonOperator(org.example.triggerservice.model.ComparisonOperator.valueOf(productPayload.getComparisonOperator()));
+                temp.setThresholdValue(productPayload.getThresholdValue());
+                temp.setObservationWindowHours(productPayload.getObservationWindowHours());
+                temp.setMinimumObservationCount(productPayload.getMinimumObservationCount());
+
+                // Use existing evaluation logic by delegating to evaluateDefinition with a synthetic window end
+                LocalDateTime windowEnd=LocalDateTime.now();
+
+                return evaluateDefinition(temp,windowEnd,userId)
+                                .onErrorMap(ex->new ValidationException("Product override evaluation failed: "+ex.getMessage()));
+        }
+
     private Mono<TriggerEvaluationResponse> evaluateDefinition(
             TriggerDefinition definition,
             LocalDateTime windowEnd,

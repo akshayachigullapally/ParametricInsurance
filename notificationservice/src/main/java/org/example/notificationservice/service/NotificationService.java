@@ -17,6 +17,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +33,7 @@ public class NotificationService {
     private final NotificationPreferenceService preferenceService;
     private final DeliveryAttemptService deliveryAttemptService;
     private final NotificationDeliveryService deliveryService;
+    private final Sinks.Many<NotificationResponse> notificationSink = Sinks.many().multicast().directBestEffort();
 
     public NotificationService(NotificationRepository repository,
                                NotificationTemplateService templateService,
@@ -105,7 +107,16 @@ public class NotificationService {
                     log.info("Duplicate idempotency key detected, returning existing notification: id={}", saved.getId());
                     return Mono.just(saved);
                 })
-                .map(this::response);
+                .map(this::response)
+                .doOnNext(this::publish);
+    }
+
+    // Publish notification to SSE sink after creation
+    private void publish(NotificationResponse response) {
+        try {
+            notificationSink.tryEmitNext(response);
+        } catch (Exception ignored) {
+        }
     }
 
     public Flux<NotificationResponse> createForChannels(InternalNotificationRequest r) {
@@ -267,8 +278,26 @@ Flux<Notification> roleQuery = customerId > 0
                         })));
     }
 
+        // Stream notifications for the current authenticated user
+        public Flux<NotificationResponse> streamForCurrentUser() {
+        // merge persisted mine() (recent/history) with live sink events filtered by recipient
+        return SecurityUtil.userId().flatMapMany(userId ->
+            SecurityUtil.customerId().defaultIfEmpty(-1L).flatMapMany(customerId ->
+                SecurityUtil.role().flatMapMany(role ->
+                    notificationSink.asFlux()
+                        .filter(n -> (n.getRecipientUserId() != null && n.getRecipientUserId().equals(userId))
+                            || (n.getRecipientCustomerId() != null && customerId > 0 && n.getRecipientCustomerId().equals(customerId))
+                            || (n.getRecipientRole() != null && n.getRecipientRole().equals(role)))
+                )));
+        }
+
     public Mono<UnreadCountResponse> unreadCount() {
         return mine(true).count().map(UnreadCountResponse::new);
+    }
+
+    // Ensure publishes for createFromTemplate and createForChannels also notify sink
+    public Flux<NotificationResponse> createForChannelsAndPublish(InternalNotificationRequest r) {
+        return createForChannels(r).doOnNext(this::publish);
     }
 
     public Mono<NotificationResponse> markRead(Long id) {

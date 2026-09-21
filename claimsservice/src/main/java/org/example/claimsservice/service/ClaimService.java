@@ -188,6 +188,39 @@ public class ClaimService{
                 ))
                 .map(this::toInternalResponse);
     }
+    
+        @Transactional
+        public Mono<InternalClaimResponse> createInternalClaim(CreateClaimRequest request){
+                return getPolicy(request.getPolicyId())
+                                .flatMap(policy -> {
+                                        if(policy.getId()==null){
+                                                return Mono.error(new ValidationException("Policy information is incomplete"));
+                                        }
+
+                                        if(!"ACTIVE".equalsIgnoreCase(policy.getStatus())){
+                                                return Mono.error(new ValidationException("Policy must be ACTIVE to create an automatic claim"));
+                                        }
+
+                                        return triggerEligibilityClient.getEligibility(policy.getId())
+                                                        .flatMap(eligibility -> {
+                                                                if(!eligibility.isEligible()){
+                                                                        return Mono.error(new ValidationException("Policy is not eligible for trigger-based claim: "+eligibility.getEligibilityReason()));
+                                                                }
+
+                                                                Long customerId = policy.getCustomerId();
+
+                                                                return validateNoDuplicateTriggerClaim(
+                                                                                customerId,
+                                                                                policy.getId(),
+                                                                                eligibility.getTriggerEventId()
+                                                                ).then(saveAutomaticClaim(
+                                                                                customerId,
+                                                                                request,
+                                                                                policy,
+                                                                                eligibility
+                                                                )).map(this::toInternalResponse);
+                                                        });
+                                });
 
     @Transactional
     public Mono<ClaimResponse> startReview(Long reviewerId,Long claimId){

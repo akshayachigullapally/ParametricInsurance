@@ -54,6 +54,14 @@ public class GatewayJwtFilter implements WebFilter{
         String authorization=sanitizedRequest.getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
 
+        // Support access_token query param for EventSource/SSE clients
+        if (authorization == null || authorization.isBlank()) {
+            String paramToken = sanitizedRequest.getQueryParams().getFirst("access_token");
+            if (paramToken != null && !paramToken.isBlank()) {
+                authorization = "Bearer " + paramToken;
+            }
+        }
+
         if(authorization==null||!authorization.startsWith("Bearer ")){
             return unauthorized(
                     sanitizedExchange,

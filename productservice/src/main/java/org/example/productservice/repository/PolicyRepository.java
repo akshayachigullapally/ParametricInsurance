@@ -10,6 +10,7 @@ public interface PolicyRepository extends ReactiveCrudRepository<Policy,Long>{
     Flux<Policy> findAllByCustomerId(Long customerId);
     Flux<Policy> findAllByCustomerIdAndStatus(Long customerId,String status);
     Flux<Policy> findAllByStatus(String status);
+    Flux<Policy> findAllByProductIdAndStatus(Long productId, String status);
     Mono<Policy> findByIdAndCustomerId(Long id,Long customerId);
     Mono<Boolean> existsByCustomerIdAndProductIdAndStatus(
             Long customerId,

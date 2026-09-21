@@ -59,6 +59,9 @@ public class SecurityConfig{
                         .pathMatchers(HttpMethod.GET,
                                 "/internal/claims/**"
                         ).permitAll()
+                        .pathMatchers(HttpMethod.POST,
+                                "/internal/claims"
+                        ).permitAll()
                         .anyExchange().denyAll()
                 )
                 .addFilterAt(

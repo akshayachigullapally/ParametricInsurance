@@ -54,6 +54,27 @@ public class TriggerEvaluationHandler{
     }
 
     public Mono<ServerResponse> evaluate(ServerRequest request){
+        // support both definition-based evaluation and internal product-based override evaluation
+        String path=request.path();
+        if(path.contains("/internal/triggers/products/")){
+            // internal product evaluation: expect productId path variable and admin-provided payload
+            return requireAdmin()
+                    .then(requireUserId())
+                    .zipWith(parseId(request,"productId"))
+                    .flatMap(tuple->request
+                            .bodyToMono(org.example.productservice.dto.ProductTriggerSyncRequest.class)
+                            .flatMap(body->{
+                                // map product payload to a temporary trigger definition flow inside triggerEvaluationService
+                                return triggerEvaluationService.evaluateProductOverride(
+                                        tuple.getT2(),
+                                        body,
+                                        tuple.getT1());
+                            }))
+                    .flatMap(result->ServerResponse.status(201)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(result));
+        }
+
         return requireAdmin()
                 .then(requireUserId())
                 .zipWith(parseId(request,"definitionId"))

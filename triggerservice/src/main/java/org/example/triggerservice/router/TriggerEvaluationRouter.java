@@ -30,6 +30,11 @@ public class TriggerEvaluationRouter{
                         "/api/triggers/definitions/{definitionId}/evaluate",
                         contentType(MediaType.APPLICATION_JSON),
                         handler::evaluate)
+                // allow internal evaluation requests with admin overrides
+                .POST(
+                        "/internal/triggers/products/{productId}/evaluate",
+                        contentType(MediaType.APPLICATION_JSON),
+                        handler::evaluate)
                 .build();
     }
 }

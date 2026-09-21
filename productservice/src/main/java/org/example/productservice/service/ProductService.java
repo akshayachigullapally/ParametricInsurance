@@ -278,32 +278,134 @@ public class ProductService{
                             request.getMeasurementUnit()
                     );
 
+                    // Do not mutate the stored product threshold. Record history using
+                    // the admin-provided values and perform a one-off evaluation using the override.
                     TriggerSnapshotValues previous=snapshotOf(product);
-                    applyThresholdRequest(product,request);
 
-                    product.setUpdatedAt(LocalDateTime.now());
+                    // Build a transient product snapshot that contains the admin override
+                    Product transientProduct = Product.builder()
+                            .id(product.getId())
+                            .productCode(product.getProductCode())
+                            .name(product.getName())
+                            .description(product.getDescription())
+                            .category(product.getCategory())
+                            .status(product.getStatus())
+                            .minimumSumInsured(product.getMinimumSumInsured())
+                            .maximumSumInsured(product.getMaximumSumInsured())
+                            .minimumTermMonths(product.getMinimumTermMonths())
+                            .maximumTermMonths(product.getMaximumTermMonths())
+                            .eligibilityDescription(product.getEligibilityDescription())
+                            .perilCode(normalizeEnumValue(request.getPerilCode()))
+                            .measurementType(normalizeEnumValue(request.getMeasurementType()))
+                            .measurementUnit(normalizeUnit(request.getMeasurementUnit()))
+                            .thresholdValue(request.getThresholdValue())
+                            .comparisonOperator(normalizeEnumValue(request.getComparisonOperator()))
+                            .aggregationType(normalizeEnumValue(request.getAggregationType()))
+                            .observationWindowHours(request.getObservationWindowHours())
+                            .minimumObservationCount(request.getMinimumObservationCount())
+                            .triggerDescription(StringUtils.hasText(request.getTriggerDescription())
+                                    ? request.getTriggerDescription().trim()
+                                    : buildDescription(product))
+                            .createdBy(product.getCreatedBy())
+                            .createdAt(product.getCreatedAt())
+                            .updatedAt(LocalDateTime.now())
+                            .build();
 
-                    return productRepository.save(product)
-                            .flatMap(saved->recordThresholdHistory(
-                                    saved,
-                                    previous,
+                    // Record history comparing previous canonical product and the transient admin override
+                    Product finalProduct = product;
+                    return recordThresholdHistory(
+                                    Product.builder()
+                                            .id(product.getId())
+                                            .productCode(product.getProductCode())
+                                            .perilCode(previous.perilCode())
+                                            .measurementType(previous.measurementType())
+                                            .measurementUnit(previous.measurementUnit())
+                                            .thresholdValue(previous.thresholdValue())
+                                            .comparisonOperator(previous.comparisonOperator())
+                                            .aggregationType(previous.aggregationType())
+                                            .observationWindowHours(previous.observationWindowHours())
+                                            .minimumObservationCount(previous.minimumObservationCount())
+                                            .triggerDescription(previous.triggerDescription())
+                                            .build(),
+                                    new TriggerSnapshotValues(
+                                            transientProduct.getPerilCode(),
+                                            transientProduct.getMeasurementType(),
+                                            transientProduct.getMeasurementUnit(),
+                                            transientProduct.getThresholdValue(),
+                                            transientProduct.getComparisonOperator(),
+                                            transientProduct.getAggregationType(),
+                                            transientProduct.getObservationWindowHours(),
+                                            transientProduct.getMinimumObservationCount(),
+                                            transientProduct.getTriggerDescription()
+                                    ),
                                     adminId,
                                     request.getChangeReason()
-                            ).thenReturn(saved))
-                            .flatMap(saved->syncDefinition(saved,adminId))
-                            .map(saved->ProductThresholdUpdateResponse.builder()
-                                    .productId(saved.getId())
-                                    .productCode(saved.getProductCode())
-                                    .previousThresholdValue(previous.thresholdValue())
-                                    .newThresholdValue(saved.getThresholdValue())
-                                    .measurementUnit(saved.getMeasurementUnit())
-                                    .triggerDescription(saved.getTriggerDescription())
-                                    .triggerSyncStatus(saved.getTriggerSyncStatus())
-                                    .existingPoliciesUpdated(false)
-                                    .message("Product threshold updated. Existing policy snapshots were not changed.")
-                                    .build());
+                            )
+                            // After recording history, request a one-off evaluation from triggerservice
+                            .then(triggerServiceClient.evaluateProductWithOverride(product.getId(),
+                                    ProductTriggerSyncRequest.builder()
+                                            .productId(product.getId())
+                                            .productCode(product.getProductCode())
+                                            .productName(product.getName())
+                                            .productStatus(product.getStatus())
+                                            .perilCode(transientProduct.getPerilCode())
+                                            .measurementType(transientProduct.getMeasurementType())
+                                            .measurementUnit(transientProduct.getMeasurementUnit())
+                                            .thresholdValue(transientProduct.getThresholdValue())
+                                            .comparisonOperator(transientProduct.getComparisonOperator())
+                                            .aggregationType(transientProduct.getAggregationType())
+                                            .observationWindowHours(transientProduct.getObservationWindowHours())
+                                            .minimumObservationCount(transientProduct.getMinimumObservationCount())
+                                            .triggerDescription(transientProduct.getTriggerDescription())
+                                            .updatedBy(adminId)
+                                            .build())
+                                                        // After evaluation, attempt to fetch eligible active policies and create claims
+                                                        .thenMany(triggerServiceClient.getActiveZonesList().flatMapMany(zones->Flux.empty()))
+                                                        .then(fetchAndCreateClaimsForEligiblePolicies(product.getId(), adminId))
+                                                        .thenReturn(finalProduct)
+                                                        .map(saved->ProductThresholdUpdateResponse.builder()
+                                                                        .productId(finalProduct.getId())
+                                                                        .productCode(finalProduct.getProductCode())
+                                                                        .previousThresholdValue(previous.thresholdValue())
+                                                                        .newThresholdValue(transientProduct.getThresholdValue())
+                                                                        .measurementUnit(transientProduct.getMeasurementUnit())
+                                                                        .triggerDescription(transientProduct.getTriggerDescription())
+                                                                        .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
+                                                                        .existingPoliciesUpdated(true)
+                                                                        .message("Admin override evaluated. Matching active policies were processed and claims created where eligible.")
+                                                                        .build());
                 });
     }
+
+        private Mono<Void> fetchAndCreateClaimsForEligiblePolicies(Long productId, Long adminId){
+                        // Find active policies for the product and for each policy call trigger eligibility
+                        return policyRepository.findAllByProductIdAndStatus(productId, "ACTIVE")
+                                .flatMap(policy ->
+                                        triggerServiceClient.getPolicyEligibility(policy.getId())
+                                                .flatMap(eligibility -> {
+                                                    if(eligibility==null||!eligibility.isEligible()){
+                                                        return Mono.empty();
+                                                    }
+
+                                                    // Build internal claim request
+                                                    org.example.productservice.dto.InternalClaimRequest claimReq =
+                                                            org.example.productservice.dto.InternalClaimRequest.builder()
+                                                                    .policyId(policy.getId())
+                                                                    .incidentType("PARAMETRIC_EVENT")
+                                                                    .incidentDate(java.time.LocalDate.now())
+                                                                    .incidentLocation("AUTO")
+                                                                    .description("Automatic claim created due to admin threshold override")
+                                                                    .claimedAmount(eligibility.getAggregatedValue()!=null?eligibility.getAggregatedValue():java.math.BigDecimal.ZERO)
+                                                                    .triggerEventId(eligibility.getTriggerEventId())
+                                                                    .claimSource("AUTO_TRIGGERED")
+                                                                    .build();
+
+                                                    return claimsServiceClient.createInternalClaim(claimReq)
+                                                            .then();
+                                                })
+                                )
+                                .then();
+        }
 
     public Flux<ProductThresholdHistoryResponse> getThresholdHistory(Long productId){
         if(productId==null||productId<=0){

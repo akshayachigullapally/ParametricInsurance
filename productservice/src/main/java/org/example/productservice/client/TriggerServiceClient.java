@@ -41,6 +41,16 @@ public class TriggerServiceClient{
         return getActiveZones().collectList();
     }
 
+        public Mono<org.example.productservice.dto.PolicyTriggerEligibilityResponse> getPolicyEligibility(Long policyId){
+                return triggerServiceWebClient.get()
+                                .uri("/internal/triggers/policy/{policyId}/eligibility", policyId)
+                                .header(GatewayHeaders.GATEWAY_KEY, internalKey)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .bodyToMono(org.example.productservice.dto.PolicyTriggerEligibilityResponse.class)
+                                .onErrorMap(WebClientRequestException.class, ex-> new org.example.productservice.exception.DependentServiceException("Trigger service is currently unavailable"));
+        }
+
     public Mono<InternalZoneResponse> getZoneById(Long zoneId){
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/zones/{zoneId}",zoneId)
@@ -80,5 +90,32 @@ public class TriggerServiceClient{
                                 "Trigger service is currently unavailable"
                         )
                 );
+    }
+
+    public Mono<Void> evaluateProductWithOverride(Long productId, ProductTriggerSyncRequest request){
+        if(productId==null||request==null){
+            return Mono.error(new org.example.productservice.exception.DependentServiceException(
+                    "Trigger evaluation payload is incomplete"
+            ));
+        }
+
+        return triggerServiceWebClient.post()
+                .uri("/internal/triggers/products/{productId}/evaluate", productId)
+                .header(GatewayHeaders.GATEWAY_KEY, internalKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, response ->
+                        Mono.error(new org.example.productservice.exception.DependentServiceException(
+                                "Trigger service is currently unavailable"
+                        ))
+                )
+                .onStatus(status -> status.is4xxClientError(), response -> Mono.error(new org.example.productservice.exception.DependentServiceException(
+                        "Trigger service rejected the product evaluation request"
+                )))
+                .bodyToMono(Void.class)
+                .onErrorMap(WebClientRequestException.class, exception -> new org.example.productservice.exception.DependentServiceException(
+                        "Trigger service is currently unavailable"
+                ));
     }
 }

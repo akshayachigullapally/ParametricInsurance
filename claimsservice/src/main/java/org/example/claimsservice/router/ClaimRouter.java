@@ -36,6 +36,7 @@ public class ClaimRouter{
                         handler::getClaimTimeline)
                 .GET("/internal/claims/{claimId}",
                         handler::getInternalClaim)
+                .POST("/internal/claims", handler::createInternalClaim)
                 .build();
     }
 }
