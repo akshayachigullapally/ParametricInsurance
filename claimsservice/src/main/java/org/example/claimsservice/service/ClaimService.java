@@ -221,6 +221,7 @@ public class ClaimService{
                                                                 )).map(this::toInternalResponse);
                                                         });
                                 });
+                        }
 
     @Transactional
     public Mono<ClaimResponse> startReview(Long reviewerId,Long claimId){

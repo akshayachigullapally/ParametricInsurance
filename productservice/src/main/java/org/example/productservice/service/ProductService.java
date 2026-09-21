@@ -3,6 +3,7 @@ package org.example.productservice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.client.TriggerServiceClient;
+import org.example.productservice.client.ClaimsServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.ConflictException;
 import org.example.productservice.exception.NotFoundException;
@@ -32,6 +33,8 @@ public class ProductService{
     private final CoverageRepository coverageRepository;
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
+        private final ClaimsServiceClient claimsServiceClient;
+        private final PolicyRepository policyRepository;
     private final ProductThresholdHistoryRepository thresholdHistoryRepository;
 
     @Transactional
@@ -395,7 +398,7 @@ public class ProductService{
                                                                     .incidentDate(java.time.LocalDate.now())
                                                                     .incidentLocation("AUTO")
                                                                     .description("Automatic claim created due to admin threshold override")
-                                                                    .claimedAmount(eligibility.getAggregatedValue()!=null?eligibility.getAggregatedValue():java.math.BigDecimal.ZERO)
+                                                                            .claimedAmount(eligibility.getAggregatedValue()!=null?eligibility.getAggregatedValue():java.math.BigDecimal.ZERO)
                                                                     .triggerEventId(eligibility.getTriggerEventId())
                                                                     .claimSource("AUTO_TRIGGERED")
                                                                     .build();

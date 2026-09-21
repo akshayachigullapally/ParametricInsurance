@@ -19,7 +19,7 @@ public class NotificationSseHandler {
         this.service = service;
     }
 
-    public ServerResponse stream(ServerRequest request) {
+    public reactor.core.publisher.Mono<ServerResponse> stream(ServerRequest request) {
         // stream the mine() flux as server-sent events filtered to current user
         Flux<NotificationResponse> events = service.streamForCurrentUser();
         return ServerResponse.ok()

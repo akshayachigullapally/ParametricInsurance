@@ -2,6 +2,7 @@ package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.EvaluateTriggerRequest;
+import org.example.triggerservice.dto.ProductTriggerSyncRequest;
 import org.example.triggerservice.exception.ForbiddenException;
 import org.example.triggerservice.exception.ValidationException;
 import org.example.triggerservice.service.TriggerEvaluationService;
@@ -62,7 +63,7 @@ public class TriggerEvaluationHandler{
                     .then(requireUserId())
                     .zipWith(parseId(request,"productId"))
                     .flatMap(tuple->request
-                            .bodyToMono(org.example.productservice.dto.ProductTriggerSyncRequest.class)
+                            .bodyToMono(ProductTriggerSyncRequest.class)
                             .flatMap(body->{
                                 // map product payload to a temporary trigger definition flow inside triggerEvaluationService
                                 return triggerEvaluationService.evaluateProductOverride(

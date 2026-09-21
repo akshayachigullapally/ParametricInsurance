@@ -2,6 +2,7 @@ package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.EvaluateTriggerRequest;
+import org.example.triggerservice.dto.ProductTriggerSyncRequest;
 import org.example.triggerservice.dto.TriggerEvaluationResponse;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
@@ -100,7 +101,7 @@ public class TriggerEvaluationService{
 
         public Mono<TriggerEvaluationResponse> evaluateProductOverride(
                         Long productId,
-                        org.example.productservice.dto.ProductTriggerSyncRequest productPayload,
+                        ProductTriggerSyncRequest productPayload,
                         Long userId
         ){
                 if(productPayload==null||productId==null||productId<=0){
@@ -112,7 +113,8 @@ public class TriggerEvaluationService{
                 temp.setId(null);
                 temp.setProductId(productId);
                 temp.setMeasurementType(org.example.triggerservice.model.MeasurementType.valueOf(productPayload.getMeasurementType()));
-                temp.setMeasurementUnit(org.example.triggerservice.model.MeasurementUnit.fromText(productPayload.getMeasurementUnit()));
+                temp.setMeasurementUnit(org.example.triggerservice.model.MeasurementUnit.valueOf(
+                        productPayload.getMeasurementUnit().trim().toUpperCase(Locale.ROOT)));
                 temp.setAggregationType(org.example.triggerservice.model.AggregationType.valueOf(productPayload.getAggregationType()));
                 temp.setComparisonOperator(org.example.triggerservice.model.ComparisonOperator.valueOf(productPayload.getComparisonOperator()));
                 temp.setThresholdValue(productPayload.getThresholdValue());

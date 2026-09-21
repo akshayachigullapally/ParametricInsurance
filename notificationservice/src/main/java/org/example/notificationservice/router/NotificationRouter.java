@@ -30,7 +30,9 @@ public class NotificationRouter {
                 .GET("/api/notifications/me", n::mine)
                 .GET("/api/notifications/me/unread", n::unread)
                 .GET("/api/notifications/me/unread-count", n::count)
-                .GET("/api/notifications/me/stream", org.springframework.web.reactive.function.server.RequestPredicates.accept(org.springframework.http.MediaType.TEXT_EVENT_STREAM), sse::stream)
+                .GET(org.springframework.web.reactive.function.server.RequestPredicates
+                    .path("/api/notifications/me/stream")
+                    .and(accept(org.springframework.http.MediaType.TEXT_EVENT_STREAM)), sse::stream)
                 .PUT("/api/notifications/{notificationId}/read", n::read)
                 .PUT("/api/notifications/me/read-all", n::readAll)
                 .DELETE("/api/notifications/{notificationId}", n::delete)
