@@ -45,13 +45,13 @@ public class StaffDataLoader implements ApplicationRunner{
                         "Claims Officer Shiva",
                         "shiva@gmail.com",
                         "12345678",
-                        "ROLE_CLAIMS_REVIEWER"
+                        "ROLE_CLAIMS_OFFICER"
                 ),
                 createUser(
                         "Claims Officer Pallavi",
                         "pallavi@gmail.com",
                         "12345678",
-                        "ROLE_CLAIMS_REVIEWER"
+                        "ROLE_CLAIMS_OFFICER"
                 )
         );
 
