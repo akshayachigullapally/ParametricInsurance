@@ -260,7 +260,7 @@ public class ProductService{
                         .build());
     }
 
-    @Transactional
+@Transactional
     public Mono<ProductThresholdUpdateResponse> updateThreshold(
             Long adminId,
             Long productId,
@@ -281,130 +281,227 @@ public class ProductService{
                             request.getMeasurementUnit()
                     );
 
-                    // Do not mutate the stored product threshold. Record history using
-                    // the admin-provided values and perform a one-off evaluation using the override.
                     TriggerSnapshotValues previous=snapshotOf(product);
 
-                    // Build a transient product snapshot that contains the admin override
-                    Product transientProduct = Product.builder()
-                            .id(product.getId())
-                            .productCode(product.getProductCode())
-                            .name(product.getName())
-                            .description(product.getDescription())
-                            .category(product.getCategory())
-                            .status(product.getStatus())
-                            .minimumSumInsured(product.getMinimumSumInsured())
-                            .maximumSumInsured(product.getMaximumSumInsured())
-                            .minimumTermMonths(product.getMinimumTermMonths())
-                            .maximumTermMonths(product.getMaximumTermMonths())
-                            .eligibilityDescription(product.getEligibilityDescription())
-                            .perilCode(normalizeEnumValue(request.getPerilCode()))
-                            .measurementType(normalizeEnumValue(request.getMeasurementType()))
-                            .measurementUnit(normalizeUnit(request.getMeasurementUnit()))
-                            .thresholdValue(request.getThresholdValue())
-                            .comparisonOperator(normalizeEnumValue(request.getComparisonOperator()))
-                            .aggregationType(normalizeEnumValue(request.getAggregationType()))
-                            .observationWindowHours(request.getObservationWindowHours())
-                            .minimumObservationCount(request.getMinimumObservationCount())
-                            .triggerDescription(StringUtils.hasText(request.getTriggerDescription())
-                                    ? request.getTriggerDescription().trim()
-                                    : null)
-                            .triggerSyncStatus(product.getTriggerSyncStatus())
-                            .createdBy(product.getCreatedBy())
-                            .createdAt(product.getCreatedAt())
-                            .updatedAt(LocalDateTime.now())
-                            .build();
-                    if (!StringUtils.hasText(transientProduct.getTriggerDescription())) {
-                        transientProduct.setTriggerDescription(buildDescription(transientProduct));
-                    }
+                    applyThresholdRequest(product,request);
 
-                    Product finalProduct = product;
                     return recordThresholdHistory(
-                                    transientProduct,
+                                    product,
                                     previous,
                                     adminId,
                                     request.getChangeReason()
                             )
-                            // After recording history, request a one-off evaluation from triggerservice.
-                            // A failure of this preview evaluation must not fail the whole update
-                            // (mirrors syncDefinition's graceful degradation).
-                            .then(triggerServiceClient.evaluateProductWithOverride(product.getId(),
-                                    ProductTriggerSyncRequest.builder()
-                                            .productId(product.getId())
-                                            .productCode(product.getProductCode())
-                                            .productName(product.getName())
-                                            .productStatus(product.getStatus())
-                                            .perilCode(transientProduct.getPerilCode())
-                                            .measurementType(transientProduct.getMeasurementType())
-                                            .measurementUnit(transientProduct.getMeasurementUnit())
-                                            .thresholdValue(transientProduct.getThresholdValue())
-                                            .comparisonOperator(transientProduct.getComparisonOperator())
-                                            .aggregationType(transientProduct.getAggregationType())
-                                            .observationWindowHours(transientProduct.getObservationWindowHours())
-                                            .minimumObservationCount(transientProduct.getMinimumObservationCount())
-                                            .triggerDescription(transientProduct.getTriggerDescription())
-                                            .updatedBy(adminId)
-                                            .build())
-                                            .then(fetchAndCreateClaimsForEligiblePolicies(product.getId()))
-                                            .then(Mono.just(ProductThresholdUpdateResponse.builder()
-                                                    .productId(finalProduct.getId())
-                                                    .productCode(finalProduct.getProductCode())
-                                                    .previousThresholdValue(previous.thresholdValue())
-                                                    .newThresholdValue(transientProduct.getThresholdValue())
-                                                    .measurementUnit(transientProduct.getMeasurementUnit())
-                                                    .triggerDescription(transientProduct.getTriggerDescription())
-                                                    .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
-                                                    .existingPoliciesUpdated(true)
-                                                    .message("Admin override evaluated. Matching active policies were processed and claims created where eligible.")
-                                                    .build()))
-                                            .onErrorResume(error->{
-                                                log.warn("Admin threshold override evaluation failed for product {}: {}",
-                                                        finalProduct.getId(), error.getMessage());
-                                                return Mono.just(ProductThresholdUpdateResponse.builder()
-                                                        .productId(finalProduct.getId())
-                                                        .productCode(finalProduct.getProductCode())
-                                                        .previousThresholdValue(previous.thresholdValue())
-                                                        .newThresholdValue(transientProduct.getThresholdValue())
-                                                        .measurementUnit(transientProduct.getMeasurementUnit())
-                                                        .triggerDescription(transientProduct.getTriggerDescription())
-                                                        .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
-                                                        .existingPoliciesUpdated(false)
-                                                        .message("Threshold saved to history, but the trigger evaluation preview could not be completed: "
-                                                                +error.getMessage())
-                                                        .build());
-                                            }));
+                            .then(productRepository.save(product))
+                            .flatMap(saved->syncDefinition(saved,adminId))
+                            .map(saved->ProductThresholdUpdateResponse.builder()
+                                    .productId(saved.getId())
+                                    .productCode(saved.getProductCode())
+                                    .previousThresholdValue(previous.thresholdValue())
+                                    .newThresholdValue(saved.getThresholdValue())
+                                    .measurementUnit(saved.getMeasurementUnit())
+                                    .triggerDescription(saved.getTriggerDescription())
+                                    .triggerSyncStatus(saved.getTriggerSyncStatus())
+                                    .existingPoliciesUpdated(false)
+                                    .message("Threshold updated and trigger definitions synchronized. Existing policies retain their captured trigger snapshot and are unaffected.")
+                                    .build());
                 });
     }
 
-    private Mono<Void> fetchAndCreateClaimsForEligiblePolicies(Long productId){
-                        // Find active policies for the product and for each policy call trigger eligibility
-                        return policyRepository.findAllByProductIdAndStatus(productId, "ACTIVE")
-                                .flatMap(policy ->
-                                        triggerServiceClient.getPolicyEligibility(policy.getId())
-                                                .flatMap(eligibility -> {
-                                                    if(eligibility==null||!eligibility.isEligible()){
-                                                        return Mono.empty();
-                                                    }
+    private Mono<Long> fetchAndCreateClaimsForEligiblePolicies(Long productId){
+        return policyRepository.findAllByProductIdAndStatus(productId,"ACTIVE")
+                .flatMap(policy->
+                        triggerServiceClient.getPolicyEligibility(policy.getId())
+                                .flatMap(eligibility->{
+                                    if(eligibility==null||
+                                            !eligibility.isEligible()||
+                                            eligibility.getTriggerEventId()==null){
+                                        return Mono.just(0L);
+                                    }
 
-                                                    // Build internal claim request
-                                                    org.example.productservice.dto.InternalClaimRequest claimReq =
-                                                            org.example.productservice.dto.InternalClaimRequest.builder()
-                                                                    .policyId(policy.getId())
-                                                                    .incidentType("PARAMETRIC_EVENT")
-                                                                    .incidentDate(java.time.LocalDate.now())
-                                                                    .incidentLocation("AUTO")
-                                                                    .description("Automatic claim created due to admin threshold override")
-                                                                            .claimedAmount(eligibility.getAggregatedValue()!=null?eligibility.getAggregatedValue():java.math.BigDecimal.ZERO)
-                                                                    .triggerEventId(eligibility.getTriggerEventId())
-                                                                    .claimSource("AUTO_TRIGGERED")
-                                                                    .build();
+                                    InternalClaimRequest claimReq=
+                                            InternalClaimRequest.builder()
+                                                    .policyId(policy.getId())
+                                                    .incidentType("PARAMETRIC_EVENT")
+                                                    .incidentDate(
+                                                            java.time.LocalDate.now())
+                                                    .incidentLocation("AUTO")
+                                                    .description("Automatic claim created from a verified trigger event")
+                                                    .claimedAmount(eligibility.getAggregatedValue()!=null
+                                                            ?eligibility.getAggregatedValue()
+                                                            :java.math.BigDecimal.ZERO)
+                                                    .triggerEventId(
+                                                            eligibility.getTriggerEventId())
+                                                    .claimSource("AUTO_TRIGGERED")
+                                                    .build();
 
-                                                    return claimsServiceClient.createInternalClaim(claimReq)
-                                                            .then();
-                                                })
-                                )
-                                .then();
+                                    return claimsServiceClient.createInternalClaim(claimReq)
+                                            .thenReturn(1L);
+                                })
+                                .onErrorResume(error->{
+                                    log.warn("Eligibility or claim creation failed for policy {}: {}",
+                                            policy.getId(),error.getMessage());
+                                    return Mono.just(0L);
+                                }))
+                .reduce(0L,Long::sum);
+    }
+
+    public Mono<VerifiedEventProcessingResponse> processVerifiedEvent(
+            VerifiedEventRequest request){
+        if(request==null||
+                request.getProductId()==null||
+                request.getEventId()==null){
+            return Mono.error(new ValidationException(
+                    "productId and eventId are required"
+            ));
         }
+
+        return productRepository.findById(request.getProductId())
+                .switchIfEmpty(Mono.error(new NotFoundException(
+                        "Product not found for verified trigger event"
+                )))
+                .flatMap(product->fetchAndCreateClaimsForEligiblePolicies(
+                                product.getId())
+                        .map(created->VerifiedEventProcessingResponse.builder()
+                                .productId(product.getId())
+                                .eventId(request.getEventId())
+                                .claimsCreated(created)
+                                .message(created>0
+                                        ?created+" automatic claim(s) created for eligible policies"
+                                        :"No eligible policies matched the verified event")
+                                .build()));
+    }
+
+    public Flux<MeasurementStatusResponse> getMeasurementStatus(){
+        return triggerServiceClient.getCurrentMeasurements()
+                .collectMap(
+                        current->normalizeMeasurementTypeKey(
+                                current.getMeasurementType()),
+                        current->current)
+                .flatMapMany(byType->productRepository.findAll()
+                        .filter(this::hasTriggerConfiguration)
+                        .filter(product->hasDashboardType(product))
+                        .groupBy(product->normalizeMeasurementTypeKey(
+                                product.getMeasurementType()))
+                        .flatMap(group->group.collectList()
+                                .map(products->buildMeasurementStatus(
+                                        byType.get(group.key()),
+                                        products)))
+                        .sort(
+                                (left,right)->String.CASE_INSENSITIVE_ORDER
+                                        .compare(
+                                                left.getMeasurementType(),
+                                                right.getMeasurementType())
+                        ));
+    }
+
+    private MeasurementStatusResponse buildMeasurementStatus(
+            MeasurementCurrentResponse current,
+            List<Product> products){
+        if(products==null||products.isEmpty()){
+            return MeasurementStatusResponse.builder()
+                    .measurementType(null)
+                    .displayName(null)
+                    .products(List.of())
+                    .build();
+        }
+
+        String typeKey=normalizeMeasurementTypeKey(
+                products.get(0).getMeasurementType());
+
+        List<ProductTriggerStatus> statuses=products.stream()
+                .map(product->ProductTriggerStatus.builder()
+                        .productId(product.getId())
+                        .productCode(product.getProductCode())
+                        .productName(product.getName())
+                        .thresholdValue(product.getThresholdValue())
+                        .comparisonOperator(product.getComparisonOperator())
+                        .aggregationType(product.getAggregationType())
+                        .observationWindowHours(product.getObservationWindowHours())
+                        .minimumObservationCount(product.getMinimumObservationCount())
+                        .triggered(current!=null&&isTriggered(
+                                current.getCurrentValue(),product))
+                        .build())
+                .toList();
+
+        return MeasurementStatusResponse.builder()
+                .measurementType(typeKey)
+                .displayName(displayLabel(typeKey))
+                .measurementUnit(current!=null
+                        ?current.getMeasurementUnit()
+                        :products.get(0).getMeasurementUnit())
+                .currentValue(current!=null
+                        ?current.getCurrentValue():null)
+                .observedAt(current!=null
+                        ?current.getObservedAt():null)
+                .zoneCode(current!=null
+                        ?current.getZoneCode():null)
+                .zoneName(current!=null
+                        ?current.getZoneName():null)
+                .products(statuses)
+                .build();
+    }
+
+    private boolean isTriggered(
+            java.math.BigDecimal currentValue,
+            Product product){
+        if(currentValue==null||
+                product.getThresholdValue()==null||
+                !StringUtils.hasText(product.getComparisonOperator())){
+            return false;
+        }
+
+        ComparisonOperator operator;
+        try{
+            operator=ComparisonOperator.valueOf(
+                    product.getComparisonOperator()
+                            .trim().toUpperCase(Locale.ROOT));
+        }catch(IllegalArgumentException exception){
+            return false;
+        }
+
+        int comparison=currentValue.compareTo(product.getThresholdValue());
+
+        return switch(operator){
+            case GREATER_THAN->comparison>0;
+            case GREATER_THAN_OR_EQUAL->comparison>=0;
+            case LESS_THAN->comparison<0;
+            case LESS_THAN_OR_EQUAL->comparison<=0;
+            case EQUAL->comparison==0;
+        };
+    }
+
+    private boolean hasDashboardType(Product product){
+        String type=normalizeMeasurementTypeKey(
+                product.getMeasurementType());
+        return type!=null&&!"OTHER".equals(type);
+    }
+
+    private String normalizeMeasurementTypeKey(String measurementType){
+        if(!StringUtils.hasText(measurementType)){
+            return null;
+        }
+        String normalized=measurementType.trim()
+                .toUpperCase(Locale.ROOT);
+        if("WATER_LEVEL".equals(normalized)){
+            return "RIVER_LEVEL";
+        }
+        return normalized;
+    }
+
+    private String displayLabel(String measurementType){
+        if(!StringUtils.hasText(measurementType)){
+            return null;
+        }
+        return switch(measurementType){
+            case "RAINFALL"->"Rainfall";
+            case "RIVER_LEVEL"->"River Level";
+            case "TEMPERATURE"->"Temperature";
+            case "WIND_SPEED"->"Wind Speed";
+            case "HUMIDITY"->"Humidity";
+            case "SOIL_MOISTURE"->"Soil Moisture";
+            default->measurementType;
+        };
+    }
 
     public Flux<ProductThresholdHistoryResponse> getThresholdHistory(Long productId){
         if(productId==null||productId<=0){

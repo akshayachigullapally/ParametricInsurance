@@ -6,6 +6,7 @@ import org.example.triggerservice.dto.PolicyTriggerEligibilityResponse;
 import org.example.triggerservice.exception.DependentServiceException;
 import org.example.triggerservice.exception.NotFoundException;
 import org.example.triggerservice.exception.ValidationException;
+import org.example.triggerservice.model.ComparisonOperator;
 import org.example.triggerservice.model.TriggerEvent;
 import org.example.triggerservice.model.TriggerEventStatus;
 import org.example.triggerservice.repository.TriggerEventRepository;
@@ -13,11 +14,13 @@ import org.example.triggerservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -69,7 +72,15 @@ public class PolicyTriggerEligibilityService{
                     }
 
                     return findLatestApplicableEvent(policy)
-                            .map(event->buildEligibleResponse(policy,event))
+                            .map(event->{
+                                if(!satisfiesSnapshot(policy,event)){
+                                    return buildIneligibleResponse(
+                                            policy,
+                                            "Event does not satisfy the policy's captured trigger snapshot");
+                                }
+
+                                return buildEligibleResponse(policy,event);
+                            })
                             .defaultIfEmpty(buildIneligibleResponse(
                                     policy,
                                     "No verified trigger event applies to the policy product, location zone and coverage period"
@@ -172,6 +183,73 @@ public class PolicyTriggerEligibilityService{
 
         return !eventEnd.isBefore(policy.getStartDate())&&
                 !eventStart.isAfter(policy.getEndDate());
+    }
+
+    private boolean satisfiesSnapshot(
+            InternalPolicyResponse policy,
+            TriggerEvent event
+    ){
+        String snapshotType=normalizeSnapshotType(
+                policy.getSnapshotMeasurementType());
+        if(StringUtils.hasText(snapshotType)){
+            String eventType=event.getMeasurementType()!=null
+                    ?normalizeSnapshotType(event.getMeasurementType().name())
+                    :null;
+
+            if(eventType==null||!snapshotType.equals(eventType)){
+                return false;
+            }
+        }
+
+        if(policy.getSnapshotThresholdValue()==null){
+            return true;
+        }
+
+        if(event.getAggregatedValue()==null){
+            return false;
+        }
+
+        ComparisonOperator operator=resolveSnapshotOperator(
+                policy.getSnapshotComparisonOperator());
+
+        if(operator==null){
+            return true;
+        }
+
+        int comparison=event.getAggregatedValue()
+                .compareTo(policy.getSnapshotThresholdValue());
+
+        return switch(operator){
+            case GREATER_THAN->comparison>0;
+            case GREATER_THAN_OR_EQUAL->comparison>=0;
+            case LESS_THAN->comparison<0;
+            case LESS_THAN_OR_EQUAL->comparison<=0;
+            case EQUAL->comparison==0;
+        };
+    }
+
+    private String normalizeSnapshotType(String value){
+        if(!StringUtils.hasText(value)){
+            return null;
+        }
+        if("WATER_LEVEL".equalsIgnoreCase(value.trim())){
+            return "RIVER_LEVEL";
+        }
+        return value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private ComparisonOperator resolveSnapshotOperator(
+            String snapshotOperator
+    ){
+        if(StringUtils.hasText(snapshotOperator)){
+            try{
+                return ComparisonOperator.valueOf(
+                        snapshotOperator.trim().toUpperCase(Locale.ROOT));
+            }catch(IllegalArgumentException exception){
+                return null;
+            }
+        }
+        return null;
     }
 
     private PolicyTriggerEligibilityResponse buildEligibleResponse(

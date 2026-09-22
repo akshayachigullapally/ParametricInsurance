@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.example.productservice.dto.InternalProductResponse;
+import org.example.productservice.dto.MeasurementStatusResponse;
 import org.example.productservice.dto.ProductRequest;
 import org.example.productservice.dto.ProductResponse;
 import org.example.productservice.dto.ProductThresholdHistoryResponse;
@@ -11,6 +12,7 @@ import org.example.productservice.dto.ProductThresholdUpdateRequest;
 import org.example.productservice.dto.ProductThresholdUpdateResponse;
 import org.example.productservice.dto.ProductTriggerSyncResponse;
 import org.example.productservice.dto.UpdateProductStatusRequest;
+import org.example.productservice.dto.VerifiedEventRequest;
 import org.example.productservice.exception.ValidationException;
 import org.example.productservice.service.ProductService;
 import org.example.productservice.util.SecurityUtil;
@@ -180,6 +182,24 @@ public class ProductHandler{
                                 adminId,
                                 productId
                         )))
+                .flatMap(response->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response));
+    }
+
+    public Mono<ServerResponse> getMeasurementStatus(ServerRequest request){
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(productService.getMeasurementStatus(),
+                        MeasurementStatusResponse.class);
+    }
+
+    public Mono<ServerResponse> processVerifiedEvent(ServerRequest request){
+        return request.bodyToMono(VerifiedEventRequest.class)
+                .switchIfEmpty(Mono.error(new org.example.productservice.exception.ValidationException(
+                        "Request body is required"
+                )))
+                .flatMap(productService::processVerifiedEvent)
                 .flatMap(response->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response));

@@ -6,6 +6,7 @@ import org.example.productservice.model.*;
 import org.example.productservice.repository.*;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class ProductDataLoader implements ApplicationRunner{
     private final ProductRepository productRepository;

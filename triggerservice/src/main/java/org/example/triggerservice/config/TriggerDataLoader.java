@@ -37,20 +37,27 @@ public class TriggerDataLoader implements CommandLineRunner{
     public void run(String... args){
         LocalDateTime now=LocalDateTime.now();
 
-        loadPeril(
-                "EXCESS_RAINFALL",
-                "Excess Rainfall",
-                "Rainfall exceeds the configured threshold within the observation period",
-                now
-        )
+loadPeril(
+                        "EXCESS_RAINFALL",
+                        "Excess Rainfall",
+                        "Rainfall exceeds the configured threshold within the observation period",
+                        now
+                )
                 .then(loadPeril(
                         "DROUGHT",
                         "Drought",
                         "Recorded rainfall remains below the configured minimum threshold",
                         now
                 ))
+                .then(loadPeril(
+                        "FLOOD",
+                        "Flood",
+                        "River level exceeds the configured threshold within the observation period",
+                        now
+                ))
                 .then(loadLocationZone(now))
                 .then(loadTriggerDefinition(now))
+                .then(loadDemoTriggerDefinitions(now))
                 .doOnSuccess(unused->
                         log.info("Trigger service initial data loading completed"))
                 .doOnError(error->
@@ -162,5 +169,100 @@ public class TriggerDataLoader implements CommandLineRunner{
                         .doOnNext(definition->
                                 log.info("Loaded trigger definition: {}",
                                         definition.getDefinitionCode()))));
+    }
+
+    private Mono<Void> loadDemoTriggerDefinitions(LocalDateTime now){
+        return locationZoneRepository
+                .findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE)
+                .flatMap(zone->Mono.when(
+                        loadDemoDefinition(
+                                zone,
+                                1L,
+                                "P1_"+zone.getZoneCode()+"_RAINFALL",
+                                "WEATHER-001 Rainfall Trigger – "+zone.getZoneName(),
+                                "Rainfall exceeds 150 mm over the last 24 hours",
+                                "EXCESS_RAINFALL",
+                                MeasurementType.RAINFALL,
+                                MeasurementUnit.MM,
+                                AggregationType.SUM,
+                                ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                                "150.00",
+                                24,
+                                1,
+                                now),
+                        loadDemoDefinition(
+                                zone,
+                                2L,
+                                "P2_"+zone.getZoneCode()+"_RIVER_LEVEL",
+                                "FLOOD-001 River Level Trigger – "+zone.getZoneName(),
+                                "River level reaches 5 m within the last 6 hours",
+                                "FLOOD",
+                                MeasurementType.RIVER_LEVEL,
+                                MeasurementUnit.METER,
+                                AggregationType.MAXIMUM,
+                                ComparisonOperator.GREATER_THAN_OR_EQUAL,
+                                "5.00",
+                                6,
+                                1,
+                                now)
+                ))
+                .then();
+    }
+
+    private Mono<TriggerDefinition> loadDemoDefinition(
+            LocationZone zone,
+            Long productId,
+            String definitionCode,
+            String definitionName,
+            String description,
+            String perilCode,
+            MeasurementType measurementType,
+            MeasurementUnit measurementUnit,
+            AggregationType aggregationType,
+            ComparisonOperator comparisonOperator,
+            String thresholdValue,
+            int windowHours,
+            int minObservationCount,
+            LocalDateTime now
+    ){
+        return triggerDefinitionRepository
+                .findByProductIdAndMeasurementTypeAndLocationZoneIdAndStatusNot(
+                        productId,
+                        measurementType,
+                        zone.getId(),
+                        TriggerDefinitionStatus.ARCHIVED)
+                .switchIfEmpty(Mono.defer(()->perilRepository
+                        .findByPerilCodeIgnoreCase(perilCode)
+                        .switchIfEmpty(Mono.error(new IllegalStateException(
+                                "Peril loader data is unavailable: "+perilCode)))
+                        .flatMap(peril->triggerDefinitionRepository.save(
+                                TriggerDefinition.builder()
+                                        .definitionCode(definitionCode)
+                                        .definitionName(definitionName)
+                                        .description(description)
+                                        .perilId(peril.getId())
+                                        .locationZoneId(zone.getId())
+                                        .productId(productId)
+                                        .measurementType(measurementType)
+                                        .measurementUnit(measurementUnit)
+                                        .aggregationType(aggregationType)
+                                        .comparisonOperator(comparisonOperator)
+                                        .thresholdValue(new BigDecimal(thresholdValue))
+                                        .observationWindowHours(windowHours)
+                                        .minimumObservationCount(minObservationCount)
+                                        .status(TriggerDefinitionStatus.ACTIVE)
+                                        .effectiveFrom(LocalDate.now())
+                                        .effectiveTo(LocalDate.now().plusYears(1))
+                                        .createdBy(SYSTEM_USER_ID)
+                                        .createdAt(now)
+                                        .updatedBy(SYSTEM_USER_ID)
+                                        .updatedAt(now)
+                                        .build()
+                        )))
+                        .map(definition->{
+                            log.info("Loaded trigger definition: {}",
+                                    definition.getDefinitionCode());
+                            return definition;
+                        }));
     }
 }
