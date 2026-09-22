@@ -34,7 +34,7 @@ Existing policy snapshots are never replaced by the current product threshold.
 /admin/current-measurements
 /admin/trigger-events
 /admin/claims
-/admin/notifications
+/admin/notificationsParametricInsurance/SIMPLIFIED_FRONTEND_IMPLEMENTATION_GUIDE.md
 /admin/audit
 ```
 

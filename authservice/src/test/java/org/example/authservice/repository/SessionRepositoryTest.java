@@ -31,10 +31,6 @@ class SessionRepositoryTest extends BaseRepositoryTest {
                 .then(insertToken(103L,2L,"session-token-103"))).expectNextCount(1).verifyComplete();
     }
 
-    private reactor.core.publisher.Mono<Long> insertUser(Long id,String email) {
-        return databaseClient.sql("INSERT INTO users_credentials(id,email,password,full_name,role,enabled,email_verified,created_at,updated_at) VALUES(:id,:email,'password','Test User','ROLE_CUSTOMER',TRUE,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind("id",id).bind("email",email).fetch().rowsUpdated();
-    }
-
     private reactor.core.publisher.Mono<Long> insertToken(Long id,Long userId,String token) {
         return databaseClient.sql("INSERT INTO refresh_tokens(id,user_id,token,expires_at,revoked,created_at) VALUES(:id,:userId,:token,DATEADD('DAY',7,CURRENT_TIMESTAMP),FALSE,CURRENT_TIMESTAMP)").bind("id",id).bind("userId",userId).bind("token",token).fetch().rowsUpdated();
     }

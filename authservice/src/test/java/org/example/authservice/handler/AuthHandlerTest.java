@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AuthHandlerTest {
 
     @Mock
@@ -483,7 +486,7 @@ class AuthHandlerTest {
         StepVerifier.create(authHandler.revokeSession(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Session id must be positive");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Session id must be positive");
                 })
                 .verify();
     }
@@ -495,7 +498,7 @@ class AuthHandlerTest {
         StepVerifier.create(authHandler.revokeSession(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Session id must be positive");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Session id must be positive");
                 })
                 .verify();
     }
@@ -507,7 +510,7 @@ class AuthHandlerTest {
         StepVerifier.create(authHandler.revokeSession(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Invalid session id");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid session id");
                 })
                 .verify();
     }

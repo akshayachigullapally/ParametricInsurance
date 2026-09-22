@@ -30,10 +30,6 @@ class AddressRepositoryTest extends BaseRepositoryTest {
                 .then(databaseClient.sql("INSERT INTO user_profiles(id,auth_user_id,customer_segment,status,created_at,updated_at) VALUES(20,2,'STANDARD','ACTIVE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").fetch().rowsUpdated())).expectNextCount(1).verifyComplete();
     }
 
-    private reactor.core.publisher.Mono<Long> insertUser(Long id,String email) {
-        return databaseClient.sql("INSERT INTO users_credentials(id,email,password,full_name,role,enabled,email_verified,created_at,updated_at) VALUES(:id,:email,'password','Test User','ROLE_CUSTOMER',TRUE,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind("id",id).bind("email",email).fetch().rowsUpdated();
-    }
-
     @Test
     void findAllByUserProfileId_whenAddressesExist_shouldReturnOnlyMatchingAddresses() {
         Address first=address(10L,"Hyderabad",true),second=address(10L,"Secunderabad",false),other=address(20L,"Warangal",true);

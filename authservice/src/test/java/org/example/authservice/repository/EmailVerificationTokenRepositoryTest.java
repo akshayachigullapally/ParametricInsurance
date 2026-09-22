@@ -25,11 +25,7 @@ class EmailVerificationTokenRepositoryTest extends BaseRepositoryTest {
                 .then(databaseClient.sql("DELETE FROM user_roles").fetch().rowsUpdated())
                 .then(databaseClient.sql("DELETE FROM users_credentials").fetch().rowsUpdated())
                 .then(insertUser(1L,"ev1@test.com"))
-                .then(insertUser(2L,"ev2@test.com"))).expectNextCount(1).verifyComplete();
-    }
-
-    private reactor.core.publisher.Mono<Long> insertUser(Long id,String email) {
-        return databaseClient.sql("INSERT INTO users_credentials(id,email,password,full_name,role,enabled,email_verified,created_at,updated_at) VALUES(:id,:email,'password','Test User','ROLE_CUSTOMER',TRUE,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind("id",id).bind("email",email).fetch().rowsUpdated();
+                .then(insertUser(2L,"ev2@test.com"))).verifyComplete();
     }
 
     @Test

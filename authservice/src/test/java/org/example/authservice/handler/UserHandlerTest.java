@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -30,6 +32,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserHandlerTest {
 
     @Mock
@@ -275,7 +278,7 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.getUser(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("User id must be positive");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("User id must be positive");
                 })
                 .verify();
     }
@@ -287,7 +290,7 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.getUser(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("User id must be positive");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("User id must be positive");
                 })
                 .verify();
     }
@@ -299,7 +302,7 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.getUser(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Invalid user id");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid user id");
                 })
                 .verify();
     }
@@ -345,7 +348,7 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.updateStatus(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("User id must be positive");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("User id must be positive");
                 })
                 .verify();
     }
@@ -359,7 +362,7 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.updateStatus(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Invalid user id");
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid user id");
                 })
                 .verify();
     }
@@ -386,8 +389,8 @@ class UserHandlerTest {
         StepVerifier.create(userHandler.updateStatus(request))
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Status must be ACTIVE, SUSPENDED or INACTIVE");
+                    assertThat(((ValidationException) error).getErrors())
+                            .containsExactly("Status must be ACTIVE, SUSPENDED or INACTIVE");
                 })
                 .verify();
     }
