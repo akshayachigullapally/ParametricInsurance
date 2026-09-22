@@ -361,7 +361,7 @@ public class ProductService{
                                             .minimumObservationCount(transientProduct.getMinimumObservationCount())
                                             .triggerDescription(transientProduct.getTriggerDescription())
                                             .updatedBy(adminId)
-                                            .build())
+                                            .build()))
                                                         // After evaluation, attempt to fetch eligible active policies and create claims
                                                         .thenMany(triggerServiceClient.getActiveZonesList().flatMapMany(zones->Flux.empty()))
                                                         .then(fetchAndCreateClaimsForEligiblePolicies(product.getId(), adminId))
