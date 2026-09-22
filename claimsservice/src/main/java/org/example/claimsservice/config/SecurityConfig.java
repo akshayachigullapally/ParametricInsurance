@@ -60,7 +60,8 @@ public class SecurityConfig{
                                 "/internal/claims/**"
                         ).permitAll()
                         .pathMatchers(HttpMethod.POST,
-                                "/internal/claims"
+                                "/internal/claims",
+                                "/internal/claims/from-trigger-event"
                         ).permitAll()
                         .anyExchange().denyAll()
                 )

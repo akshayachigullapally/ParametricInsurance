@@ -26,6 +26,9 @@ public class MeasurementRouter{
                 .PUT("/api/triggers/current-measurements",
                         contentType(MediaType.APPLICATION_JSON),
                         handler::processCurrentMeasurement)
+                .GET("/api/triggers/current-measurements",
+                        accept(MediaType.APPLICATION_JSON),
+                        handler::getCurrentMeasurementSnapshots)
                 .path("/internal/triggers/measurements",builder->builder
                         .GET("/current",accept(MediaType.APPLICATION_JSON),
                                 handler::getCurrentMeasurementsInternal))

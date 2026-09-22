@@ -54,6 +54,15 @@ public class MeasurementHandler{
                         .bodyValue(measurements));
     }
 
+    public Mono<ServerResponse> getCurrentMeasurementSnapshots(ServerRequest request){
+        return requireAnyRole(VIEW_ROLES)
+                .thenMany(measurementService.getCurrentMeasurementSnapshots())
+                .collectList()
+                .flatMap(snapshots->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(snapshots));
+    }
+
     public Mono<ServerResponse> getCurrentMeasurementsInternal(
             ServerRequest request
     ){

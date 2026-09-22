@@ -207,6 +207,19 @@ public class MeasurementService{
         };
     }
 
+    public Flux<org.example.triggerservice.dto.CurrentMeasurementSnapshotResponse> getCurrentMeasurementSnapshots(){
+        return currentMeasurementRepository.findAll()
+                .map(current->org.example.triggerservice.dto.CurrentMeasurementSnapshotResponse.builder()
+                        .productId(current.getProductId())
+                        .locationZoneId(current.getLocationZoneId())
+                        .measurementType(current.getMeasurementType())
+                        .measurementUnit(current.getMeasurementUnit())
+                        .currentValue(current.getCurrentValue())
+                        .recordedAt(current.getRecordedAt())
+                        .updatedAt(current.getUpdatedAt())
+                        .build());
+    }
+
     public Flux<MeasurementCurrentResponse> getCurrentMeasurements(){
         return Flux.fromArray(MeasurementType.values())
                 .flatMap(this::latestValidatedFor)
