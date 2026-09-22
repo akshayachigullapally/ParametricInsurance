@@ -1,6 +1,6 @@
 package org.example.productservice.client;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.dto.InternalClaimResponse;
 import org.example.productservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
 public class ClaimsServiceClient{
     private final WebClient webClient;
 

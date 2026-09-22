@@ -91,7 +91,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
 
     private boolean isPublicInfrastructurePath(String path){
         return path.equals("/actuator/health")||
-                path.equals("/actuator/info");
+                path.equals("/actuator/info")||
+                path.startsWith("/api/auth/");
     }
 
     private Mono<Void> forbidden(ServerWebExchange exchange,String message){

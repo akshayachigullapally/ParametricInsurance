@@ -17,7 +17,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,18 +32,20 @@ public class NotificationService {
     private final NotificationPreferenceService preferenceService;
     private final DeliveryAttemptService deliveryAttemptService;
     private final NotificationDeliveryService deliveryService;
-    private final Sinks.Many<NotificationResponse> notificationSink = Sinks.many().multicast().directBestEffort();
+    private final NotificationStream stream;
 
     public NotificationService(NotificationRepository repository,
                                NotificationTemplateService templateService,
                                NotificationPreferenceService preferenceService,
                                DeliveryAttemptService deliveryAttemptService,
-                               NotificationDeliveryService deliveryService) {
+                               NotificationDeliveryService deliveryService,
+                               NotificationStream stream) {
         this.repository = repository;
         this.templateService = templateService;
         this.preferenceService = preferenceService;
         this.deliveryAttemptService = deliveryAttemptService;
         this.deliveryService = deliveryService;
+        this.stream = stream;
     }
 
     public Mono<NotificationResponse> create(InternalNotificationRequest r) {
@@ -108,15 +109,7 @@ public class NotificationService {
                     return Mono.just(saved);
                 })
                 .map(this::response)
-                .doOnNext(this::publish);
-    }
-
-    // Publish notification to SSE sink after creation
-    private void publish(NotificationResponse response) {
-        try {
-            notificationSink.tryEmitNext(response);
-        } catch (Exception ignored) {
-        }
+                .doOnNext(stream::publish);
     }
 
     public Flux<NotificationResponse> createForChannels(InternalNotificationRequest r) {
@@ -165,7 +158,8 @@ public class NotificationService {
                     log.info("Duplicate idempotency key detected, returning existing notification: id={}", persisted.getId());
                     return Mono.just(persisted);
                 })
-                .map(this::response);
+                .map(this::response)
+                .doOnNext(stream::publish);
     }
 
     public Flux<NotificationResponse> sendFromTemplate(SendFromTemplateRequest r) {
@@ -278,15 +272,14 @@ Flux<Notification> roleQuery = customerId > 0
                         })));
     }
 
-        // Stream notifications for the current authenticated user
-        public Flux<NotificationResponse> streamForCurrentUser() {
-        // merge persisted mine() (recent/history) with live sink events filtered by recipient
+        // Stream live notifications filtered for the current authenticated user
+        public Flux<NotificationResponse> stream() {
         return SecurityUtil.userId().flatMapMany(userId ->
             SecurityUtil.customerId().defaultIfEmpty(-1L).flatMapMany(customerId ->
                 SecurityUtil.role().flatMapMany(role ->
-                    notificationSink.asFlux()
+                    stream.asFlux()
                         .filter(n -> (n.getRecipientUserId() != null && n.getRecipientUserId().equals(userId))
-                            || (n.getRecipientCustomerId() != null && customerId > 0 && n.getRecipientCustomerId().equals(customerId))
+                            || (customerId > 0 && n.getRecipientCustomerId() != null && n.getRecipientCustomerId().equals(customerId))
                             || (n.getRecipientRole() != null && n.getRecipientRole().equals(role)))
                 )));
         }
@@ -297,7 +290,7 @@ Flux<Notification> roleQuery = customerId > 0
 
     // Ensure publishes for createFromTemplate and createForChannels also notify sink
     public Flux<NotificationResponse> createForChannelsAndPublish(InternalNotificationRequest r) {
-        return createForChannels(r).doOnNext(this::publish);
+        return createForChannels(r).doOnNext(stream::publish);
     }
 
     public Mono<NotificationResponse> markRead(Long id) {

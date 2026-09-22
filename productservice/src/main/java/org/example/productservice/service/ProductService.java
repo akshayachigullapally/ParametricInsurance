@@ -33,8 +33,8 @@ public class ProductService{
     private final CoverageRepository coverageRepository;
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
-        private final ClaimsServiceClient claimsServiceClient;
-        private final PolicyRepository policyRepository;
+    private final ClaimsServiceClient claimsServiceClient;
+    private final PolicyRepository policyRepository;
     private final ProductThresholdHistoryRepository thresholdHistoryRepository;
 
     @Transactional
@@ -308,43 +308,26 @@ public class ProductService{
                             .minimumObservationCount(request.getMinimumObservationCount())
                             .triggerDescription(StringUtils.hasText(request.getTriggerDescription())
                                     ? request.getTriggerDescription().trim()
-                                    : buildDescription(product))
+                                    : null)
+                            .triggerSyncStatus(product.getTriggerSyncStatus())
                             .createdBy(product.getCreatedBy())
                             .createdAt(product.getCreatedAt())
                             .updatedAt(LocalDateTime.now())
                             .build();
+                    if (!StringUtils.hasText(transientProduct.getTriggerDescription())) {
+                        transientProduct.setTriggerDescription(buildDescription(transientProduct));
+                    }
 
-                    // Record history comparing previous canonical product and the transient admin override
                     Product finalProduct = product;
                     return recordThresholdHistory(
-                                    Product.builder()
-                                            .id(product.getId())
-                                            .productCode(product.getProductCode())
-                                            .perilCode(previous.perilCode())
-                                            .measurementType(previous.measurementType())
-                                            .measurementUnit(previous.measurementUnit())
-                                            .thresholdValue(previous.thresholdValue())
-                                            .comparisonOperator(previous.comparisonOperator())
-                                            .aggregationType(previous.aggregationType())
-                                            .observationWindowHours(previous.observationWindowHours())
-                                            .minimumObservationCount(previous.minimumObservationCount())
-                                            .triggerDescription(previous.triggerDescription())
-                                            .build(),
-                                    new TriggerSnapshotValues(
-                                            transientProduct.getPerilCode(),
-                                            transientProduct.getMeasurementType(),
-                                            transientProduct.getMeasurementUnit(),
-                                            transientProduct.getThresholdValue(),
-                                            transientProduct.getComparisonOperator(),
-                                            transientProduct.getAggregationType(),
-                                            transientProduct.getObservationWindowHours(),
-                                            transientProduct.getMinimumObservationCount(),
-                                            transientProduct.getTriggerDescription()
-                                    ),
+                                    transientProduct,
+                                    previous,
                                     adminId,
                                     request.getChangeReason()
                             )
-                            // After recording history, request a one-off evaluation from triggerservice
+                            // After recording history, request a one-off evaluation from triggerservice.
+                            // A failure of this preview evaluation must not fail the whole update
+                            // (mirrors syncDefinition's graceful degradation).
                             .then(triggerServiceClient.evaluateProductWithOverride(product.getId(),
                                     ProductTriggerSyncRequest.builder()
                                             .productId(product.getId())
@@ -362,25 +345,38 @@ public class ProductService{
                                             .triggerDescription(transientProduct.getTriggerDescription())
                                             .updatedBy(adminId)
                                             .build())
-                                                        // After evaluation, attempt to fetch eligible active policies and create claims
-                                                        .thenMany(triggerServiceClient.getActiveZonesList().flatMapMany(zones->Flux.empty()))
-                                                        .then(fetchAndCreateClaimsForEligiblePolicies(product.getId(), adminId))
-                                                        .thenReturn(finalProduct)
-                                                        .map(saved->ProductThresholdUpdateResponse.builder()
-                                                                        .productId(finalProduct.getId())
-                                                                        .productCode(finalProduct.getProductCode())
-                                                                        .previousThresholdValue(previous.thresholdValue())
-                                                                        .newThresholdValue(transientProduct.getThresholdValue())
-                                                                        .measurementUnit(transientProduct.getMeasurementUnit())
-                                                                        .triggerDescription(transientProduct.getTriggerDescription())
-                                                                        .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
-                                                                        .existingPoliciesUpdated(true)
-                                                                        .message("Admin override evaluated. Matching active policies were processed and claims created where eligible.")
-                                                                        .build());
+                                            .then(fetchAndCreateClaimsForEligiblePolicies(product.getId()))
+                                            .then(Mono.just(ProductThresholdUpdateResponse.builder()
+                                                    .productId(finalProduct.getId())
+                                                    .productCode(finalProduct.getProductCode())
+                                                    .previousThresholdValue(previous.thresholdValue())
+                                                    .newThresholdValue(transientProduct.getThresholdValue())
+                                                    .measurementUnit(transientProduct.getMeasurementUnit())
+                                                    .triggerDescription(transientProduct.getTriggerDescription())
+                                                    .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
+                                                    .existingPoliciesUpdated(true)
+                                                    .message("Admin override evaluated. Matching active policies were processed and claims created where eligible.")
+                                                    .build()))
+                                            .onErrorResume(error->{
+                                                log.warn("Admin threshold override evaluation failed for product {}: {}",
+                                                        finalProduct.getId(), error.getMessage());
+                                                return Mono.just(ProductThresholdUpdateResponse.builder()
+                                                        .productId(finalProduct.getId())
+                                                        .productCode(finalProduct.getProductCode())
+                                                        .previousThresholdValue(previous.thresholdValue())
+                                                        .newThresholdValue(transientProduct.getThresholdValue())
+                                                        .measurementUnit(transientProduct.getMeasurementUnit())
+                                                        .triggerDescription(transientProduct.getTriggerDescription())
+                                                        .triggerSyncStatus(finalProduct.getTriggerSyncStatus())
+                                                        .existingPoliciesUpdated(false)
+                                                        .message("Threshold saved to history, but the trigger evaluation preview could not be completed: "
+                                                                +error.getMessage())
+                                                        .build());
+                                            }));
                 });
     }
 
-        private Mono<Void> fetchAndCreateClaimsForEligiblePolicies(Long productId, Long adminId){
+    private Mono<Void> fetchAndCreateClaimsForEligiblePolicies(Long productId){
                         // Find active policies for the product and for each policy call trigger eligibility
                         return policyRepository.findAllByProductIdAndStatus(productId, "ACTIVE")
                                 .flatMap(policy ->

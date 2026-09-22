@@ -63,13 +63,24 @@ public class StaffDataLoader implements ApplicationRunner{
     }
 
     private Mono<UserCredential> saveIfNotExists(UserCredential user){
-        return userRepository.existsByEmailIgnoreCase(user.getEmail())
-                .flatMap(exists->{
-                    if(exists){
-                        log.info("Staff account already exists: {}",user.getEmail());
-                        return Mono.empty();
+        return userRepository.findByEmailIgnoreCase(user.getEmail())
+                .flatMap(existing->{
+                    if(!user.getRole().equals(existing.getRole())){
+                        existing.setRole(user.getRole());
+                        existing.setUpdatedAt(LocalDateTime.now());
+
+                        return userRepository.save(existing)
+                                .doOnSuccess(updated->log.info(
+                                        "Updated staff account: {} role {}",
+                                        updated.getEmail(),
+                                        updated.getRole()
+                                ));
                     }
 
+                    log.info("Staff account already exists: {}",user.getEmail());
+                    return Mono.empty();
+                })
+                .switchIfEmpty(Mono.defer(()->{
                     user.setPassword(passwordEncoder.encode(user.getPassword()));
 
                     return userRepository.save(user)
@@ -78,7 +89,7 @@ public class StaffDataLoader implements ApplicationRunner{
                                     saved.getEmail(),
                                     saved.getRole()
                             ));
-                });
+                }));
     }
 
     private UserCredential createUser(String fullName,String email,

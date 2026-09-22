@@ -1,4 +1,4 @@
-package org.example.claimsservice.dto;
+package org.example.productservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
