@@ -1,33 +1,42 @@
+### Maven ###
 HELP.md
-target/
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+**/target/
 
-### STS ###
-.apt_generated
+### Spring Tool Suite ###
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
 
 ### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+**/nbproject/private/
+**/nbbuild/
+**/nbdist/
+.nb-gradle/
+**/build/
 
 ### VS Code ###
 .vscode/
+
+### H2 database files ###
+**/data/
+*.mv.db
+*.trace.db
+*.lock.db
+
+### Logs ###
+*.log
+
+### Operating system files ###
+.DS_Store
+Thumbs.db

@@ -121,11 +121,78 @@ public class TriggerEvaluationService{
                 temp.setObservationWindowHours(productPayload.getObservationWindowHours());
                 temp.setMinimumObservationCount(productPayload.getMinimumObservationCount());
 
-                // Use existing evaluation logic by delegating to evaluateDefinition with a synthetic window end
+                // The override is not backed by a stored trigger definition, so compute the
+                // result in-memory and return a preview response WITHOUT persisting a
+                // trigger_evaluations / trigger_events row (whose trigger_definition_id and
+                // location_zone_id columns are NOT NULL in the schema).
                 LocalDateTime windowEnd=LocalDateTime.now();
+                LocalDateTime windowStart=windowEnd.minusHours(
+                        temp.getObservationWindowHours());
 
-                return evaluateDefinition(temp,windowEnd,userId)
-                                .onErrorMap(ex->new ValidationException("Product override evaluation failed: "+ex.getMessage()));
+                return observationRepository
+                        .findAllByLocationZoneIdAndMeasurementTypeAndStatusAndObservedAtBetweenOrderByObservedAtAsc(
+                                temp.getLocationZoneId(),
+                                temp.getMeasurementType(),
+                                ObservationStatus.VALIDATED,
+                                windowStart,
+                                windowEnd)
+                        .filter(observation->
+                                observation.getMeasurementUnit()==
+                                        temp.getMeasurementUnit())
+                        .collectList()
+                        .map(observations->evaluateOverrideInMemory(
+                                temp,
+                                observations,
+                                windowStart,
+                                windowEnd,
+                                userId))
+                        .onErrorMap(ex->new ValidationException(
+                                "Product override evaluation failed: "+ex.getMessage()));
+        }
+
+        private TriggerEvaluationResponse evaluateOverrideInMemory(
+                TriggerDefinition definition,
+                List<Observation> observations,
+                LocalDateTime windowStart,
+                LocalDateTime windowEnd,
+                Long userId
+        ){
+                int observationCount=observations.size();
+                BigDecimal aggregatedValue=null;
+                TriggerEvaluationResult result;
+
+                if(observationCount<definition.getMinimumObservationCount()){
+                        result=TriggerEvaluationResult.INSUFFICIENT_OBSERVATIONS;
+                }else{
+                        aggregatedValue=aggregate(
+                                observations,
+                                definition.getAggregationType());
+                        result=compare(
+                                aggregatedValue,
+                                definition.getThresholdValue(),
+                                definition.getComparisonOperator())
+                                ?TriggerEvaluationResult.MATCHED
+                                :TriggerEvaluationResult.NOT_MATCHED;
+                }
+
+                return TriggerEvaluationResponse.builder()
+                        .id(null)
+                        .evaluationReference("OVERRIDE-"+randomReference())
+                        .triggerDefinitionId(definition.getId())
+                        .definitionCode("OVERRIDE")
+                        .locationZoneId(definition.getLocationZoneId())
+                        .zoneCode("UNAVAILABLE")
+                        .measurementType(definition.getMeasurementType())
+                        .windowStart(windowStart)
+                        .windowEnd(windowEnd)
+                        .observationCount(observationCount)
+                        .aggregatedValue(aggregatedValue)
+                        .thresholdValue(definition.getThresholdValue())
+                        .comparisonOperator(definition.getComparisonOperator())
+                        .result(result)
+                        .evaluatedBy(userId)
+                        .evaluatedAt(LocalDateTime.now())
+                        .build();
         }
 
     private Mono<TriggerEvaluationResponse> evaluateDefinition(

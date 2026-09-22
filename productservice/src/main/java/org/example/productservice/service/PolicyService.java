@@ -342,20 +342,39 @@ public class PolicyService{
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Policy not found")
                 ))
-                .map(policy-> InternalPolicyResponse.builder()
-                        .id(policy.getId())
-                        .policyNumber(policy.getPolicyNumber())
-                        .customerId(policy.getCustomerId())
-                        .productId(policy.getProductId())
-                        .productCode(policy.getProductCode())
-                        .productName(policy.getProductName())
-                        .locationZoneId(policy.getLocationZoneId())
-                        .sumInsured(policy.getSumInsured())
-                        .premiumAmount(policy.getPremiumAmount())
-                        .startDate(policy.getStartDate())
-                        .endDate(policy.getEndDate())
-                        .status(policy.getStatus())
-                        .build());
+                .flatMap(policy->snapshotRepository
+                        .findByPolicyId(policyId)
+                        .defaultIfEmpty(new PolicyTriggerSnapshot())
+                        .map(snapshot->toInternalResponse(policy,snapshot)));
+    }
+
+    private InternalPolicyResponse toInternalResponse(
+            Policy policy,
+            PolicyTriggerSnapshot snapshot
+    ){
+        return InternalPolicyResponse.builder()
+                .id(policy.getId())
+                .policyNumber(policy.getPolicyNumber())
+                .customerId(policy.getCustomerId())
+                .productId(policy.getProductId())
+                .productCode(policy.getProductCode())
+                .productName(policy.getProductName())
+                .locationZoneId(policy.getLocationZoneId())
+                .sumInsured(policy.getSumInsured())
+                .premiumAmount(policy.getPremiumAmount())
+                .startDate(policy.getStartDate())
+                .endDate(policy.getEndDate())
+                .status(policy.getStatus())
+                .snapshotMeasurementType(snapshot.getMeasurementType())
+                .snapshotMeasurementUnit(snapshot.getMeasurementUnit())
+                .snapshotThresholdValue(snapshot.getThresholdValue())
+                .snapshotComparisonOperator(snapshot.getComparisonOperator())
+                .snapshotAggregationType(snapshot.getAggregationType())
+                .snapshotObservationWindowHours(
+                        snapshot.getObservationWindowHours())
+                .snapshotMinimumObservationCount(
+                        snapshot.getMinimumObservationCount())
+                .build();
     }
 
     public Flux<PolicyStatusHistoryResponse> getPolicyHistory(Long policyId){

@@ -26,8 +26,17 @@ public class GatewayJwtFilter implements WebFilter{
             "ROLE_CUSTOMER",
             "ROLE_UNDERWRITER",
             "ROLE_CLAIMS_OFFICER",
+            "ROLE_CLAIMS_REVIEWER",
             "ROLE_ADMIN"
     );
+
+    private static String downstreamRole(String role){
+        if("ROLE_CLAIMS_REVIEWER".equals(role)){
+            return "ROLE_CLAIMS_OFFICER";
+        }
+
+        return role;
+    }
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
@@ -51,27 +60,27 @@ public class GatewayJwtFilter implements WebFilter{
             return chain.filter(addGatewayKey(sanitizedExchange));
         }
 
+        boolean webSocket=
+                sanitizedRequest.getPath().value().startsWith("/ws/");
+        boolean sseStream=
+                sanitizedRequest.getPath().value().equals("/api/notifications/me/stream");
+
         String authorization=sanitizedRequest.getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
 
-        // Support access_token query param for EventSource/SSE clients
-        if (authorization == null || authorization.isBlank()) {
-            String paramToken = sanitizedRequest.getQueryParams().getFirst("access_token");
-            if (paramToken != null && !paramToken.isBlank()) {
-                authorization = "Bearer " + paramToken;
-            }
-        }
-
-        if(authorization==null||!authorization.startsWith("Bearer ")){
-            return unauthorized(
-                    sanitizedExchange,
-                    "Authorization token is required"
+        String token;
+        if(authorization!=null&&authorization.startsWith("Bearer ")){
+            token=authorization.substring(7).trim();
+        }else if(webSocket||sseStream){
+            token=queryParam(
+                    sanitizedRequest.getURI().getQuery(),
+                    sseStream?"access_token":"token"
             );
+        }else{
+            token=null;
         }
 
-        String token=authorization.substring(7).trim();
-
-        if(token.isBlank()){
+        if(token==null||token.isBlank()){
             return unauthorized(
                     sanitizedExchange,
                     "Authorization token is required"
@@ -113,7 +122,7 @@ public class GatewayJwtFilter implements WebFilter{
                         headers.set(GATEWAY_KEY_HEADER,internalGatewayKey);
                         headers.set(USER_ID_HEADER,userId.toString());
                         headers.set(USER_HEADER,email);
-                        headers.set(ROLE_HEADER,role);
+                        headers.set(ROLE_HEADER,downstreamRole(role));
 
                         if(customerId!=null){
                             headers.set(
@@ -147,6 +156,17 @@ public class GatewayJwtFilter implements WebFilter{
                     headers.remove(CUSTOMER_ID_HEADER);
                 })
                 .build();
+    }
+
+    private String queryParam(String query,String key){
+        if(query==null||query.isBlank()) return null;
+
+        for(String part:query.split("&")){
+            String[] kv=part.split("=",2);
+            if(kv.length==2&&kv[0].equals(key)) return kv[1];
+        }
+
+        return null;
     }
 
     private ServerWebExchange addGatewayKey(ServerWebExchange exchange){

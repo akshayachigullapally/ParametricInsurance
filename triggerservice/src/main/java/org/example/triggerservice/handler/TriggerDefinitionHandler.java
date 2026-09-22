@@ -2,10 +2,12 @@ package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.MessageResponse;
+import org.example.triggerservice.dto.ProductTriggerSyncRequest;
 import org.example.triggerservice.dto.TriggerDefinitionRequest;
 import org.example.triggerservice.dto.UpdateTriggerDefinitionStatusRequest;
 import org.example.triggerservice.exception.ForbiddenException;
 import org.example.triggerservice.exception.ValidationException;
+import org.example.triggerservice.service.ProductTriggerSyncService;
 import org.example.triggerservice.service.TriggerDefinitionService;
 import org.example.triggerservice.util.RequestValidationUtil;
 import org.example.triggerservice.util.SecurityUtil;
@@ -27,6 +29,7 @@ public class TriggerDefinitionHandler{
     );
 
     private final TriggerDefinitionService triggerDefinitionService;
+    private final ProductTriggerSyncService productTriggerSyncService;
     private final RequestValidationUtil validationUtil;
 
     public Mono<ServerResponse> getAll(ServerRequest request){
@@ -169,6 +172,21 @@ public class TriggerDefinitionHandler{
                         .bodyValue(MessageResponse.builder()
                                 .message("Trigger definition archived successfully")
                                 .build()));
+    }
+
+    public Mono<ServerResponse> syncProductDefinition(ServerRequest request){
+        return parseId(request,"productId")
+                .flatMap(productId->request.bodyToMono(
+                                ProductTriggerSyncRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                new ValidationException(
+                                        "Request body is required"
+                                )))
+                        .flatMap(body->productTriggerSyncService
+                                .syncProductDefinition(productId,body)))
+                .flatMap(result->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(result));
     }
 
     private Mono<Long> requireUserId(){

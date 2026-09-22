@@ -29,6 +29,10 @@ public class TriggerDefinitionRouter{
                         .PUT("/{definitionId}",contentType(MediaType.APPLICATION_JSON),handler::update)
                         .PUT("/{definitionId}/status",contentType(MediaType.APPLICATION_JSON),handler::updateStatus)
                         .DELETE("/{definitionId}",handler::archive))
+                .path("/internal/triggers/products",builder->builder
+                        .PUT("/{productId}/definition",
+                                contentType(MediaType.APPLICATION_JSON),
+                                handler::syncProductDefinition))
                 .build();
     }
 }

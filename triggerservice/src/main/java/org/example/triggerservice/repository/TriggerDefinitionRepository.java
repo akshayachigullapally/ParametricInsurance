@@ -1,5 +1,6 @@
 package org.example.triggerservice.repository;
 
+import org.example.triggerservice.model.MeasurementType;
 import org.example.triggerservice.model.TriggerDefinition;
 import org.example.triggerservice.model.TriggerDefinitionStatus;
 import org.springframework.data.r2dbc.repository.Query;
@@ -78,4 +79,22 @@ public interface TriggerDefinitionRepository extends ReactiveCrudRepository<Trig
             Long definitionId
     );
     Mono<TriggerDefinition> findByDefinitionCodeIgnoreCase(String definitionCode);
+
+    Mono<TriggerDefinition> findByProductIdAndMeasurementTypeAndLocationZoneIdAndStatusNot(
+            Long productId,
+            MeasurementType measurementType,
+            Long locationZoneId,
+            TriggerDefinitionStatus status
+    );
+
+    Flux<TriggerDefinition> findAllByProductIdAndStatusNot(
+            Long productId,
+            TriggerDefinitionStatus status
+    );
+
+    Flux<TriggerDefinition> findAllByLocationZoneIdAndMeasurementTypeAndStatus(
+            Long locationZoneId,
+            MeasurementType measurementType,
+            TriggerDefinitionStatus status
+    );
 }

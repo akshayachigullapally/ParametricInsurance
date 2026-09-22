@@ -59,17 +59,19 @@ public class TriggerEvaluationHandler{
         String path=request.path();
         if(path.contains("/internal/triggers/products/")){
             // internal product evaluation: expect productId path variable and admin-provided payload
-            return requireAdmin()
-                    .then(requireUserId())
-                    .zipWith(parseId(request,"productId"))
-                    .flatMap(tuple->request
+            return parseId(request,"productId")
+                    .flatMap(productId->request
                             .bodyToMono(ProductTriggerSyncRequest.class)
                             .flatMap(body->{
-                                // map product payload to a temporary trigger definition flow inside triggerEvaluationService
+                                Long acceptedBy=body.getUpdatedBy();
+                                if(acceptedBy==null){
+                                    return Mono.error(new ValidationException(
+                                            "updatedBy is required for internal product evaluation"));
+                                }
                                 return triggerEvaluationService.evaluateProductOverride(
-                                        tuple.getT2(),
+                                        productId,
                                         body,
-                                        tuple.getT1());
+                                        acceptedBy);
                             }))
                     .flatMap(result->ServerResponse.status(201)
                             .contentType(MediaType.APPLICATION_JSON)

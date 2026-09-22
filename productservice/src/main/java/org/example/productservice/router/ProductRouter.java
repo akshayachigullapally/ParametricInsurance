@@ -31,9 +31,13 @@ public class ProductRouter{
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                                 handler::updateThreshold)
                         .POST("/admin/{productId}/sync-trigger",handler::syncTrigger)
+                        .GET("/admin/measurement-status",handler::getMeasurementStatus)
                 )
                 .GET("/internal/products/code/{productCode}",handler::getInternalProductByCode)
                 .GET("/internal/products/{productId}",handler::getInternalProduct)
+                .POST("/internal/products/verified-event",
+                        RequestPredicates.contentType(MediaType.APPLICATION_JSON),
+                        handler::processVerifiedEvent)
                 .build();
     }
 

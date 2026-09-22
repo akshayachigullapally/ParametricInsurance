@@ -25,4 +25,11 @@ public class InternalPolicyResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private String snapshotMeasurementType;
+    private String snapshotMeasurementUnit;
+    private BigDecimal snapshotThresholdValue;
+    private String snapshotComparisonOperator;
+    private String snapshotAggregationType;
+    private Integer snapshotObservationWindowHours;
+    private Integer snapshotMinimumObservationCount;
 }

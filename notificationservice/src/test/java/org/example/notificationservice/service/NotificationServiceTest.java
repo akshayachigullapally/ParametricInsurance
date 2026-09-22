@@ -55,6 +55,9 @@ class NotificationServiceTest {
     @Mock
     private NotificationDeliveryService deliveryService;
 
+    @Mock
+    private NotificationStream stream;
+
     @InjectMocks
     private NotificationService service;
 

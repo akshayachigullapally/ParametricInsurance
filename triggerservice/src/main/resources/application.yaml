@@ -45,6 +45,12 @@ eureka:
 gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
 
+demo:
+  feed:
+    enabled: ${DEMO_FEED_ENABLED:true}
+    interval-ms: ${DEMO_FEED_INTERVAL_MS:60000}
+    backfill-hours: 24
+
 management:
   endpoints:
     web:

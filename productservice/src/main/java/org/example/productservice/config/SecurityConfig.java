@@ -50,6 +50,10 @@ public class SecurityConfig{
                                 "/internal/products/**"
                         ).permitAll()
 
+                        .pathMatchers(HttpMethod.POST,
+                                "/internal/products/verified-event"
+                        ).permitAll()
+
                         .pathMatchers(HttpMethod.GET,
                                 "/api/products",
                                 "/api/products/*",
@@ -60,7 +64,8 @@ public class SecurityConfig{
                         .pathMatchers(HttpMethod.GET,
                                 "/api/products/admin/all",
                                 "/api/products/admin/{productId:[0-9]+}",
-                                "/api/products/admin/{productId:[0-9]+}/threshold-history"
+                                "/api/products/admin/{productId:[0-9]+}/threshold-history",
+                                "/api/products/admin/measurement-status"
                         ).hasRole("ADMIN")
 
                         .pathMatchers(HttpMethod.POST,

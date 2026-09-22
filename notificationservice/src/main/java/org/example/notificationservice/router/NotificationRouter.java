@@ -18,8 +18,7 @@ public class NotificationRouter {
             AuditEventHandler a,
             NotificationTemplateHandler t,
             NotificationPreferenceHandler p,
-            DeliveryAttemptHandler d,
-            org.example.notificationservice.handler.NotificationSseHandler sse) {
+            DeliveryAttemptHandler d) {
 
         return RouterFunctions.route()
                 // Internal endpoints (gateway key only)
@@ -30,9 +29,7 @@ public class NotificationRouter {
                 .GET("/api/notifications/me", n::mine)
                 .GET("/api/notifications/me/unread", n::unread)
                 .GET("/api/notifications/me/unread-count", n::count)
-                .GET(org.springframework.web.reactive.function.server.RequestPredicates
-                    .path("/api/notifications/me/stream")
-                    .and(accept(org.springframework.http.MediaType.TEXT_EVENT_STREAM)), sse::stream)
+                .GET("/api/notifications/me/stream", n::stream)
                 .PUT("/api/notifications/{notificationId}/read", n::read)
                 .PUT("/api/notifications/me/read-all", n::readAll)
                 .DELETE("/api/notifications/{notificationId}", n::delete)

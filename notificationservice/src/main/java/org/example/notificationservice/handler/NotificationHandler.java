@@ -4,17 +4,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.notificationservice.dto.BatchNotificationRequest;
 import org.example.notificationservice.dto.InternalNotificationRequest;
 import org.example.notificationservice.dto.NotificationQuery;
+import org.example.notificationservice.dto.NotificationResponse;
 import org.example.notificationservice.dto.SendFromTemplateRequest;
 import org.example.notificationservice.exception.ValidationException;
 import org.example.notificationservice.model.NotificationType;
 import org.example.notificationservice.service.NotificationService;
 import org.example.notificationservice.util.RequestValidationUtil;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -71,6 +76,16 @@ public class NotificationHandler {
 
     public Mono<ServerResponse> count(ServerRequest r) {
         return service.unreadCount().flatMap(x -> ServerResponse.ok().bodyValue(x));
+    }
+
+    public Mono<ServerResponse> stream(ServerRequest r) {
+        Flux<ServerSentEvent<NotificationResponse>> sse = Flux.merge(
+                service.stream().map(n -> ServerSentEvent.<NotificationResponse>builder(n).build()),
+                Flux.interval(Duration.ofSeconds(20))
+                        .map(i -> ServerSentEvent.<NotificationResponse>builder().comment("keep-alive").build()));
+        return ServerResponse.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .body(sse, ServerSentEvent.class);
     }
 
     public Mono<ServerResponse> read(ServerRequest r) {

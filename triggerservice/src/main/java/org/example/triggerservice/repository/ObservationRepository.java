@@ -24,6 +24,15 @@ public interface ObservationRepository extends ReactiveCrudRepository<Observatio
             MeasurementType measurementType
     );
 
+    Flux<Observation> findAllByMeasurementTypeAndStatusOrderByObservedAtDesc(
+            MeasurementType measurementType,
+            ObservationStatus status
+    );
+
+    Flux<Observation> findAllByStatusOrderByObservedAtDesc(
+            ObservationStatus status
+    );
+
     Flux<Observation> findAllByLocationZoneIdAndMeasurementTypeAndStatusAndObservedAtBetweenOrderByObservedAtAsc(
             Long locationZoneId,
             MeasurementType measurementType,

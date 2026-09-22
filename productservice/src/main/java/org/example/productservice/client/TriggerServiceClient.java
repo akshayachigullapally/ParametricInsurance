@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.dto.ProductTriggerSyncRequest;
 import org.example.productservice.dto.InternalZoneResponse;
+import org.example.productservice.dto.MeasurementCurrentResponse;
 import org.example.productservice.exception.DependentServiceException;
 import org.example.productservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,6 +33,7 @@ public class TriggerServiceClient{
     public Flux<InternalZoneResponse> getActiveZones(){
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/zones/active")
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToFlux(InternalZoneResponse.class);
@@ -54,9 +56,25 @@ public class TriggerServiceClient{
     public Mono<InternalZoneResponse> getZoneById(Long zoneId){
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/zones/{zoneId}",zoneId)
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(InternalZoneResponse.class);
+    }
+
+    public Flux<MeasurementCurrentResponse> getCurrentMeasurements(){
+        return triggerServiceWebClient.get()
+                .uri("/internal/triggers/measurements/current")
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToFlux(MeasurementCurrentResponse.class)
+                .onErrorMap(
+                        WebClientRequestException.class,
+                        exception->new DependentServiceException(
+                                "Trigger service is currently unavailable"
+                        )
+                );
     }
 
     public Mono<Void> syncProductDefinition(ProductTriggerSyncRequest request){

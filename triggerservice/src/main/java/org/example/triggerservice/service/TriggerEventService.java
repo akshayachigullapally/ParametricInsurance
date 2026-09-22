@@ -1,6 +1,8 @@
 package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.TriggerEventResponse;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
@@ -22,6 +24,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TriggerEventService{
@@ -31,6 +34,7 @@ public class TriggerEventService{
     private final LocationZoneRepository locationZoneRepository;
     private final IdempotencyService idempotencyService;
     private final NotificationService notificationService;
+    private final ProductTriggerClient productTriggerClient;
 
     public Flux<TriggerEventResponse> getAll(){
         return triggerEventRepository.findAllByOrderByDetectedAtDesc()
@@ -125,7 +129,18 @@ public class TriggerEventService{
                 })
                 .flatMap(saved -> notificationService.notifyTriggerVerified(
                         null, saved.getId(), saved.getEventReference()
-                ).thenReturn(saved))
+                ).then(Mono.justOrEmpty(saved.getProductId())
+                        .flatMap(productId->productTriggerClient
+                                .notifyVerifiedTriggerEvent(
+                                        productId,saved.getId())
+                                .onErrorResume(error->{
+                                    log.warn(
+                                            "Product service claim creation hook failed for event {}: {}",
+                                            saved.getId(),error.getMessage());
+                                    return Mono.empty();
+                                }))
+                        .switchIfEmpty(Mono.empty()))
+                        .thenReturn(saved))
                 .flatMap(this::buildResponse);
     }
 
