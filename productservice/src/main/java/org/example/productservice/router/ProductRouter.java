@@ -25,12 +25,12 @@ public class ProductRouter{
                                 handler::updateStatus)
                         .DELETE("/{productId}",handler::deleteProduct)
                         .GET("/admin/all",handler::getAllProducts)
+                        .GET("/admin/measurement-status",handler::getMeasurementStatus)
                         .GET("/admin/{productId}",handler::getAdminProduct)
                         .GET("/admin/{productId}/threshold-history",handler::getThresholdHistory)
                         .PUT("/admin/{productId}/threshold",
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                                 handler::updateThreshold)
-                        .GET("/admin/measurement-status",handler::getMeasurementStatus)
                 )
                 .GET("/internal/products/code/{productCode}",handler::getInternalProductByCode)
                 .GET("/internal/products/{productId}",handler::getInternalProduct)

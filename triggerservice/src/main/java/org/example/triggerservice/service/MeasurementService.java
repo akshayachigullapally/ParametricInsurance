@@ -136,10 +136,11 @@ public class MeasurementService{
             return Mono.just(base);
         }
         LocalDateTime now=LocalDateTime.now();
+        MeasurementType resolvedType=resolveMeasurementType(product.getMeasurementType());
         TriggerEvent event=TriggerEvent.builder().eventReference("TEV-"+UUID.randomUUID())
             .productId(product.getProductId()).locationZoneId(request.getLocationZoneId())
-            .measurementType(MeasurementType.valueOf(product.getMeasurementType()))
-            .measurementUnit(MeasurementUnit.valueOf(product.getMeasurementUnit()))
+            .measurementType(resolvedType)
+            .measurementUnit(unitFor(resolvedType))
             .aggregatedValue(request.getCurrentValue()).thresholdValue(product.getThresholdValue())
             .status(TriggerEventStatus.VERIFIED).detectedAt(now).recordedBy(recordedBy)
             .matchedPolicyCount((int)matched).claimsCreatedCount(0).notificationsCreatedCount(0)
@@ -189,7 +190,28 @@ public class MeasurementService{
                 product.getMeasurementType()==null||product.getMeasurementUnit()==null){
             return Mono.error(new ValidationException("Product trigger configuration is incomplete"));
         }
+        try{
+            resolveMeasurementType(product.getMeasurementType());
+        }catch(IllegalArgumentException exception){
+            return Mono.error(new ValidationException(
+                    "Product measurement type '"+product.getMeasurementType()
+                            +"' is not supported by the trigger engine"));
+        }
         return Mono.empty();
+    }
+
+    /**
+     * productservice stores measurement type as a free-form string that may use a
+     * different vocabulary than this service's own {@link MeasurementType} enum
+     * (e.g. productservice's "WATER_LEVEL" corresponds to this service's
+     * {@code RIVER_LEVEL}). Normalize known aliases before parsing.
+     */
+    private MeasurementType resolveMeasurementType(String rawMeasurementType){
+        String normalized=rawMeasurementType==null?null:rawMeasurementType.trim().toUpperCase();
+        if("WATER_LEVEL".equals(normalized)){
+            normalized="RIVER_LEVEL";
+        }
+        return MeasurementType.valueOf(normalized);
     }
 
     private boolean compare(java.math.BigDecimal current,java.math.BigDecimal threshold,String operator){
