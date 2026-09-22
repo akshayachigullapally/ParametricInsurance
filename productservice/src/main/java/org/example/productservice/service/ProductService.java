@@ -87,7 +87,6 @@ public class ProductService{
                             .observationWindowHours(request.getObservationWindowHours())
                             .minimumObservationCount(request.getMinimumObservationCount())
                             .triggerDescription(resolveTriggerDescription(request))
-                            .triggerSyncStatus(TriggerSyncStatus.PENDING.name())
                             .createdBy(adminId)
                             .createdAt(now)
                             .updatedAt(now)
@@ -100,7 +99,6 @@ public class ProductService{
                                             request.getCoverages()
                                     ).then(Mono.just(saved))
                             )
-                            .flatMap(saved->syncDefinition(saved,adminId))
                             .flatMap(saved->buildResponse(saved,false))
                             .flatMap(resp -> notificationService.notifyProductCreated(
                                     resp.getId(), resp.getName()
@@ -188,8 +186,6 @@ public class ProductService{
                                                             null
                                                     ).thenReturn(saved)
                                                     :Mono.just(saved))
-                                            .flatMap(saved->
-                                                    syncDefinition(saved,1L))
                                             .flatMap(saved->
                                                     buildResponse(saved,false))
                                             .flatMap(resp -> notificationService.notifyProductUpdated(
@@ -280,7 +276,6 @@ public class ProductService{
                     product.setUpdatedAt(LocalDateTime.now());
                     return productRepository.save(product);
                 })
-                .flatMap(product->syncDefinition(product,1L))
                 .flatMap(product->buildResponse(product,false));
     }
 
@@ -293,7 +288,6 @@ public class ProductService{
                     product.setUpdatedAt(LocalDateTime.now());
                     return productRepository.save(product);
                 })
-                .flatMap(product->syncDefinition(product,1L))
                 .thenReturn(MessageResponse.builder()
                         .message("Product archived successfully")
                         .build());
@@ -331,7 +325,6 @@ public class ProductService{
                                     request.getChangeReason()
                             )
                             .then(productRepository.save(product))
-                            .flatMap(saved->syncDefinition(saved,adminId))
                             .map(saved->ProductThresholdUpdateResponse.builder()
                                     .productId(saved.getId())
                                     .productCode(saved.getProductCode())

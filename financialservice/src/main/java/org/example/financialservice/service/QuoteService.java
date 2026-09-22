@@ -313,7 +313,7 @@ public class QuoteService{
                         quote.setStatus(QuoteStatus.EXPIRED);
 
                         return quoteRepository.save(quote)
-                                .then(Mono.error(
+                                .then(Mono.<Quote>error(
                                         new ConflictException(
                                                 "Quote has expired"
                                         )

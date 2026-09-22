@@ -130,15 +130,16 @@ public class TriggerEventService{
                 .flatMap(saved -> notificationService.notifyTriggerVerified(
                         null, saved.getId(), saved.getEventReference()
                 ).then(Mono.justOrEmpty(saved.getProductId())
-                        .flatMap(productId->productTriggerClient
-                                .notifyVerifiedTriggerEvent(
+                        .flatMap(productId->productTriggerClient==null
+                                ?Mono.empty()
+                                :productTriggerClient.notifyVerifiedTriggerEvent(
                                         productId,saved.getId())
-                                .onErrorResume(error->{
-                                    log.warn(
-                                            "Product service claim creation hook failed for event {}: {}",
-                                            saved.getId(),error.getMessage());
-                                    return Mono.empty();
-                                }))
+                                        .onErrorResume(error->{
+                                            log.warn(
+                                                    "Product service claim creation hook failed for event {}: {}",
+                                                    saved.getId(),error.getMessage());
+                                            return Mono.empty();
+                                        }))
                         .switchIfEmpty(Mono.empty()))
                         .thenReturn(saved))
                 .flatMap(this::buildResponse);

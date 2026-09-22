@@ -10,10 +10,10 @@ import org.example.triggerservice.dto.ClaimCreationResponse;
 import org.example.triggerservice.dto.DemoObservationRequest;
 import org.example.triggerservice.dto.DemoObservationResponse;
 import org.example.triggerservice.dto.EligiblePolicyResponse;
+import org.example.triggerservice.dto.InternalNotificationRequest;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
 import org.example.triggerservice.exception.ValidationException;
-import org.example.triggerservice.model.LocationZone;
 import org.example.triggerservice.model.LocationZoneStatus;
 import org.example.triggerservice.model.MeasurementType;
 import org.example.triggerservice.model.MeasurementUnit;
@@ -31,10 +31,8 @@ import org.example.triggerservice.repository.TriggerEventRepository;
 import org.example.triggerservice.util.MeasurementValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -52,12 +50,9 @@ public class DemoObservationService{
     private final LocationZoneRepository locationZoneRepository;
     private final ObservationValidationService observationValidationService;
     private final TriggerEvaluationService triggerEvaluationService;
-    private final TriggerEventService triggerEventService;
-    private final PolicyTriggerEligibilityService policyTriggerEligibilityService;
     private final ProductTriggerClient productTriggerClient;
     private final ClaimsServiceClient claimsServiceClient;
     private final NotificationServiceClient notificationServiceClient;
-    private final IdempotencyService idempotencyService;
 
     public Mono<DemoObservationResponse> recordAndEvaluate(
             DemoObservationRequest request,
@@ -306,10 +301,10 @@ public class DemoObservationService{
                         event.getWindowEnd(),
                         event.getId())
                 .collectList()
-                .flatMap(eligiblePolicies->{
+                .<DemoObservationResponse>flatMap(eligiblePolicies->{
                     if(request.isCreateAutomaticClaims()&&!eligiblePolicies.isEmpty()){
                         return createAutomaticClaims(event,eligiblePolicies)
-                                .map(claimsCreated->buildResponse(
+                            .flatMap(claimsCreated->buildResponse(
                                         observation,
                                         evaluationResponse,
                                         event,
@@ -318,14 +313,14 @@ public class DemoObservationService{
                                         claimsCreated,
                                         eligiblePolicies.size()+" eligible policies found, "+claimsCreated+" automatic claim(s) created"));
                     }
-                    return Mono.just(buildResponse(
+                        return buildResponse(
                             observation,
                             evaluationResponse,
                             event,
                             "VERIFIED",
                             "MATCHED",
                             0,
-                            eligiblePolicies.size()+" eligible policies found, no automatic claims created (createAutomaticClaims=false)"));
+                            eligiblePolicies.size()+" eligible policies found, no automatic claims created (createAutomaticClaims=false)");
                 });
     }
 
@@ -365,16 +360,21 @@ public class DemoObservationService{
 
                     for(ClaimCreationResponse.ClaimResult result:response.getResults()){
                         if("CREATED".equals(result.getStatus())||"EXISTING".equals(result.getStatus())){
+                            Long customerId=eligiblePolicies.stream()
+                                .filter(policy->policy.getPolicyId().equals(result.getPolicyId()))
+                                .map(EligiblePolicyResponse::getCustomerId)
+                                .findFirst()
+                                .orElse(null);
                             notificationServiceClient.createInternalNotification(
                                     InternalNotificationRequest.builder()
-                                            .recipientCustomerId(result.getPolicyId())
-                                            .notificationType("AUTOMATIC_CLAIM_CREATED")
+                                    .recipientCustomerId(customerId)
+                                            .type("AUTOMATIC_CLAIM_CREATED")
                                             .title("Automatic parametric claim created")
                                             .message("Trigger event "+event.getEventReference()+" met the threshold. Claim "+result.getClaimNumber()+" was created automatically for policy "+result.getPolicyNumber()+".")
                                             .relatedEntityType("CLAIM")
                                             .relatedEntityId(result.getClaimId())
                                             .correlationId(event.getEventReference())
-                                            .idempotencyKey("AUTO_CLAIM:"+result.getClaimId()+":CUSTOMER:"+result.getPolicyId())
+                                            .idempotencyKey("AUTO_CLAIM:"+result.getClaimId()+":CUSTOMER:"+customerId)
                                             .deliveryChannel("IN_APP")
                                             .build()
                             ).subscribe();

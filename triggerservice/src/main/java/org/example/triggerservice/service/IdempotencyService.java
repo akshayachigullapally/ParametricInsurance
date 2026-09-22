@@ -19,6 +19,10 @@ public class IdempotencyService{
         return idempotencyRecordRepository.existsByIdempotencyKey(idempotencyKey);
     }
 
+        public Mono<Long> resourceId(String idempotencyKey){
+                return idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey).map(IdempotencyRecord::getResourceId);
+        }
+
     public Mono<IdempotencyRecord> record(
             String idempotencyKey,
             String operationType,

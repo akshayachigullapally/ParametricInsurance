@@ -12,6 +12,9 @@ public interface TriggerEventRepository extends ReactiveCrudRepository<TriggerEv
 
     Mono<TriggerEvent> findByTriggerEvaluationId(Long triggerEvaluationId);
 
+    Mono<TriggerEvent> findByTriggerDefinitionIdAndWindowStartAndWindowEnd(
+            Long triggerDefinitionId,LocalDateTime windowStart,LocalDateTime windowEnd);
+
     Mono<Boolean> existsByTriggerDefinitionIdAndWindowStartAndWindowEndAndStatusNot(
             Long triggerDefinitionId,
             LocalDateTime windowStart,

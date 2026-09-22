@@ -58,6 +58,9 @@ CREATE INDEX idx_claims_submitted_at
 CREATE INDEX idx_claims_trigger_event
     ON claims(trigger_event_id);
 
+CREATE UNIQUE INDEX uq_claims_policy_trigger_event
+    ON claims(policy_id,trigger_event_id);
+
 CREATE INDEX idx_claims_trigger_definition
     ON claims(trigger_definition_id);
 

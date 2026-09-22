@@ -68,4 +68,17 @@ public class TriggerEvent{
 
     @Column("review_notes")
     private String reviewNotes;
+
+    @Column("matched_policy_count")
+    private Integer matchedPolicyCount;
+    @Column("claims_created_count")
+    private Integer claimsCreatedCount;
+    @Column("notifications_created_count")
+    private Integer notificationsCreatedCount;
+    @Column("recorded_by")
+    private Long recordedBy;
+    @Column("processed_at")
+    private LocalDateTime processedAt;
+    @Column("idempotency_key")
+    private String idempotencyKey;
 }

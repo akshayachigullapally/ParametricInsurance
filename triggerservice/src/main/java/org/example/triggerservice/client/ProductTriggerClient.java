@@ -2,12 +2,15 @@ package org.example.triggerservice.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.dto.VerifiedEventRequest;
+import org.example.triggerservice.dto.InternalProductConfig;
+import org.example.triggerservice.dto.EligiblePolicyResponse;
 import org.example.triggerservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @Slf4j
 @Component
@@ -40,4 +43,35 @@ public class ProductTriggerClient{
                         "Failed to notify product service about verified event {}: {}",
                         eventId,error.getMessage()));
     }
+
+        public Mono<InternalProductConfig> getProduct(Long productId){
+                return webClient.get()
+                                .uri("/internal/products/{productId}",productId)
+                                .retrieve()
+                                .bodyToMono(InternalProductConfig.class);
+        }
+
+                    public Flux<org.example.triggerservice.dto.ActivePolicyForTriggerResponse> getActivePolicies(
+                            Long productId,Long locationZoneId){
+                        return webClient.get()
+                                .uri(uriBuilder->uriBuilder
+                                        .path("/internal/policies/active-for-trigger")
+                                        .queryParam("productId",productId)
+                                        .queryParam("locationZoneId",locationZoneId)
+                                        .build())
+                                .retrieve()
+                                .bodyToFlux(org.example.triggerservice.dto.ActivePolicyForTriggerResponse.class);
+                    }
+
+                    public Flux<EligiblePolicyResponse> getEligiblePoliciesForEvent(
+                            Long productId,Long locationZoneId,java.time.LocalDateTime eventStart,
+                            java.time.LocalDateTime eventEnd,Long triggerEventId){
+                        return webClient.get()
+                                .uri(uriBuilder->uriBuilder.path("/internal/policies/active-for-trigger")
+                                        .queryParam("productId",productId)
+                                        .queryParam("locationZoneId",locationZoneId)
+                                        .build())
+                                .retrieve()
+                                .bodyToFlux(EligiblePolicyResponse.class);
+                    }
 }

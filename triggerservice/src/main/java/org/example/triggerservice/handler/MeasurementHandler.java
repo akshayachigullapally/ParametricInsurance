@@ -2,6 +2,7 @@ package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.exception.ForbiddenException;
+import org.example.triggerservice.dto.CurrentMeasurementRequest;
 import org.example.triggerservice.service.MeasurementService;
 import org.example.triggerservice.util.SecurityUtil;
 import org.springframework.http.MediaType;
@@ -22,6 +23,18 @@ public class MeasurementHandler{
     );
 
     private final MeasurementService measurementService;
+
+    public Mono<ServerResponse> processCurrentMeasurement(ServerRequest request){
+        return requireAdmin()
+                .then(SecurityUtil.getUserId())
+                .zipWith(request.bodyToMono(CurrentMeasurementRequest.class)
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body is required"))))
+                .flatMap(tuple->measurementService.processCurrentMeasurement(
+                        tuple.getT2(),tuple.getT1()))
+                .flatMap(result->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(result));
+    }
 
     public Mono<ServerResponse> getMeasurementTypes(ServerRequest request){
         return requireAnyRole(VIEW_ROLES)
@@ -59,4 +72,8 @@ public class MeasurementHandler{
                 )))
                 .then();
     }
+
+        private Mono<Void> requireAdmin(){
+                return requireAnyRole(Set.of("ROLE_ADMIN"));
+        }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
@@ -20,17 +21,16 @@ public class InternalPolicyHandler{
     public Mono<ServerResponse> getEligiblePolicies(ServerRequest request){
         Long productId=parseLong(request.queryParam("productId").orElse(null),"productId");
         Long locationZoneId=parseLong(request.queryParam("locationZoneId").orElse(null),"locationZoneId");
-        LocalDateTime eventStart=parseLocalDateTime(request.queryParam("eventStart").orElse(null),"eventStart");
-        LocalDateTime eventEnd=parseLocalDateTime(request.queryParam("eventEnd").orElse(null),"eventEnd");
-        Long triggerEventId=parseLong(request.queryParam("triggerEventId").orElse(null),"triggerEventId");
 
-        if(productId==null||locationZoneId==null||
-                eventStart==null||eventEnd==null||triggerEventId==null){
-            return Mono.error(new ValidationException("All parameters required"));
+        if(productId==null||locationZoneId==null){
+            return Mono.error(new ValidationException("productId and locationZoneId are required"));
         }
 
         return productService.getEligiblePoliciesForEvent(
-                        productId,locationZoneId,eventStart,eventEnd,triggerEventId)
+                        productId,locationZoneId,
+                        LocalDate.now().atStartOfDay(),
+                        LocalDate.now().plusDays(1).atStartOfDay(),
+                        null)
                 .collectList()
                 .flatMap(list->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
@@ -45,11 +45,4 @@ public class InternalPolicyHandler{
         }
     }
 
-    private LocalDateTime parseLocalDateTime(String value,String name){
-        try{
-            return value!=null?LocalDateTime.parse(value):null;
-        }catch(Exception e){
-            throw new ValidationException("Invalid "+name);
-        }
-    }
 }

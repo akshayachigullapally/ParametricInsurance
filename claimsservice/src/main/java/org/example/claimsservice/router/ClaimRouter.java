@@ -37,6 +37,7 @@ public class ClaimRouter{
                 .GET("/internal/claims/{claimId}",
                         handler::getInternalClaim)
                 .POST("/internal/claims", handler::createInternalClaim)
+                .POST("/internal/claims/from-trigger-event", handler::createClaimsFromTriggerEvent)
                 .build();
     }
 }

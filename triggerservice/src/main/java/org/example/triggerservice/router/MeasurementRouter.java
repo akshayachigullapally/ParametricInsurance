@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
 @Configuration
 public class MeasurementRouter{
@@ -22,6 +23,9 @@ public class MeasurementRouter{
                                 handler::getMeasurementTypes)
                         .GET("/current",accept(MediaType.APPLICATION_JSON),
                                 handler::getCurrentMeasurements))
+                .PUT("/api/triggers/current-measurements",
+                        contentType(MediaType.APPLICATION_JSON),
+                        handler::processCurrentMeasurement)
                 .path("/internal/triggers/measurements",builder->builder
                         .GET("/current",accept(MediaType.APPLICATION_JSON),
                                 handler::getCurrentMeasurementsInternal))

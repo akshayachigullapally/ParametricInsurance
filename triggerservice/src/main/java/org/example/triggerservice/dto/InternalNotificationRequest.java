@@ -14,6 +14,7 @@ public class InternalNotificationRequest {
     private Long recipientCustomerId;
     private String recipientRole;
     private String type;
+    private String notificationType;
     private String title;
     private String message;
     private String relatedEntityType;

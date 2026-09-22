@@ -30,7 +30,6 @@ public class ProductRouter{
                         .PUT("/admin/{productId}/threshold",
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                                 handler::updateThreshold)
-                        .POST("/admin/{productId}/sync-trigger",handler::syncTrigger)
                         .GET("/admin/measurement-status",handler::getMeasurementStatus)
                 )
                 .GET("/internal/products/code/{productCode}",handler::getInternalProductByCode)

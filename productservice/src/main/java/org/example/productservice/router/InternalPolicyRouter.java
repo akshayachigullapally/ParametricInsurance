@@ -18,7 +18,7 @@ public class InternalPolicyRouter{
     ){
         return route()
                 .GET(
-                        "/internal/policies/eligible",
+                        "/internal/policies/active-for-trigger",
                         accept(MediaType.APPLICATION_JSON),
                         handler::getEligiblePolicies)
                 .build();

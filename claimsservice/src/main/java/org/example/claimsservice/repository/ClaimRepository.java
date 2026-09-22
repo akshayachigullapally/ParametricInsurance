@@ -24,6 +24,7 @@ public interface ClaimRepository extends ReactiveCrudRepository<Claim,Long>{
             Long triggerEventId,
             ClaimStatus status
     );
+        Mono<Boolean> existsByPolicyIdAndTriggerEventId(Long policyId,Long triggerEventId);
 
     Mono<Boolean> existsByCustomerIdAndPolicyIdAndIncidentDateAndStatusNot(
             Long customerId,

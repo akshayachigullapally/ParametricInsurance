@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -105,6 +104,14 @@ public class ClaimHandler{
                                 .flatMap(response->ServerResponse.status(HttpStatus.CREATED)
                                                 .contentType(MediaType.APPLICATION_JSON)
                                                 .bodyValue(response));
+        }
+
+        public Mono<ServerResponse> createClaimsFromTriggerEvent(ServerRequest request){
+                return request.bodyToMono(org.example.claimsservice.dto.ClaimCreationRequest.class)
+                        .switchIfEmpty(Mono.error(new org.example.claimsservice.exception.ValidationException("Request body is required")))
+                        .flatMap(claimService::createClaimsFromTriggerEvent)
+                        .flatMap(response->ServerResponse.status(HttpStatus.CREATED)
+                                .contentType(MediaType.APPLICATION_JSON).bodyValue(response));
         }
 
     public Mono<ServerResponse> startReview(ServerRequest request){

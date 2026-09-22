@@ -188,6 +188,59 @@ public class ClaimService{
                 ))
                 .map(this::toInternalResponse);
     }
+
+    @Transactional
+    public Mono<org.example.claimsservice.dto.ClaimCreationResponse> createClaimsFromTriggerEvent(
+            org.example.claimsservice.dto.ClaimCreationRequest request){
+        if(request.getTriggerEventId()==null||request.getEligiblePolicies()==null){
+            return Mono.error(new ValidationException("Trigger event and matched policies are required"));
+        }
+        return Flux.fromIterable(request.getEligiblePolicies())
+                .concatMap(policy->claimRepository.existsByPolicyIdAndTriggerEventId(
+                                policy.getPolicyId(),request.getTriggerEventId())
+                        .flatMap(existing->{
+                            if(existing){
+                                return Mono.just(org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
+                                        .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
+                                        .status("EXISTING").build());
+                            }
+                            LocalDateTime now=LocalDateTime.now();
+                            Claim claim=Claim.builder()
+                                    .claimNumber(generateClaimNumber())
+                                    .customerId(policy.getCustomerId()).policyId(policy.getPolicyId())
+                                    .policyNumber(policy.getPolicyNumber()).productId(request.getProductId())
+                                    .triggerEventId(request.getTriggerEventId())
+                                    .triggerEventReference(request.getTriggerEventReference())
+                                    .locationZoneId(request.getLocationZoneId())
+                                    .perilId(request.getPerilId())
+                                    .incidentType(request.getMeasurementType())
+                                    .incidentDate(LocalDate.now()).incidentLocation("AUTO")
+                                    .description("Automatic claim created from a verified trigger event")
+                                    .claimedAmount(policy.getSumInsured())
+                                    .status(ClaimStatus.SUBMITTED.name())
+                                    .claimSource(ClaimSource.AUTO_TRIGGERED.name())
+                                    .manualReviewRequired(false).createdFromTriggerEvent(true)
+                                    .triggerDetectionStatus(TriggerDetectionStatus.DETECTED.name())
+                                    .submittedAt(now).updatedAt(now).payoutRequested(false).build();
+                            return claimRepository.save(claim)
+                                    .flatMap(saved->recordTimeline(saved,null,ClaimStatus.SUBMITTED.name(),
+                                            "CLAIM_SUBMITTED",policy.getCustomerId(),"TRIGGER_SERVICE",
+                                            "Automatic claim created from trigger event").thenReturn(saved))
+                                    .flatMap(saved->notificationService.notifyClaimSubmitted(
+                                            saved.getCustomerId(),saved.getId(),saved.getClaimNumber()).thenReturn(saved))
+                                    .map(saved->org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
+                                            .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
+                                            .claimId(saved.getId()).claimNumber(saved.getClaimNumber()).status("CREATED").build());
+                        })
+                        .onErrorResume(error->Mono.just(org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
+                                .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
+                                .status("FAILED").errorMessage(error.getMessage()).build())))
+                .collectList()
+                .map(results->org.example.claimsservice.dto.ClaimCreationResponse.builder()
+                        .claimsCreated((int)results.stream().filter(r->"CREATED".equals(r.getStatus())).count())
+                        .claimsFailed((int)results.stream().filter(r->"FAILED".equals(r.getStatus())).count())
+                        .results(results).build());
+    }
     
         @Transactional
         public Mono<InternalClaimResponse> createInternalClaim(CreateClaimRequest request){
