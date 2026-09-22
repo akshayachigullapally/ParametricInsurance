@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class NotificationServiceClient{
+public class InternalNotificationClient{
     private final WebClient.Builder webClientBuilder;
 
     @Value("${gateway.internal-key}")

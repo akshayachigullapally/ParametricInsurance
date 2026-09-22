@@ -3,7 +3,7 @@ package org.example.triggerservice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.client.ClaimsServiceClient;
-import org.example.triggerservice.client.NotificationServiceClient;
+import org.example.triggerservice.client.InternalNotificationClient;
 import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.ClaimCreationRequest;
 import org.example.triggerservice.dto.ClaimCreationResponse;
@@ -52,7 +52,7 @@ public class DemoObservationService{
     private final TriggerEvaluationService triggerEvaluationService;
     private final ProductTriggerClient productTriggerClient;
     private final ClaimsServiceClient claimsServiceClient;
-    private final NotificationServiceClient notificationServiceClient;
+    private final InternalNotificationClient notificationServiceClient;
 
     public Mono<DemoObservationResponse> recordAndEvaluate(
             DemoObservationRequest request,
