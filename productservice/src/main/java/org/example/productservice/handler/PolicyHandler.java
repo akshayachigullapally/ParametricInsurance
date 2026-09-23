@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.example.productservice.dto.InternalPolicyResponse;
+import org.example.productservice.dto.CreateCustomPolicyRequest;
 import org.example.productservice.dto.CreatePolicyRequest;
 import org.example.productservice.dto.PolicyDecisionRequest;
 import org.example.productservice.dto.PolicyResponse;
@@ -29,6 +30,19 @@ public class PolicyHandler{
                         readAndValidate(request, CreatePolicyRequest.class)
                                 .flatMap(body->
                                         policyService.createPolicy(customerId,body)
+                                )
+                )
+                .flatMap(response->ServerResponse.status(HttpStatus.CREATED)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response));
+    }
+
+    public Mono<ServerResponse> createCustomPolicy(ServerRequest request){
+        return SecurityUtil.getUserId(request)
+                .flatMap(customerId->
+                        readAndValidate(request, CreateCustomPolicyRequest.class)
+                                .flatMap(body->
+                                        policyService.createCustomPolicy(customerId,body)
                                 )
                 )
                 .flatMap(response->ServerResponse.status(HttpStatus.CREATED)

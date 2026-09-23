@@ -38,6 +38,7 @@ public class PolicyService{
     private final PolicyStatusHistoryRepository historyRepository;
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
+    private final ProductService productService;
 
     @Transactional
     public Mono<PolicyResponse> createPolicy(
@@ -119,6 +120,99 @@ public class PolicyService{
                 ).then(notificationService.notifyPolicyPendingReview(
                         resp.getId(), resp.getPolicyNumber()
                 )).thenReturn(resp));
+    }
+
+    @Transactional
+    public Mono<PolicyResponse> createCustomPolicy(
+            Long customerId,
+            CreateCustomPolicyRequest request
+    ){
+        validateCustomerId(customerId);
+        validateCustomPolicyRequest(request);
+
+        ProductRequest productRequest=buildCustomProductRequest(customerId,request);
+
+        return productService.createCustomerDefinedProduct(customerId,productRequest)
+                .flatMap(product->{
+                    CreatePolicyRequest policyRequest=CreatePolicyRequest.builder()
+                            .productId(product.getId())
+                            .sumInsured(request.getSumInsured())
+                            .termMonths(request.getTermMonths())
+                            .locationZoneId(request.getLocationZoneId())
+                            .perilCode(request.getPerilCode())
+                            .triggerMetric(request.getMeasurementType())
+                            .triggerOperator(request.getComparisonOperator())
+                            .triggerThreshold(request.getThresholdValue())
+                            .triggerDurationHours(request.getObservationWindowHours())
+                            .triggerAggregationType(request.getAggregationType())
+                            .triggerMinObservationCount(request.getMinimumObservationCount())
+                            .build();
+
+                    return createPolicy(customerId,policyRequest);
+                });
+    }
+
+    private void validateCustomPolicyRequest(CreateCustomPolicyRequest request){
+        if(request==null){
+            throw new ValidationException("Custom policy request is required");
+        }
+
+        if(request.getLocationZoneId()==null||request.getLocationZoneId()<=0){
+            throw new ValidationException(
+                    "Location zone ID must be greater than zero"
+            );
+        }
+
+        if(request.getSumInsured()==null||request.getSumInsured().signum()<=0){
+            throw new ValidationException(
+                    "Sum insured must be greater than zero"
+            );
+        }
+
+        if(request.getTermMonths()==null||request.getTermMonths()<=0){
+            throw new ValidationException(
+                    "Policy term must be greater than zero"
+            );
+        }
+    }
+
+    private ProductRequest buildCustomProductRequest(
+            Long customerId,
+            CreateCustomPolicyRequest request
+    ){
+        String generatedCode="CUSTOM-"+customerId+"-"+
+                UUID.randomUUID().toString()
+                        .substring(0,8)
+                        .toUpperCase(Locale.ROOT);
+
+        String name=StringUtils.hasText(request.getName())&&
+                request.getName().trim().length()>=3
+                ?request.getName().trim()
+                :"Custom Policy - "+(
+                        StringUtils.hasText(request.getPerilCode())
+                                ?request.getPerilCode()
+                                :"Custom"
+                );
+
+        return ProductRequest.builder()
+                .productCode(generatedCode)
+                .name(name)
+                .description(request.getDescription())
+                .category(request.getCategory())
+                .minimumSumInsured(request.getSumInsured())
+                .maximumSumInsured(request.getSumInsured())
+                .minimumTermMonths(request.getTermMonths())
+                .maximumTermMonths(request.getTermMonths())
+                .perilCode(request.getPerilCode())
+                .measurementType(request.getMeasurementType())
+                .measurementUnit(request.getMeasurementUnit())
+                .thresholdValue(request.getThresholdValue())
+                .comparisonOperator(request.getComparisonOperator())
+                .aggregationType(request.getAggregationType())
+                .observationWindowHours(request.getObservationWindowHours())
+                .minimumObservationCount(request.getMinimumObservationCount())
+                .triggerDescription(request.getTriggerDescription())
+                .build();
     }
 
     public Flux<PolicyResponse> getMyPolicies(

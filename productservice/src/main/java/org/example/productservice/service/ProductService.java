@@ -107,6 +107,67 @@ public class ProductService{
     }
 
     @Transactional
+    public Mono<ProductResponse> createCustomerDefinedProduct(
+            Long customerId,
+            ProductRequest request){
+
+        validateProductValues(request);
+        validateTriggerConfiguration(request);
+        String code=normalizeCode(request.getProductCode());
+
+        return productRepository.existsByProductCodeIgnoreCase(code)
+                .flatMap(exists->{
+                    if(exists){
+                        return Mono.error(
+                                new ConflictException(
+                                        "Product code already exists"
+                                )
+                        );
+                    }
+
+                    LocalDateTime now=LocalDateTime.now();
+
+                    Product product=Product.builder()
+                            .productCode(code)
+                            .name(request.getName().trim())
+                            .description(trim(request.getDescription()))
+                            .category(validateCategory(request.getCategory()))
+                            .status(ProductStatus.ACTIVE.name())
+                            .minimumSumInsured(request.getMinimumSumInsured())
+                            .maximumSumInsured(request.getMaximumSumInsured())
+                            .minimumTermMonths(request.getMinimumTermMonths())
+                            .maximumTermMonths(request.getMaximumTermMonths())
+                            .eligibilityDescription(
+                                    trim(request.getEligibilityDescription())
+                            )
+                            .perilCode(normalizeEnumValue(request.getPerilCode()))
+                            .measurementType(
+                                    normalizeEnumValue(request.getMeasurementType())
+                            )
+                            .measurementUnit(normalizeUnit(request.getMeasurementUnit()))
+                            .thresholdValue(request.getThresholdValue())
+                            .comparisonOperator(
+                                    normalizeEnumValue(request.getComparisonOperator())
+                            )
+                            .aggregationType(
+                                    normalizeEnumValue(request.getAggregationType())
+                            )
+                            .observationWindowHours(request.getObservationWindowHours())
+                            .minimumObservationCount(request.getMinimumObservationCount())
+                            .triggerDescription(resolveTriggerDescription(request))
+                            .customerDefined(true)
+                            .createdBy(customerId)
+                            .createdAt(now)
+                            .updatedAt(now)
+                            .build();
+
+                    return productRepository.save(product)
+                            .flatMap(saved->syncDefinition(saved,customerId))
+                            .flatMap(saved->buildResponse(saved,false));
+                });
+    }
+
+    @Transactional
     public Mono<ProductResponse> updateProduct(
             Long productId,
             ProductRequest request){
@@ -197,6 +258,7 @@ public class ProductService{
 
     public Flux<ProductResponse> getActiveProducts(){
         return productRepository.findAllByStatus(ProductStatus.ACTIVE.name())
+                .filter(product->!Boolean.TRUE.equals(product.getCustomerDefined()))
                 .concatMap(product->buildResponse(product,true));
     }
 
@@ -212,11 +274,14 @@ public class ProductService{
         return productRepository.findAllByCategoryAndStatus(
                 validatedCategory,
                 ProductStatus.ACTIVE.name()
-        ).concatMap(product->buildResponse(product,true));
+        )
+                .filter(product->!Boolean.TRUE.equals(product.getCustomerDefined()))
+                .concatMap(product->buildResponse(product,true));
     }
 
     public Flux<ProductResponse> getAllProducts(){
         return productRepository.findAll()
+                .filter(product->!Boolean.TRUE.equals(product.getCustomerDefined()))
                 .concatMap(product->buildResponse(product,false));
     }
 
@@ -737,6 +802,7 @@ public class ProductService{
                         .triggerSyncStatus(product.getTriggerSyncStatus())
                         .triggerSyncedAt(product.getTriggerSyncedAt())
                         .triggerSyncError(product.getTriggerSyncError())
+                        .customerDefined(Boolean.TRUE.equals(product.getCustomerDefined()))
                         .createdBy(product.getCreatedBy())
                         .coverages(items)
                         .createdAt(product.getCreatedAt())

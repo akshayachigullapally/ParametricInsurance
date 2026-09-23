@@ -85,7 +85,8 @@ public class SecurityConfig{
                         ).hasRole("ADMIN")
 
                         .pathMatchers(HttpMethod.POST,
-                                "/api/policies"
+                                "/api/policies",
+                                "/api/policies/custom"
                         ).hasRole("CUSTOMER")
 
                         .pathMatchers(HttpMethod.GET,

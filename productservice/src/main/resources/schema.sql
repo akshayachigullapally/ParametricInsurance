@@ -204,3 +204,8 @@ ALTER TABLE policy_trigger_snapshots ADD COLUMN IF NOT EXISTS captured_at TIMEST
 
 CREATE INDEX IF NOT EXISTS idx_products_trigger_fields
     ON products(measurement_type,threshold_value);
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS customer_defined BOOLEAN DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_products_customer_defined
+    ON products(customer_defined);

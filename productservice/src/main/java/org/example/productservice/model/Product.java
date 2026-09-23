@@ -74,6 +74,9 @@ public class Product{
     @Column("trigger_sync_error")
     private String triggerSyncError;
 
+    @Column("customer_defined")
+    private Boolean customerDefined;
+
     @Column("created_by")
     private Long createdBy;
 

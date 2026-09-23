@@ -43,6 +43,10 @@ public class PolicyRouter{
                         "/api/policies",
                         handler::createPolicy
                 )
+                .POST(
+                        "/api/policies/custom",
+                        handler::createCustomPolicy
+                )
                 .PUT(
                         "/api/policies/{policyId}/cancel",
                         handler::cancelPolicy

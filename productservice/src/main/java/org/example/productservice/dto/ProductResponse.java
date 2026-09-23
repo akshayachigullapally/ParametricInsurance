@@ -34,6 +34,7 @@ public class ProductResponse{
     private String triggerSyncStatus;
     private java.time.LocalDateTime triggerSyncedAt;
     private String triggerSyncError;
+    private Boolean customerDefined;
     private Long createdBy;
     private List<CoverageResponse> coverages;
     private LocalDateTime createdAt;
