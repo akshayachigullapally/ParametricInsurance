@@ -237,51 +237,62 @@ public class NotificationService {
         return unreadOnly ? mine(NotificationQuery.unreadOnly()) : mine(NotificationQuery.defaults());
     }
 
+    /*
+     * Producing services (productservice, claimsservice, triggerservice, financialservice)
+     * never have a distinct "customer id" separate from the authenticated user's id -
+     * they all populate NotificationRequest.recipientCustomerId with the same value as
+     * the recipient's userId (see e.g. PolicyHandler using SecurityUtil.getUserId() as
+     * the policy's customerId). authservice also never issues a JWT "customerId" claim
+     * (AuthService.generateToken(user, null)), so SecurityUtil.customerId() here is
+     * always empty. Matching recipientCustomerId against the caller's own userId is
+     * therefore the correct - and only working - way to retrieve those notifications.
+     */
     public Flux<NotificationResponse> mine(NotificationQuery q) {
         return SecurityUtil.userId().flatMapMany(userId ->
-                SecurityUtil.customerId().defaultIfEmpty(-1L).flatMapMany(customerId ->
-                        SecurityUtil.role().flatMapMany(role -> {
-Flux<Notification> roleQuery = customerId > 0
-                            ? Flux.empty()
-                            : q.isUnreadOnly()
-                                    ? repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc(role)
-                                    : repository.findAllByRecipientRoleOrderByCreatedAtDesc(role);
+                SecurityUtil.role().flatMapMany(role -> {
+                    // Role-matched results are only genuine broadcasts (no specific
+                    // recipient) - a notification addressed to a specific user/customer
+                    // must never leak to someone else who merely shares its role.
+                    Flux<Notification> roleBroadcasts = (q.isUnreadOnly()
+                            ? repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc(role)
+                            : repository.findAllByRecipientRoleOrderByCreatedAtDesc(role))
+                            .filter(n -> n.getRecipientUserId() == null && n.getRecipientCustomerId() == null);
                     Flux<Notification> all = Flux.concat(
                             q.isUnreadOnly()
                                     ? repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(userId)
                                     : repository.findAllByRecipientUserIdOrderByCreatedAtDesc(userId),
-                            customerId > 0
-                                    ? (q.isUnreadOnly()
-                                            ? repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(customerId)
-                                            : repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(customerId))
-                                    : Flux.empty(),
-                            roleQuery
+                            q.isUnreadOnly()
+                                    ? repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(userId)
+                                    : repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(userId),
+                            roleBroadcasts
                     );
-                            Flux<Notification> filtered = all
-                                    .distinct(Notification::getId)
-                                    .filter(n -> q.getNotificationType() == null || n.getType() == q.getNotificationType())
-                                    .filter(n -> q.getCreatedAfter() == null
-                                            || (n.getCreatedAt() != null && n.getCreatedAt().isAfter(q.getCreatedAfter())))
-                                    .sort((x, y) -> q.isSortAsc()
-                                            ? x.getCreatedAt().compareTo(y.getCreatedAt())
-                                            : y.getCreatedAt().compareTo(x.getCreatedAt()));
-                            Flux<Notification> paged = q.isPaginated()
-                                    ? filtered.skip((long) q.getPage() * q.getSize()).take(q.getSize())
-                                    : filtered;
-                            return paged.map(this::response);
-                        })));
+                    Flux<Notification> filtered = all
+                            .distinct(Notification::getId)
+                            .filter(n -> q.getNotificationType() == null || n.getType() == q.getNotificationType())
+                            .filter(n -> q.getCreatedAfter() == null
+                                    || (n.getCreatedAt() != null && n.getCreatedAt().isAfter(q.getCreatedAfter())))
+                            .sort((x, y) -> q.isSortAsc()
+                                    ? x.getCreatedAt().compareTo(y.getCreatedAt())
+                                    : y.getCreatedAt().compareTo(x.getCreatedAt()));
+                    Flux<Notification> paged = q.isPaginated()
+                            ? filtered.skip((long) q.getPage() * q.getSize()).take(q.getSize())
+                            : filtered;
+                    return paged.map(this::response);
+                }));
     }
 
-        // Stream live notifications filtered for the current authenticated user
+        // Stream live notifications filtered for the current authenticated user.
+        // See the comment on mine(NotificationQuery) - recipientCustomerId is matched
+        // against the caller's own userId, since that is what producers actually set it to.
         public Flux<NotificationResponse> stream() {
         return SecurityUtil.userId().flatMapMany(userId ->
-            SecurityUtil.customerId().defaultIfEmpty(-1L).flatMapMany(customerId ->
                 SecurityUtil.role().flatMapMany(role ->
                     stream.asFlux()
                         .filter(n -> (n.getRecipientUserId() != null && n.getRecipientUserId().equals(userId))
-                            || (customerId > 0 && n.getRecipientCustomerId() != null && n.getRecipientCustomerId().equals(customerId))
-                            || (n.getRecipientRole() != null && n.getRecipientRole().equals(role)))
-                )));
+                            || (n.getRecipientCustomerId() != null && n.getRecipientCustomerId().equals(userId))
+                            || (n.getRecipientUserId() == null && n.getRecipientCustomerId() == null
+                                && n.getRecipientRole() != null && n.getRecipientRole().equals(role)))
+                ));
         }
 
     public Mono<UnreadCountResponse> unreadCount() {
@@ -373,13 +384,15 @@ Flux<Notification> roleQuery = customerId > 0
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Notification not found")))
                 .flatMap(n -> SecurityUtil.userId().flatMap(userId ->
-                        SecurityUtil.customerId().defaultIfEmpty(-1L).flatMap(customerId ->
-                                SecurityUtil.role().flatMap(role -> {
-                                    boolean ok = userId.equals(n.getRecipientUserId())
-                                            || customerId.equals(n.getRecipientCustomerId())
-                                            || role.equals(n.getRecipientRole());
-                                    return ok ? Mono.just(n) : Mono.error(new ForbiddenException("Notification does not belong to current user"));
-                                }))));
+                        SecurityUtil.role().flatMap(role -> {
+                            // recipientCustomerId is matched against userId - see mine(NotificationQuery).
+                            // Role only grants ownership for genuine broadcasts (no specific recipient).
+                            boolean ok = userId.equals(n.getRecipientUserId())
+                                    || userId.equals(n.getRecipientCustomerId())
+                                    || (n.getRecipientUserId() == null && n.getRecipientCustomerId() == null
+                                            && role.equals(n.getRecipientRole()));
+                            return ok ? Mono.just(n) : Mono.error(new ForbiddenException("Notification does not belong to current user"));
+                        })));
     }
 
     private NotificationResponse response(Notification n) {

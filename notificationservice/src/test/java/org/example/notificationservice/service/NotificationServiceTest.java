@@ -243,7 +243,8 @@ class NotificationServiceTest {
         Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", true, DeliveryStatus.DELIVERED);
 
         when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(100L)).thenReturn(Flux.empty());
+        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
+        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(false))
                 .expectNextCount(2)
@@ -256,6 +257,7 @@ class NotificationServiceTest {
         Notification n1 = buildNotification(1L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
 
         when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1));
+        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
         when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(true))
@@ -270,7 +272,8 @@ class NotificationServiceTest {
         Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
 
         when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(100L)).thenReturn(Flux.just(n2));
+        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n2));
+        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(false))
                 .expectNextCount(2)
@@ -284,7 +287,8 @@ class NotificationServiceTest {
         Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
 
         when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
-        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(100L)).thenReturn(Flux.empty());
+        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
+        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.unreadCount())
                 .assertNext(count -> assertThat(count.getUnreadCount()).isEqualTo(2))
@@ -548,6 +552,7 @@ class NotificationServiceTest {
         newer.setCreatedAt(now);
 
         when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(newer, older));
+        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
         when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(NotificationQuery.of(false, null, now.minusHours(1), 0, 20, false, true)))
@@ -565,6 +570,7 @@ class NotificationServiceTest {
         newer.setCreatedAt(now);
 
         when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(newer, older));
+        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
         when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(NotificationQuery.of(false, null, null, 0, 100, true, true)))
@@ -585,6 +591,7 @@ class NotificationServiceTest {
         n3.setCreatedAt(now.minusHours(2));
 
         when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2, n3));
+        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
         when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
 
         StepVerifier.create(service.mine(NotificationQuery.of(false, null, null, 0, 2, false, true)))
