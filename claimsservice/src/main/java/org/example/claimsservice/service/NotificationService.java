@@ -75,10 +75,33 @@ public class NotificationService {
                 "CLAIM", claimId);
     }
 
+    public Mono<Void> notifyClaimPendingReview(Long claimId, String claimNumber) {
+        return notifyRole("ROLE_CLAIMS_OFFICER", "CLAIM_SUBMITTED", "Claim Pending Review",
+                "Claim " + claimNumber + " was submitted and is awaiting Claims Officer review.",
+                "CLAIM", claimId);
+    }
+
     private Mono<Void> notify(Long customerId, String type, String title, String message,
                               String entityType, Long entityId) {
         NotificationRequest request = NotificationRequest.builder()
                 .recipientCustomerId(customerId)
+                .type(type)
+                .title(title)
+                .message(message)
+                .relatedEntityType(entityType)
+                .relatedEntityId(entityId)
+                .build();
+        return client.sendNotification(request)
+                .onErrorResume(e -> {
+                    log.warn("Notification {} failed: {}", type, e.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    private Mono<Void> notifyRole(String role, String type, String title, String message,
+                                  String entityType, Long entityId) {
+        NotificationRequest request = NotificationRequest.builder()
+                .recipientRole(role)
                 .type(type)
                 .title(title)
                 .message(message)

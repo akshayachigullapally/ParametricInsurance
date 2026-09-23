@@ -64,6 +64,8 @@ class PolicyServiceTest{
 
         lenient().when(notificationService.notifyPolicySubmitted(any(),any(),any()))
                 .thenReturn(Mono.empty());
+        lenient().when(notificationService.notifyPolicyPendingReview(any(),any()))
+                .thenReturn(Mono.empty());
         lenient().when(notificationService.notifyPolicyApproved(any(),any(),any()))
                 .thenReturn(Mono.empty());
         lenient().when(notificationService.notifyPolicyRejected(any(),any(),any(),any()))

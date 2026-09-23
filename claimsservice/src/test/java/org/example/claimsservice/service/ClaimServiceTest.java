@@ -91,6 +91,8 @@ class ClaimServiceTest {
                 .thenReturn(Mono.empty());
         when(notificationService.notifyManualClaimSubmitted(anyLong(),anyLong(),any()))
                 .thenReturn(Mono.empty());
+        when(notificationService.notifyClaimPendingReview(anyLong(),any()))
+                .thenReturn(Mono.empty());
 
         ReflectionTestUtils.setField(
                 claimService,

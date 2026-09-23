@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NotificationRequest {
     private Long recipientCustomerId;
+    private String recipientRole;
     private String type;
     private String title;
     private String message;

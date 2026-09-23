@@ -227,7 +227,10 @@ public class ClaimService{
                                             "CLAIM_SUBMITTED",policy.getCustomerId(),"TRIGGER_SERVICE",
                                             "Automatic claim created from trigger event").thenReturn(saved))
                                     .flatMap(saved->notificationService.notifyClaimSubmitted(
-                                            saved.getCustomerId(),saved.getId(),saved.getClaimNumber()).thenReturn(saved))
+                                            saved.getCustomerId(),saved.getId(),saved.getClaimNumber())
+                                            .then(notificationService.notifyClaimPendingReview(
+                                                    saved.getId(),saved.getClaimNumber()))
+                                            .thenReturn(saved))
                                     .map(saved->org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
                                             .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
                                             .claimId(saved.getId()).claimNumber(saved.getClaimNumber()).status("CREATED").build());
@@ -900,16 +903,21 @@ public class ClaimService{
             Long claimId,
             String claimNumber
     ){
+        Mono<Void> customerNotification;
         if(claimSource!=null&&
                 ClaimSource.MANUAL_EXCEPTION.name()
                         .equals(claimSource)){
-            return notificationService.notifyManualClaimSubmitted(
+            customerNotification = notificationService.notifyManualClaimSubmitted(
+                    customerId,claimId,claimNumber
+            );
+        }else{
+            customerNotification = notificationService.notifyClaimSubmitted(
                     customerId,claimId,claimNumber
             );
         }
 
-        return notificationService.notifyClaimSubmitted(
-                customerId,claimId,claimNumber
+        return customerNotification.then(
+                notificationService.notifyClaimPendingReview(claimId,claimNumber)
         );
     }
 

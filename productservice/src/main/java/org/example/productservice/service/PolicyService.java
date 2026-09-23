@@ -116,7 +116,9 @@ public class PolicyService{
                 .map(this::toResponse)
                 .flatMap(resp -> notificationService.notifyPolicySubmitted(
                         customerId, resp.getId(), resp.getPolicyNumber()
-                ).thenReturn(resp));
+                ).then(notificationService.notifyPolicyPendingReview(
+                        resp.getId(), resp.getPolicyNumber()
+                )).thenReturn(resp));
     }
 
     public Flux<PolicyResponse> getMyPolicies(
