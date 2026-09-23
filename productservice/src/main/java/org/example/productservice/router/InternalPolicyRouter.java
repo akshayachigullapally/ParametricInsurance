@@ -21,6 +21,10 @@ public class InternalPolicyRouter{
                         "/internal/policies/active-for-trigger",
                         accept(MediaType.APPLICATION_JSON),
                         handler::getEligiblePolicies)
+                .GET(
+                        "/internal/policies/zone/{zoneId}/has-active",
+                        accept(MediaType.APPLICATION_JSON),
+                        handler::hasActivePoliciesForZone)
                 .build();
     }
 }

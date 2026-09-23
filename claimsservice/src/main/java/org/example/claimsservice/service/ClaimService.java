@@ -164,13 +164,16 @@ public class ClaimService{
                 .map(this::toResponse);
     }
 
-    public Flux<ClaimResponse> getAllClaims(String status){
-        if(status!=null&&!status.isBlank()){
-            return claimRepository.findAllByStatus(validateStatus(status))
-                    .map(this::toResponse);
+    public Flux<ClaimResponse> getAllClaims(String status,Long customerId){
+        Flux<Claim> claims=(status!=null&&!status.isBlank())
+                ?claimRepository.findAllByStatus(validateStatus(status))
+                :claimRepository.findAll();
+
+        if(customerId!=null){
+            claims=claims.filter(claim->customerId.equals(claim.getCustomerId()));
         }
 
-        return claimRepository.findAll().map(this::toResponse);
+        return claims.map(this::toResponse);
     }
 
     public Mono<ClaimResponse> getClaim(Long claimId){

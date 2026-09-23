@@ -301,6 +301,7 @@ package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.InternalZoneResponse;
 import org.example.triggerservice.dto.LocationZoneRequest;
 import org.example.triggerservice.dto.LocationZoneResponse;
@@ -323,6 +324,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class LocationZoneService{
     private final LocationZoneRepository locationZoneRepository;
+    private final ProductTriggerClient productTriggerClient;
 
     public Flux<LocationZoneResponse> getAll(String state){
         if(StringUtils.hasText(state)){
@@ -513,13 +515,22 @@ public class LocationZoneService{
 
     public Mono<Void> archive(Long zoneId,Long userId){
         return findAvailableZone(zoneId)
-                .flatMap(zone->{
-                    zone.setStatus(LocationZoneStatus.ARCHIVED);
-                    zone.setUpdatedBy(userId);
-                    zone.setUpdatedAt(LocalDateTime.now());
+                .flatMap(zone->
+                        productTriggerClient.hasActivePoliciesForZone(zoneId)
+                                .flatMap(hasActivePolicies->{
+                                    if(Boolean.TRUE.equals(hasActivePolicies)){
+                                        return Mono.error(new ConflictException(
+                                                "Cannot archive location zone: it has pending or active policies referencing it"
+                                        ));
+                                    }
 
-                    return locationZoneRepository.save(zone);
-                })
+                                    zone.setStatus(LocationZoneStatus.ARCHIVED);
+                                    zone.setUpdatedBy(userId);
+                                    zone.setUpdatedAt(LocalDateTime.now());
+
+                                    return locationZoneRepository.save(zone);
+                                })
+                )
                 .then();
     }
 

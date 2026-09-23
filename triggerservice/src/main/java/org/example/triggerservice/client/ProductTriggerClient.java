@@ -63,6 +63,14 @@ public class ProductTriggerClient{
                                 .bodyToFlux(org.example.triggerservice.dto.ActivePolicyForTriggerResponse.class);
                     }
 
+                    public Mono<Boolean> hasActivePoliciesForZone(Long zoneId){
+                        return webClient.get()
+                                .uri("/internal/policies/zone/{zoneId}/has-active",zoneId)
+                                .retrieve()
+                                .bodyToMono(java.util.Map.class)
+                                .map(body->Boolean.TRUE.equals(body.get("hasActivePolicies")));
+                    }
+
                     public Flux<EligiblePolicyResponse> getEligiblePoliciesForEvent(
                             Long productId,Long locationZoneId,java.time.LocalDateTime eventStart,
                             java.time.LocalDateTime eventEnd,Long triggerEventId){

@@ -258,6 +258,14 @@ public class ProductService{
                                 .build()));
     }
 
+    public Mono<Boolean> hasActivePoliciesForZone(Long locationZoneId){
+        return Flux.merge(
+                        policyRepository.findAllByLocationZoneIdAndStatus(locationZoneId, PolicyStatus.PENDING.name()),
+                        policyRepository.findAllByLocationZoneIdAndStatus(locationZoneId, PolicyStatus.ACTIVE.name())
+                )
+                .hasElements();
+    }
+
     @Transactional
     public Mono<ProductResponse> updateStatus(
             Long productId,
@@ -283,11 +291,24 @@ public class ProductService{
     public Mono<MessageResponse> deleteProduct(Long productId){
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Product not found")))
-                .flatMap(product->{
-                    product.setStatus(ProductStatus.ARCHIVED.name());
-                    product.setUpdatedAt(LocalDateTime.now());
-                    return productRepository.save(product);
-                })
+                .flatMap(product->
+                        Flux.merge(
+                                        policyRepository.findAllByProductIdAndStatus(productId, PolicyStatus.PENDING.name()),
+                                        policyRepository.findAllByProductIdAndStatus(productId, PolicyStatus.ACTIVE.name())
+                                )
+                                .hasElements()
+                                .flatMap(hasActivePolicies->{
+                                    if(Boolean.TRUE.equals(hasActivePolicies)){
+                                        return Mono.error(new ConflictException(
+                                                "Cannot archive product: it has pending or active policies referencing it"
+                                        ));
+                                    }
+
+                                    product.setStatus(ProductStatus.ARCHIVED.name());
+                                    product.setUpdatedAt(LocalDateTime.now());
+                                    return productRepository.save(product);
+                                })
+                )
                 .thenReturn(MessageResponse.builder()
                         .message("Product archived successfully")
                         .build());

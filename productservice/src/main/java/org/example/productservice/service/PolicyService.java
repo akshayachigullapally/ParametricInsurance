@@ -200,15 +200,16 @@ public class PolicyService{
                 .map(this::toResponse);
     }
 
-    public Flux<PolicyResponse> getAllPolicies(String status){
-        if(status!=null&&!status.isBlank()){
-            return policyRepository
-                    .findAllByStatus(validateStatus(status))
-                    .map(this::toResponse);
+    public Flux<PolicyResponse> getAllPolicies(String status,Long customerId){
+        Flux<Policy> policies=(status!=null&&!status.isBlank())
+                ?policyRepository.findAllByStatus(validateStatus(status))
+                :policyRepository.findAll();
+
+        if(customerId!=null){
+            policies=policies.filter(policy->customerId.equals(policy.getCustomerId()));
         }
 
-        return policyRepository.findAll()
-                .map(this::toResponse);
+        return policies.map(this::toResponse);
     }
 
     public Mono<PolicyResponse> getPolicy(Long policyId){

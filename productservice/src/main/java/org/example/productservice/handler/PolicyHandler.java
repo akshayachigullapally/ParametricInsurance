@@ -92,11 +92,14 @@ public class PolicyHandler{
 
     public Mono<ServerResponse> getAllPolicies(ServerRequest request){
         String status=request.queryParam("status").orElse(null);
+        Long customerId=request.queryParam("customerId")
+                .map(Long::parseLong)
+                .orElse(null);
 
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(
-                        policyService.getAllPolicies(status),
+                        policyService.getAllPolicies(status,customerId),
                         PolicyResponse.class
                 );
     }

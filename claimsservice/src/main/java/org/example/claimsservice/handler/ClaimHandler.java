@@ -79,10 +79,13 @@ public class ClaimHandler{
 
     public Mono<ServerResponse> getAllClaims(ServerRequest request){
         String status=request.queryParam("status").orElse(null);
+        Long customerId=request.queryParam("customerId")
+                .map(Long::parseLong)
+                .orElse(null);
 
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(claimService.getAllClaims(status),ClaimResponse.class);
+                .body(claimService.getAllClaims(status,customerId),ClaimResponse.class);
     }
 
     public Mono<ServerResponse> getClaim(ServerRequest request){

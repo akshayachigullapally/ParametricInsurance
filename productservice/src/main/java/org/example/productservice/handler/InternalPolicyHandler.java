@@ -37,6 +37,15 @@ public class InternalPolicyHandler{
                         .bodyValue(list));
     }
 
+    public Mono<ServerResponse> hasActivePoliciesForZone(ServerRequest request){
+        Long zoneId=parseLong(request.pathVariable("zoneId"),"zoneId");
+
+        return productService.hasActivePoliciesForZone(zoneId)
+                .flatMap(hasActive->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(java.util.Map.of("hasActivePolicies",hasActive)));
+    }
+
     private Long parseLong(String value,String name){
         try{
             return value!=null?Long.parseLong(value):null;
