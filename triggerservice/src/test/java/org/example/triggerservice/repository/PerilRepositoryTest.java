@@ -23,8 +23,24 @@ class PerilRepositoryTest {
     @Autowired
     private PerilRepository perilRepository;
 
+    @Autowired
+    private TriggerDefinitionRepository triggerDefinitionRepository;
+
+    @Autowired
+    private TriggerEvaluationRepository triggerEvaluationRepository;
+
+    @Autowired
+    private TriggerEventRepository triggerEventRepository;
+
     @BeforeEach
     void setUp() {
+        // Full dependency-order cleanup: trigger_events and trigger_definitions both
+        // reference perils (directly or via trigger_definitions), and other
+        // @SpringBootTest classes share the same persistent H2 instance within one
+        // Maven fork, so every FK-dependent child table must be cleared first.
+        triggerEventRepository.deleteAll().block();
+        triggerEvaluationRepository.deleteAll().block();
+        triggerDefinitionRepository.deleteAll().block();
         perilRepository.deleteAll().block();
     }
 

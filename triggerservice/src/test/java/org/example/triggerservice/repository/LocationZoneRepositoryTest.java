@@ -21,8 +21,28 @@ class LocationZoneRepositoryTest {
     @Autowired
     private LocationZoneRepository locationZoneRepository;
 
+    @Autowired
+    private TriggerDefinitionRepository triggerDefinitionRepository;
+
+    @Autowired
+    private TriggerEvaluationRepository triggerEvaluationRepository;
+
+    @Autowired
+    private TriggerEventRepository triggerEventRepository;
+
+    @Autowired
+    private ObservationRepository observationRepository;
+
     @BeforeEach
     void setUp() {
+        // Full dependency-order cleanup: other @SpringBootTest classes in this module
+        // share the same persistent H2 instance within one Maven fork, and demo data
+        // seeded at context startup references location_zones, so every FK-dependent
+        // child table must be cleared before location_zones itself.
+        triggerEventRepository.deleteAll().block();
+        triggerEvaluationRepository.deleteAll().block();
+        observationRepository.deleteAll().block();
+        triggerDefinitionRepository.deleteAll().block();
         locationZoneRepository.deleteAll().block();
     }
 

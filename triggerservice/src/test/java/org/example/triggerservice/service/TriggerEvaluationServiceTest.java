@@ -171,6 +171,13 @@ class TriggerEvaluationServiceTest {
         TriggerDefinition definition=definition();
         definition.setStatus(TriggerDefinitionStatus.INACTIVE);
         when(triggerDefinitionRepository.findById(1L)).thenReturn(Mono.just(definition));
+        // evaluate() builds the observationRepository publisher via
+        // validateDefinition(...).then(evaluateDefinition(...)); the Java call
+        // constructing evaluateDefinition's Flux argument happens eagerly even though
+        // reactor never subscribes to it once validateDefinition errors first, so the
+        // mock still needs a non-null stub to avoid an NPE while assembling the chain.
+        when(observationRepository.findAllByLocationZoneIdAndMeasurementTypeAndStatusAndObservedAtBetweenOrderByObservedAtAsc(
+                any(),any(),any(),any(),any())).thenReturn(Flux.empty());
 
         StepVerifier.create(service.evaluate(1L,null,5L))
                 .expectError(ConflictException.class)

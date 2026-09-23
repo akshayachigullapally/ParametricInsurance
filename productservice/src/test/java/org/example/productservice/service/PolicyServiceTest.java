@@ -657,6 +657,8 @@ class PolicyServiceTest{
     void getInternalPolicy_whenFound_shouldMapInternalFields(){
         when(policyRepository.findById(100L))
                 .thenReturn(Mono.just(pendingPolicy));
+        when(snapshotRepository.findByPolicyId(100L))
+                .thenReturn(Mono.empty());
 
         StepVerifier.create(policyService.getInternalPolicy(100L))
                 .assertNext(response->{

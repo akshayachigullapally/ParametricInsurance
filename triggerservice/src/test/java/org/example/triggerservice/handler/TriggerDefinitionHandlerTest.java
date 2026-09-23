@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +23,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -44,6 +47,14 @@ class TriggerDefinitionHandlerTest {
                 org.springframework.http.HttpMethod.valueOf(method), path).build();
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
         return ServerRequest.create(exchange, List.of());
+    }
+
+    private ServerRequest createRequest(String method, String path, Map<String, String> pathVariables) {
+        return MockServerRequest.builder()
+                .method(org.springframework.http.HttpMethod.valueOf(method))
+                .uri(URI.create(path))
+                .pathVariables(pathVariables)
+                .build();
     }
 
     @Test
@@ -110,7 +121,7 @@ class TriggerDefinitionHandlerTest {
 
         when(triggerDefinitionService.getById(1L)).thenReturn(Mono.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/definitions/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/definitions/1", Map.of("definitionId", "1"));
 
         StepVerifier.create(
                         triggerDefinitionHandler.getById(request)
@@ -123,7 +134,7 @@ class TriggerDefinitionHandlerTest {
 
     @Test
     void getById_shouldReturnValidationForInvalidId() {
-        ServerRequest request = createRequest("GET", "/api/triggers/definitions/abc");
+        ServerRequest request = createRequest("GET", "/api/triggers/definitions/abc", Map.of("definitionId", "abc"));
 
         StepVerifier.create(
                         triggerDefinitionHandler.getById(request)
@@ -143,7 +154,7 @@ class TriggerDefinitionHandlerTest {
 
         when(triggerDefinitionService.getByPerilId(1L)).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/definitions/peril/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/definitions/peril/1", Map.of("perilId", "1"));
 
         StepVerifier.create(
                         triggerDefinitionHandler.getByPerilId(request)
@@ -163,7 +174,7 @@ class TriggerDefinitionHandlerTest {
 
         when(triggerDefinitionService.getByLocationZoneId(1L)).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/definitions/zone/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/definitions/zone/1", Map.of("zoneId", "1"));
 
         StepVerifier.create(
                         triggerDefinitionHandler.getByZoneId(request)
@@ -183,7 +194,7 @@ class TriggerDefinitionHandlerTest {
 
         when(triggerDefinitionService.getByProductId(1L)).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/definitions/product/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/definitions/product/1", Map.of("productId", "1"));
 
         StepVerifier.create(
                         triggerDefinitionHandler.getByProductId(request)

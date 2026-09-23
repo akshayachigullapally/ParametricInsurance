@@ -9,11 +9,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
-import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;
-import java.util.List;
+import java.net.URI;
+import java.util.Map;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,11 +28,12 @@ class PolicyTriggerEligibilityHandlerTest {
     @InjectMocks
     private PolicyTriggerEligibilityHandler eligibilityHandler;
 
-    private ServerRequest createRequest(String method, String path) {
-        MockServerHttpRequest httpRequest = MockServerHttpRequest.method(
-                org.springframework.http.HttpMethod.valueOf(method), path).build();
-        MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-        return ServerRequest.create(exchange, List.of());
+    private ServerRequest createRequest(String method, String path, String policyId) {
+        return MockServerRequest.builder()
+                .method(org.springframework.http.HttpMethod.valueOf(method))
+                .uri(URI.create(path))
+                .pathVariables(Map.of("policyId", policyId))
+                .build();
     }
 
     @Test
@@ -45,7 +46,7 @@ class PolicyTriggerEligibilityHandlerTest {
 
         when(eligibilityService.checkEligibility(1L)).thenReturn(Mono.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/1", "1");
 
         StepVerifier.create(eligibilityHandler.checkEligibility(request))
                 .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
@@ -54,7 +55,7 @@ class PolicyTriggerEligibilityHandlerTest {
 
     @Test
     void checkEligibility_shouldReturnValidationForInvalidId() {
-        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/abc");
+        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/abc", "abc");
 
         StepVerifier.create(eligibilityHandler.checkEligibility(request))
                 .expectError(ValidationException.class)
@@ -63,7 +64,7 @@ class PolicyTriggerEligibilityHandlerTest {
 
     @Test
     void checkEligibility_shouldReturnValidationForNegativeId() {
-        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/-1");
+        ServerRequest request = createRequest("GET", "/api/triggers/policy-trigger-eligibility/-1", "-1");
 
         StepVerifier.create(eligibilityHandler.checkEligibility(request))
                 .expectError(ValidationException.class)

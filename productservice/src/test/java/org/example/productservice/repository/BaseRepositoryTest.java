@@ -21,8 +21,14 @@ public abstract class BaseRepositoryTest {
 
     @BeforeEach
     void cleanDatabase() {
+        // Other @DataR2dbcTest/@SpringBootTest classes in this module share the same
+        // persistent H2 instance within one Maven fork, so every FK-dependent child
+        // table must be cleared before policies/products themselves.
         StepVerifier.create(
-                deleteFrom("policies")
+                deleteFrom("policy_trigger_snapshots")
+                        .then(deleteFrom("policy_status_history"))
+                        .then(deleteFrom("product_threshold_history"))
+                        .then(deleteFrom("policies"))
                         .then(deleteFrom("coverages"))
                         .then(deleteFrom("products"))
         ).verifyComplete();

@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +25,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -46,6 +49,17 @@ class ObservationHandlerTest {
                 org.springframework.http.HttpMethod.valueOf(method), path).build();
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
         return ServerRequest.create(exchange, List.of());
+    }
+
+    // ServerRequest.create() does not perform route pattern matching, so it cannot
+    // resolve path variables. Use MockServerRequest (Spring's functional-handler test
+    // fixture) whenever the handler under test reads one via request.pathVariable(...).
+    private ServerRequest createRequest(String method, String path, Map<String, String> pathVariables) {
+        return MockServerRequest.builder()
+                .method(org.springframework.http.HttpMethod.valueOf(method))
+                .uri(URI.create(path))
+                .pathVariables(pathVariables)
+                .build();
     }
 
     @Test
@@ -93,7 +107,7 @@ class ObservationHandlerTest {
 
         when(observationService.getById(1L)).thenReturn(Mono.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/observations/1", Map.of("observationId", "1"));
 
         StepVerifier.create(
                         observationHandler.getById(request)
@@ -106,7 +120,7 @@ class ObservationHandlerTest {
 
     @Test
     void getById_shouldReturnValidationForInvalidId() {
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/abc");
+        ServerRequest request = createRequest("GET", "/api/triggers/observations/abc", Map.of("observationId", "abc"));
 
         StepVerifier.create(
                         observationHandler.getById(request)
@@ -126,7 +140,7 @@ class ObservationHandlerTest {
 
         when(observationService.getByZoneId(1L)).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/zone/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/observations/zone/1", Map.of("zoneId", "1"));
 
         StepVerifier.create(
                         observationHandler.getByZoneId(request)
@@ -146,7 +160,7 @@ class ObservationHandlerTest {
 
         when(observationService.getByMeasurementType("TEMPERATURE")).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/measurement-type/TEMPERATURE");
+        ServerRequest request = createRequest("GET", "/api/triggers/observations/measurement-type/TEMPERATURE", Map.of("measurementType", "TEMPERATURE"));
 
         StepVerifier.create(
                         observationHandler.getByMeasurementType(request)

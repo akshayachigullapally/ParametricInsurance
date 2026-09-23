@@ -16,11 +16,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PolicyRepositoryTest{
     @Autowired private PolicyRepository policyRepository;
     @Autowired private ProductRepository productRepository;
+    @Autowired private PolicyTriggerSnapshotRepository policyTriggerSnapshotRepository;
+    @Autowired private PolicyStatusHistoryRepository policyStatusHistoryRepository;
+    @Autowired private CoverageRepository coverageRepository;
+    @Autowired private ProductThresholdHistoryRepository productThresholdHistoryRepository;
 
     private Product savedProduct;
 
     @BeforeEach
     void setUp(){
+        // Other @DataR2dbcTest classes in this module share the same persistent H2
+        // instance within one Maven fork, so every FK-dependent child table must be
+        // cleared before policies/products themselves, regardless of run order.
+        policyTriggerSnapshotRepository.deleteAll().block();
+        policyStatusHistoryRepository.deleteAll().block();
+        productThresholdHistoryRepository.deleteAll().block();
+        coverageRepository.deleteAll().block();
+        policyRepository.deleteAll().block();
+        productRepository.deleteAll().block();
+
         Product product=Product.builder()
                 .productCode("WEATHER-01")
                 .name("Weather Shield")
@@ -40,6 +54,10 @@ class PolicyRepositoryTest{
 
     @AfterEach
     void tearDown(){
+        policyTriggerSnapshotRepository.deleteAll().block();
+        policyStatusHistoryRepository.deleteAll().block();
+        productThresholdHistoryRepository.deleteAll().block();
+        coverageRepository.deleteAll().block();
         policyRepository.deleteAll().block();
         productRepository.deleteAll().block();
     }

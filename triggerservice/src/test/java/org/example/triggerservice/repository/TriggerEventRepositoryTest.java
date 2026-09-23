@@ -32,6 +32,9 @@ class TriggerEventRepositoryTest {
     @Autowired
     private LocationZoneRepository locationZoneRepository;
 
+    @Autowired
+    private ObservationRepository observationRepository;
+
     private Peril savedPeril;
     private LocationZone savedZone;
     private TriggerDefinition savedDefinition;
@@ -39,8 +42,12 @@ class TriggerEventRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        // Full dependency-order cleanup: other @SpringBootTest classes share the same
+        // persistent H2 instance within one Maven fork, so every FK-dependent child
+        // table must be cleared before its parents.
         triggerEventRepository.deleteAll().block();
         triggerEvaluationRepository.deleteAll().block();
+        observationRepository.deleteAll().block();
         triggerDefinitionRepository.deleteAll().block();
         perilRepository.deleteAll().block();
         locationZoneRepository.deleteAll().block();
@@ -112,10 +119,14 @@ class TriggerEventRepositoryTest {
     }
 
     private TriggerEvent createEvent(String reference, TriggerEventStatus status, LocalDateTime detectedAt) {
+        return createEvent(reference, status, detectedAt, savedEvaluation.getId());
+    }
+
+    private TriggerEvent createEvent(String reference, TriggerEventStatus status, LocalDateTime detectedAt, Long evaluationId) {
         return TriggerEvent.builder()
                 .eventReference(reference)
                 .triggerDefinitionId(savedDefinition.getId())
-                .triggerEvaluationId(savedEvaluation.getId())
+                .triggerEvaluationId(evaluationId)
                 .perilId(savedPeril.getId())
                 .locationZoneId(savedZone.getId())
                 .productId(1L)
@@ -163,8 +174,25 @@ class TriggerEventRepositoryTest {
 
     @Test
     void shouldFindAllByOrderByDetectedAtDesc() {
-        triggerEventRepository.save(createEvent("EVT-OLD", TriggerEventStatus.DETECTED, LocalDateTime.now().minusHours(1))).block();
-        triggerEventRepository.save(createEvent("EVT-NEW", TriggerEventStatus.DETECTED, LocalDateTime.now())).block();
+        // trigger_evaluation_id is unique on trigger_events, so each event needs its own evaluation row.
+        TriggerEvaluation secondEvaluation = triggerEvaluationRepository.save(TriggerEvaluation.builder()
+                .evaluationReference("EVAL-EVT-002")
+                .triggerDefinitionId(savedDefinition.getId())
+                .locationZoneId(savedZone.getId())
+                .measurementType(MeasurementType.RAINFALL)
+                .windowStart(LocalDateTime.now().minusHours(24))
+                .windowEnd(LocalDateTime.now())
+                .observationCount(5)
+                .aggregatedValue(new BigDecimal("120.00"))
+                .thresholdValue(new BigDecimal("100.00"))
+                .comparisonOperator(ComparisonOperator.GREATER_THAN)
+                .result(org.example.triggerservice.model.TriggerEvaluationResult.MATCHED)
+                .evaluatedBy(1L)
+                .evaluatedAt(LocalDateTime.now())
+                .build()).block();
+
+        triggerEventRepository.save(createEvent("EVT-OLD", TriggerEventStatus.DETECTED, LocalDateTime.now().minusHours(1), savedEvaluation.getId())).block();
+        triggerEventRepository.save(createEvent("EVT-NEW", TriggerEventStatus.DETECTED, LocalDateTime.now(), secondEvaluation.getId())).block();
 
         StepVerifier.create(triggerEventRepository.findAllByOrderByDetectedAtDesc())
                 .assertNext(e -> assertThat(e.getEventReference()).isEqualTo("EVT-NEW"))

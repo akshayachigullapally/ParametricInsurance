@@ -1,6 +1,7 @@
 package org.example.triggerservice.filter;
 
 import org.example.triggerservice.util.GatewayHeaders;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -24,9 +26,16 @@ class GatewayAuthenticationFilterTest {
     @InjectMocks
     private GatewayAuthenticationFilter gatewayAuthenticationFilter;
 
+    @BeforeEach
+    void setUp() {
+        // @Value is not populated by Mockito's @InjectMocks; the production filter
+        // relies on Spring to inject this field, so set it directly for the unit test.
+        ReflectionTestUtils.setField(gatewayAuthenticationFilter, "internalKey", "test-gateway-key");
+    }
+
     private WebFilterChain createChain(boolean called) {
         WebFilterChain chain = mock(WebFilterChain.class);
-        when(chain.filter(any(ServerWebExchange.class))).thenReturn(called ? Mono.empty() : Mono.error(new RuntimeException("Chain not called")));
+        lenient().when(chain.filter(any(ServerWebExchange.class))).thenReturn(called ? Mono.empty() : Mono.error(new RuntimeException("Chain not called")));
         return chain;
     }
 

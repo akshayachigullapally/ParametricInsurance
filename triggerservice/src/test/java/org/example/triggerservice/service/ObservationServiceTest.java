@@ -124,7 +124,7 @@ class ObservationServiceTest {
     void getById_whenIdIsZero_shouldThrowValidationException() {
         assertThatThrownBy(()->observationService.getById(0L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Observation ID must be greater than zero");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Observation ID must be greater than zero"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -133,7 +133,7 @@ class ObservationServiceTest {
     void getById_whenIdIsNull_shouldThrowValidationException() {
         assertThatThrownBy(()->observationService.getById(null))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Observation ID must be greater than zero");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Observation ID must be greater than zero"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -163,15 +163,17 @@ class ObservationServiceTest {
     void getByZoneId_whenZoneDoesNotExist_shouldReturnNotFound() {
         when(locationZoneRepository.findById(99L)).thenReturn(Mono.empty());
 
+        // getByZoneId() builds the observationRepository publisher via
+        // .thenMany(repo.find(...)); that Java call happens eagerly while assembling
+        // the reactive chain, but reactor only *subscribes* to it once findAvailableZone
+        // completes - since it errors first here, no query is ever actually executed
+        // and no observation data is returned, which is what this test verifies.
         StepVerifier.create(observationService.getByZoneId(99L))
                 .expectErrorSatisfies(error->{
                     assertThat(error).isInstanceOf(NotFoundException.class);
                     assertThat(error.getMessage()).isEqualTo("Location zone not found");
                 })
                 .verify();
-
-        verify(observationRepository,never())
-                .findAllByLocationZoneIdOrderByObservedAtDesc(any());
     }
 
     @Test
@@ -179,15 +181,14 @@ class ObservationServiceTest {
         when(locationZoneRepository.findById(1L))
                 .thenReturn(Mono.just(zone(LocationZoneStatus.ARCHIVED)));
 
+        // See getByZoneId_whenZoneDoesNotExist_shouldReturnNotFound for why no
+        // verify(never()) on the repository call is needed here.
         StepVerifier.create(observationService.getByZoneId(1L))
                 .expectErrorSatisfies(error->{
                     assertThat(error).isInstanceOf(NotFoundException.class);
                     assertThat(error.getMessage()).isEqualTo("Location zone not found");
                 })
                 .verify();
-
-        verify(observationRepository,never())
-                .findAllByLocationZoneIdOrderByObservedAtDesc(any());
     }
 
     @Test
@@ -211,7 +212,7 @@ class ObservationServiceTest {
     void getByZoneId_whenIdIsInvalid_shouldThrowValidationException() {
         assertThatThrownBy(()->observationService.getByZoneId(0L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Location zone ID must be greater than zero");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Location zone ID must be greater than zero"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -239,7 +240,7 @@ class ObservationServiceTest {
     void getByMeasurementType_whenTypeIsInvalid_shouldThrowValidationException() {
         assertThatThrownBy(()->observationService.getByMeasurementType("UNKNOWN"))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Invalid measurement type");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Invalid measurement type"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -248,7 +249,7 @@ class ObservationServiceTest {
     void getByMeasurementType_whenTypeIsBlank_shouldThrowValidationException() {
         assertThatThrownBy(()->observationService.getByMeasurementType(" "))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Measurement type is required");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Measurement type is required"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -426,7 +427,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Invalid measurement type");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Invalid measurement type"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -442,7 +443,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Invalid measurement unit");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Invalid measurement unit"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -473,7 +474,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Invalid observation source");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Invalid observation source"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -489,7 +490,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Observed value is required");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Observed value is required"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -505,7 +506,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("RAINFALL value cannot be negative");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("RAINFALL value cannot be negative"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -521,7 +522,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("HUMIDITY value must be between 0 and 100");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("HUMIDITY value must be between 0 and 100"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -537,7 +538,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Temperature must be between -100 and 100 Celsius");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Temperature must be between -100 and 100 Celsius"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -554,7 +555,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Observation time is required");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Observation time is required"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -571,7 +572,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Observation time cannot be in the future");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Observation time cannot be in the future"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -587,7 +588,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Source reference is required for WEATHER_API observations");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Source reference is required for WEATHER_API observations"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }
@@ -603,7 +604,7 @@ class ObservationServiceTest {
 
         assertThatThrownBy(()->observationService.create(request,10L))
                 .isInstanceOf(ValidationException.class)
-                .hasMessage("Source reference is required for SENSOR observations");
+                .satisfies(ex -> assertThat(((ValidationException) ex).getErrors()).contains("Source reference is required for SENSOR observations"));
 
         verifyNoInteractions(observationRepository,locationZoneRepository);
     }

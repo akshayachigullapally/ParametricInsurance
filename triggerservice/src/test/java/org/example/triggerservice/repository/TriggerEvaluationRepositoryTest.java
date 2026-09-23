@@ -29,11 +29,23 @@ class TriggerEvaluationRepositoryTest {
     @Autowired
     private LocationZoneRepository locationZoneRepository;
 
+    @Autowired
+    private TriggerEventRepository triggerEventRepository;
+
+    @Autowired
+    private ObservationRepository observationRepository;
+
     private TriggerDefinition savedDefinition;
 
     @BeforeEach
     void setUp() {
+        // Full dependency-order cleanup: other @SpringBootTest classes share the same
+        // persistent H2 instance within one Maven fork, and demo data seeded at
+        // context startup references perils/location_zones, so every FK-dependent
+        // child table must be cleared first.
+        triggerEventRepository.deleteAll().block();
         triggerEvaluationRepository.deleteAll().block();
+        observationRepository.deleteAll().block();
         triggerDefinitionRepository.deleteAll().block();
         perilRepository.deleteAll().block();
         locationZoneRepository.deleteAll().block();

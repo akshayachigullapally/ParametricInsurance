@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +23,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -44,6 +47,14 @@ class TriggerEvaluationHandlerTest {
                 org.springframework.http.HttpMethod.valueOf(method), path).build();
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
         return ServerRequest.create(exchange, List.of());
+    }
+
+    private ServerRequest createRequest(String method, String path, Map<String, String> pathVariables) {
+        return MockServerRequest.builder()
+                .method(org.springframework.http.HttpMethod.valueOf(method))
+                .uri(URI.create(path))
+                .pathVariables(pathVariables)
+                .build();
     }
 
     @Test
@@ -89,7 +100,7 @@ class TriggerEvaluationHandlerTest {
 
         when(triggerEvaluationService.getById(1L)).thenReturn(Mono.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/1", Map.of("evaluationId", "1"));
 
         StepVerifier.create(
                         triggerEvaluationHandler.getById(request)
@@ -102,7 +113,7 @@ class TriggerEvaluationHandlerTest {
 
     @Test
     void getById_shouldReturnValidationForInvalidId() {
-        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/abc");
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/abc", Map.of("evaluationId", "abc"));
 
         StepVerifier.create(
                         triggerEvaluationHandler.getById(request)
@@ -122,7 +133,7 @@ class TriggerEvaluationHandlerTest {
 
         when(triggerEvaluationService.getByDefinitionId(1L)).thenReturn(Flux.just(response));
 
-        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/definition/1");
+        ServerRequest request = createRequest("GET", "/api/triggers/evaluations/definition/1", Map.of("definitionId", "1"));
 
         StepVerifier.create(
                         triggerEvaluationHandler.getByDefinitionId(request)
