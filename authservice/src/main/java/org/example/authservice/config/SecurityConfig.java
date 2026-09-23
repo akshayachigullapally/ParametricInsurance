@@ -64,9 +64,11 @@ public class SecurityConfig{
                                 "/api/users/me"
                         ).hasRole("CUSTOMER")
                         .pathMatchers(HttpMethod.GET,
-                                "/api/users",
-                                "/api/users/*"
+                                "/api/users"
                         ).hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.GET,
+                                "/api/users/{userId:[0-9]+}"
+                        ).hasAnyRole("ADMIN","UNDERWRITER")
                         .pathMatchers(HttpMethod.PUT,
                                 "/api/users/*/status"
                         ).hasRole("ADMIN")
