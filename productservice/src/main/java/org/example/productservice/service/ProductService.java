@@ -425,12 +425,23 @@ public class ProductService{
     }
 
     public Flux<MeasurementStatusResponse> getMeasurementStatus(){
+        return getMeasurementStatus(productRepository.findAll());
+    }
+
+    public Flux<MeasurementStatusResponse> getPublicMeasurementStatus(){
+        return getMeasurementStatus(
+                productRepository.findAllByStatus(ProductStatus.ACTIVE.name())
+        );
+    }
+
+    private Flux<MeasurementStatusResponse> getMeasurementStatus(
+            Flux<Product> productSource){
         return triggerServiceClient.getCurrentMeasurements()
                 .collectMap(
                         current->normalizeMeasurementTypeKey(
                                 current.getMeasurementType()),
                         current->current)
-                .flatMapMany(byType->productRepository.findAll()
+                .flatMapMany(byType->productSource
                         .filter(this::hasTriggerConfiguration)
                         .filter(product->hasDashboardType(product))
                         .groupBy(product->normalizeMeasurementTypeKey(

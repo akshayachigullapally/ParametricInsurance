@@ -194,6 +194,13 @@ public class ProductHandler{
                         MeasurementStatusResponse.class);
     }
 
+    public Mono<ServerResponse> getPublicMeasurementStatus(ServerRequest request){
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(productService.getPublicMeasurementStatus(),
+                        MeasurementStatusResponse.class);
+    }
+
     public Mono<ServerResponse> processVerifiedEvent(ServerRequest request){
         return request.bodyToMono(VerifiedEventRequest.class)
                 .switchIfEmpty(Mono.error(new org.example.productservice.exception.ValidationException(

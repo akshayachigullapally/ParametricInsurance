@@ -58,6 +58,7 @@ public class SecurityConfig{
                                 "/api/products",
                                 "/api/products/*",
                                 "/api/products/category/*",
+                                "/api/products/measurement-status",
                                 "/api/products/{productId:[0-9]+}"
                         ).permitAll()
 

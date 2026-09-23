@@ -13,6 +13,7 @@ public class ProductRouter{
                 .path("/api/products",builder->builder
                         .GET("",handler::getProducts)
                         .GET("/category/{category}",handler::getByCategory)
+                        .GET("/measurement-status",handler::getPublicMeasurementStatus)
                         .GET("/{productId}",handler::getProduct)
                         .POST("",
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
