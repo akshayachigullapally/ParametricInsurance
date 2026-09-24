@@ -76,8 +76,8 @@ public class ProductTriggerSyncService{
 
         return perilRepository.findByPerilCodeIgnoreCase(
                         request.getPerilCode())
-                .switchIfEmpty(Mono.error(new ValidationException(
-                        "Peril not found: "+request.getPerilCode())))
+                .switchIfEmpty(Mono.defer(()->createPeril(
+                        request.getPerilCode(),request.getUpdatedBy(),now)))
                 .flatMapMany(peril->productActive
                         ? locationZoneRepository
                                 .findAllByStatusOrderByZoneNameAsc(
@@ -97,6 +97,47 @@ public class ProductTriggerSyncService{
                 .collectList()
                 .map(updated->buildResult(
                         productId,request,productActive,updated.size()));
+    }
+
+    private Mono<Peril> createPeril(
+            String perilCode,
+            Long updatedBy,
+            LocalDateTime now
+    ){
+        String normalizedCode=perilCode.trim().toUpperCase(java.util.Locale.ROOT);
+        Long userId=updatedBy!=null?updatedBy:SYSTEM_USER_ID;
+
+        return perilRepository.save(Peril.builder()
+                        .perilCode(normalizedCode)
+                        .perilName(displayLabel(normalizedCode))
+                        .description(
+                                "Auto-created from a product/custom policy peril definition")
+                        .status(org.example.triggerservice.model.PerilStatus.ACTIVE)
+                        .createdBy(userId)
+                        .createdAt(now)
+                        .updatedBy(userId)
+                        .updatedAt(now)
+                        .build())
+                .doOnNext(peril->log.info(
+                        "Auto-created missing peril {} during product trigger sync",
+                        peril.getPerilCode()));
+    }
+
+    private String displayLabel(String perilCode){
+        String[] words=perilCode.replace('_',' ').toLowerCase(java.util.Locale.ROOT)
+                .split(" ");
+        StringBuilder builder=new StringBuilder();
+        for(String word:words){
+            if(word.isBlank()){
+                continue;
+            }
+            if(!builder.isEmpty()){
+                builder.append(' ');
+            }
+            builder.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1));
+        }
+        return builder.toString();
     }
 
     private void validateRequest(

@@ -281,7 +281,6 @@ public class ProductService{
 
     public Flux<ProductResponse> getAllProducts(){
         return productRepository.findAll()
-                .filter(product->!Boolean.TRUE.equals(product.getCustomerDefined()))
                 .concatMap(product->buildResponse(product,false));
     }
 

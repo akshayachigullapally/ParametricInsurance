@@ -55,6 +55,24 @@ loadPeril(
                         "River level exceeds the configured threshold within the observation period",
                         now
                 ))
+                .then(loadPeril(
+                        "EXTREME_TEMPERATURE",
+                        "Extreme Temperature",
+                        "Temperature exceeds the configured threshold within the observation period",
+                        now
+                ))
+                .then(loadPeril(
+                        "HIGH_WIND",
+                        "High Wind",
+                        "Wind speed exceeds the configured threshold within the observation period",
+                        now
+                ))
+                .then(loadPeril(
+                        "CYCLONE",
+                        "Cyclone",
+                        "Wind speed exceeds the configured cyclone threshold within the observation period",
+                        now
+                ))
                 .then(loadLocationZone(now))
                 .then(loadTriggerDefinition(now))
                 .then(loadDemoTriggerDefinitions(now))
