@@ -240,7 +240,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
 
     private Mono<AuthResponse> createTokens(UserCredential user,
                                              String deviceName,String ipAddress){
-        String accessToken=jwtUtil.generateToken(user,null);
+        String accessToken=jwtUtil.generateToken(user,user.getId());
         String refreshTokenValue=generateRefreshToken();
         LocalDateTime now=LocalDateTime.now();
         LocalDateTime expiresAt=now.plusNanos(refreshExpiration*1_000_000);
