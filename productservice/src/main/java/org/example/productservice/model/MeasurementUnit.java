@@ -4,10 +4,14 @@ import java.util.Locale;
 
 public enum MeasurementUnit{
     MM("mm"),
+    CM("cm"),
     METER("m"),
     CELSIUS("°C"),
+    KELVIN("K"),
     KM_PER_HOUR("km/h"),
-    PERCENTAGE("%");
+    METERS_PER_SECOND("m/s"),
+    PERCENTAGE("%"),
+    OTHER("other");
 
     private final String display;
 
@@ -26,6 +30,7 @@ public enum MeasurementUnit{
 
         String normalized=value.trim().toUpperCase(Locale.ROOT)
                 .replace("KM/H","KM_PER_HOUR")
+                .replace("M/S","METERS_PER_SECOND")
                 .replace("%","PERCENTAGE");
 
         for(MeasurementUnit unit:values()){
