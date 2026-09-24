@@ -20,4 +20,11 @@ public class WebClientConfig {
                     .build();
         }
 
+    @Bean("financialServiceWebClient")
+        public WebClient financialServiceWebClient(WebClient.Builder loadBalancedWebClientBuilder){
+            return loadBalancedWebClientBuilder
+                    .baseUrl("http://FINANCIAL-SERVICE")
+                    .build();
+        }
+
 }

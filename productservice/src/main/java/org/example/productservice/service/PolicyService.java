@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.productservice.dto.InternalPolicyResponse;
 import org.example.productservice.client.TriggerServiceClient;
+import org.example.productservice.client.FinancialServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.ConflictException;
 import org.example.productservice.exception.NotFoundException;
@@ -38,6 +39,7 @@ public class PolicyService{
     private final PolicyStatusHistoryRepository historyRepository;
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
+    private final FinancialServiceClient financialServiceClient;
     private final ProductService productService;
 
     @Transactional
@@ -47,10 +49,11 @@ public class PolicyService{
     ){
         validateCreateRequest(customerId,request);
 
-        return productRepository.findByIdAndStatus(
+        return validateQuoteIfPresent(customerId,request)
+                .then(productRepository.findByIdAndStatus(
                         request.getProductId(),
                         ProductStatus.ACTIVE.name()
-                )
+                ))
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Active product not found")
                 ))
@@ -110,7 +113,10 @@ public class PolicyService{
                                                     })
                                                     .defaultIfEmpty(saved)
                                                     .flatMap(updated->historyMono
-                                                            .then(Mono.just(updated)));
+                                                            .then(Mono.just(updated)))
+                                                    .flatMap(updated->consumeQuoteIfPresent(
+                                                            request,updated
+                                                    ).thenReturn(updated));
                                         });
                             });
                 })
@@ -642,6 +648,56 @@ public class PolicyService{
                     "Policy term must be greater than zero"
             );
         }
+    }
+
+    private Mono<Void> validateQuoteIfPresent(
+            Long customerId,
+            CreatePolicyRequest request
+    ){
+        if(request.getQuoteId()==null){
+            return Mono.empty();
+        }
+
+        InternalQuoteValidateRequest validateRequest=
+                InternalQuoteValidateRequest.builder()
+                        .customerId(customerId)
+                        .productId(request.getProductId())
+                        .locationZoneId(request.getLocationZoneId())
+                        .sumInsured(request.getSumInsured())
+                        .termMonths(request.getTermMonths())
+                        .build();
+
+        return financialServiceClient
+                .validateQuote(request.getQuoteId(),validateRequest)
+                .flatMap(response->{
+                    if(!response.isValid()){
+                        return Mono.error(new ValidationException(
+                                response.getValidationReason()!=null
+                                        ?response.getValidationReason()
+                                        :"Quote is not valid for this application"
+                        ));
+                    }
+                    return Mono.empty();
+                });
+    }
+
+    private Mono<Void> consumeQuoteIfPresent(
+            CreatePolicyRequest request,
+            Policy policy
+    ){
+        if(request.getQuoteId()==null){
+            return Mono.empty();
+        }
+
+        InternalQuoteConsumeRequest consumeRequest=
+                InternalQuoteConsumeRequest.builder()
+                        .policyId(policy.getId())
+                        .policyNumber(policy.getPolicyNumber())
+                        .build();
+
+        return financialServiceClient
+                .consumeQuote(request.getQuoteId(),consumeRequest)
+                .then();
     }
 
     private void validateSumInsured(

@@ -49,6 +49,7 @@ public class ClaimService{
     private final WebClient.Builder webClientBuilder;
     private final TriggerEligibilityClient triggerEligibilityClient;
     private final NotificationService notificationService;
+    private final FinancialServiceClient financialServiceClient;
 
     @Value("${gateway.internal-key}")
     private String internalGatewayKey;
@@ -380,6 +381,9 @@ public class ClaimService{
                 .flatMap(saved -> notificationService.notifyClaimApproved(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber()
                 ).thenReturn(saved))
+                .flatMap(saved -> financialServiceClient
+                        .createPayoutForClaim(saved.getId())
+                        .thenReturn(saved))
                 .map(this::toResponse);
     }
 

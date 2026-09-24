@@ -1,0 +1,40 @@
+package org.example.claimsservice.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.claimsservice.dto.CreatePayoutRequest;
+import org.example.claimsservice.util.GatewayHeaders;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FinancialServiceClient{
+    private final WebClient.Builder loadBalancedWebClientBuilder;
+
+    @Value("${gateway.internal-key}")
+    private String internalKey;
+
+    public Mono<Void> createPayoutForClaim(Long claimId){
+        return loadBalancedWebClientBuilder.build()
+                .post()
+                .uri("http://FINANCIAL-SERVICE/internal/financial/payouts")
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(CreatePayoutRequest.builder()
+                        .claimId(claimId)
+                        .build())
+                .retrieve()
+                .bodyToMono(Object.class)
+                .then()
+                .doOnError(error->log.warn(
+                        "Failed to auto-create payout for approved claim {}: {}",
+                        claimId,error.getMessage()
+                ))
+                .onErrorResume(error->Mono.empty());
+    }
+}

@@ -1,0 +1,109 @@
+package org.example.productservice.client;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.productservice.dto.InternalQuoteConsumeRequest;
+import org.example.productservice.dto.InternalQuoteResponse;
+import org.example.productservice.dto.InternalQuoteValidateRequest;
+import org.example.productservice.exception.DependentServiceException;
+import org.example.productservice.util.GatewayHeaders;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class FinancialServiceClient{
+    @org.springframework.beans.factory.annotation.Qualifier("financialServiceWebClient")
+    private final WebClient financialServiceWebClient;
+
+    @Value("${gateway.internal-key}")
+    private String internalKey;
+
+    public Mono<InternalQuoteResponse> validateQuote(
+            Long quoteId,
+            InternalQuoteValidateRequest request
+    ){
+        return financialServiceWebClient.post()
+                .uri("/internal/financial/quotes/{quoteId}/validate",quoteId)
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(
+                        status->status.value()==404,
+                        response->Mono.error(
+                                new DependentServiceException(
+                                        "Quote could not be found"
+                                )
+                        )
+                )
+                .onStatus(
+                        HttpStatusCode::is4xxClientError,
+                        response->Mono.error(
+                                new DependentServiceException(
+                                        "Quote could not be validated"
+                                )
+                        )
+                )
+                .onStatus(
+                        HttpStatusCode::is5xxServerError,
+                        response->Mono.error(
+                                new DependentServiceException(
+                                        "Financial service is currently unavailable"
+                                )
+                        )
+                )
+                .bodyToMono(InternalQuoteResponse.class)
+                .onErrorMap(
+                        WebClientRequestException.class,
+                        exception->new DependentServiceException(
+                                "Financial service is currently unavailable"
+                        )
+                );
+    }
+
+    public Mono<InternalQuoteResponse> consumeQuote(
+            Long quoteId,
+            InternalQuoteConsumeRequest request
+    ){
+        return financialServiceWebClient.put()
+                .uri("/internal/financial/quotes/{quoteId}/consume",quoteId)
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(
+                        HttpStatusCode::is4xxClientError,
+                        response->Mono.error(
+                                new DependentServiceException(
+                                        "Quote could not be linked to the policy"
+                                )
+                        )
+                )
+                .onStatus(
+                        HttpStatusCode::is5xxServerError,
+                        response->Mono.error(
+                                new DependentServiceException(
+                                        "Financial service is currently unavailable"
+                                )
+                        )
+                )
+                .bodyToMono(InternalQuoteResponse.class)
+                .onErrorMap(
+                        WebClientRequestException.class,
+                        exception->new DependentServiceException(
+                                "Financial service is currently unavailable"
+                        )
+                )
+                .doOnError(error->log.warn(
+                        "Failed to mark quote {} consumed for policy: {}",
+                        quoteId,error.getMessage()
+                ));
+    }
+}

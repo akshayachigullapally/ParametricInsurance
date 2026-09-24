@@ -25,6 +25,9 @@ public class CreatePolicyRequest{
     @Positive(message="Location zone ID must be greater than zero")
     private Long locationZoneId;
 
+    @Positive(message="Quote id must be positive")
+    private Long quoteId;
+
     private String perilCode;
     private String triggerMetric;
     private String triggerOperator;
