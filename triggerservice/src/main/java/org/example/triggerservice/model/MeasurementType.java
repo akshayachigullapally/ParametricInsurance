@@ -6,5 +6,6 @@ public enum MeasurementType{
     WIND_SPEED,
     HUMIDITY,
     RIVER_LEVEL,
-    SOIL_MOISTURE
+    SOIL_MOISTURE,
+    OTHER
 }

@@ -386,7 +386,7 @@ public class ProductTriggerSyncService{
         return switch(normalized){
             case "WATER_LEVEL"->MeasurementType.RIVER_LEVEL;
             case "RAINFALL","TEMPERATURE","WIND_SPEED","HUMIDITY",
-                    "SOIL_MOISTURE","RIVER_LEVEL"->
+                    "SOIL_MOISTURE","RIVER_LEVEL","OTHER"->
                     MeasurementType.valueOf(normalized);
             default->null;
         };
@@ -398,14 +398,19 @@ public class ProductTriggerSyncService{
         }
         String normalized=value.trim().toUpperCase(java.util.Locale.ROOT)
                 .replace("KM/H","KM_PER_HOUR")
+                .replace("M/S","METERS_PER_SECOND")
                 .replace("%","PERCENTAGE")
                 .replace("°","");
         return switch(normalized){
             case "M","METER"->MeasurementUnit.METER;
             case "MM","MILLIMETER"->MeasurementUnit.MM;
+            case "CM","CENTIMETER"->MeasurementUnit.CM;
             case "C","CELSIUS"->MeasurementUnit.CELSIUS;
+            case "K","KELVIN"->MeasurementUnit.KELVIN;
             case "KM_PER_HOUR"->MeasurementUnit.KM_PER_HOUR;
+            case "METERS_PER_SECOND"->MeasurementUnit.METERS_PER_SECOND;
             case "PERCENTAGE","PCT"->MeasurementUnit.PERCENTAGE;
+            case "OTHER"->MeasurementUnit.OTHER;
             default->null;
         };
     }
@@ -455,6 +460,7 @@ public class ProductTriggerSyncService{
             case WIND_SPEED->"Wind Speed";
             case HUMIDITY->"Humidity";
             case SOIL_MOISTURE->"Soil Moisture";
+            case OTHER->"Other";
         };
     }
 }

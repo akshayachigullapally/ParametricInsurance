@@ -288,6 +288,7 @@ public class MeasurementService{
             case TEMPERATURE->MeasurementUnit.CELSIUS;
             case WIND_SPEED->MeasurementUnit.KM_PER_HOUR;
             case HUMIDITY,SOIL_MOISTURE->MeasurementUnit.PERCENTAGE;
+            case OTHER->MeasurementUnit.OTHER;
         };
     }
 
@@ -299,6 +300,7 @@ public class MeasurementService{
             case WIND_SPEED->"Wind Speed";
             case HUMIDITY->"Humidity";
             case SOIL_MOISTURE->"Soil Moisture";
+            case OTHER->"Other";
         };
     }
 }

@@ -106,7 +106,7 @@ public class DemoObservationGenerator implements CommandLineRunner{
 
     private Flux<Observation> generateReadings(LocalDateTime observedAt){
         return activeZones()
-                .flatMap(zone->Flux.fromArray(MeasurementType.values())
+                .flatMap(zone->Flux.fromIterable(VALUE_RANGES.keySet())
                         .flatMap(type->saveReading(zone,type,observedAt)));
     }
 
@@ -157,6 +157,7 @@ public class DemoObservationGenerator implements CommandLineRunner{
             case TEMPERATURE->MeasurementUnit.CELSIUS;
             case WIND_SPEED->MeasurementUnit.KM_PER_HOUR;
             case HUMIDITY,SOIL_MOISTURE->MeasurementUnit.PERCENTAGE;
+            case OTHER->MeasurementUnit.OTHER;
         };
     }
 

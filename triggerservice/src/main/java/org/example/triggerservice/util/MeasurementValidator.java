@@ -13,10 +13,14 @@ public final class MeasurementValidator{
     ){
         boolean valid=switch(measurementType){
             case RAINFALL->measurementUnit==MeasurementUnit.MM;
-            case TEMPERATURE->measurementUnit==MeasurementUnit.CELSIUS;
-            case WIND_SPEED->measurementUnit==MeasurementUnit.KM_PER_HOUR;
+            case TEMPERATURE->measurementUnit==MeasurementUnit.CELSIUS
+                    ||measurementUnit==MeasurementUnit.KELVIN;
+            case WIND_SPEED->measurementUnit==MeasurementUnit.KM_PER_HOUR
+                    ||measurementUnit==MeasurementUnit.METERS_PER_SECOND;
             case HUMIDITY,SOIL_MOISTURE->measurementUnit==MeasurementUnit.PERCENTAGE;
-            case RIVER_LEVEL->measurementUnit==MeasurementUnit.METER;
+            case RIVER_LEVEL->measurementUnit==MeasurementUnit.METER
+                    ||measurementUnit==MeasurementUnit.CM;
+            case OTHER->true;
         };
 
         if(!valid){
