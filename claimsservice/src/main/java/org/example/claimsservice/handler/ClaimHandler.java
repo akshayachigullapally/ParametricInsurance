@@ -134,6 +134,9 @@ public class ClaimHandler{
                         ).flatMap(body->claimService.approveClaim(
                                 reviewerId,claimId,body
                         ))))
+                .flatMap(response->claimService
+                        .requestPayout(response.getId())
+                        .thenReturn(response))
                 .flatMap(response->ServerResponse.ok().bodyValue(response));
     }
 

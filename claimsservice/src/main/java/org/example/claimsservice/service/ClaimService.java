@@ -381,10 +381,13 @@ public class ClaimService{
                 .flatMap(saved -> notificationService.notifyClaimApproved(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber()
                 ).thenReturn(saved))
-                .flatMap(saved -> financialServiceClient
-                        .createPayoutForClaim(saved.getId())
-                        .thenReturn(saved))
                 .map(this::toResponse);
+    }
+
+    // Must run after approveClaim's transaction commits: the financial
+    // service reads the claim back and rejects it unless it is APPROVED.
+    public Mono<Void> requestPayout(Long claimId){
+        return financialServiceClient.createPayoutForClaim(claimId);
     }
 
     @Transactional

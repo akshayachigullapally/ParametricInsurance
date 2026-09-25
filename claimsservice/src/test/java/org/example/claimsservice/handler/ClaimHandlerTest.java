@@ -260,6 +260,7 @@ class ClaimHandlerTest {
 
         when(claimService.approveClaim(eq(1L), eq(1L), any(ApproveClaimRequest.class)))
                 .thenReturn(Mono.just(response));
+        when(claimService.requestPayout(1L)).thenReturn(Mono.empty());
         when(serverRequest.pathVariable("claimId")).thenReturn("1");
         mockPrincipal(1L);
         when(serverRequest.bodyToMono(ApproveClaimRequest.class))

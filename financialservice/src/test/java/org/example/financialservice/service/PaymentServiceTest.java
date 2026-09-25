@@ -142,9 +142,54 @@ class PaymentServiceTest{
     }
 
     @Test
-    void createRejectsWhenNoConsumedQuote(){
+    void createAllowsActivePolicyWithoutQuote(){
         when(productServiceClient.findPolicy(7L))
                 .thenReturn(Mono.just(POLICY));
+        when(quoteRepository.findByPolicyIdAndStatus(
+                7L,
+                QuoteStatus.CONSUMED
+        )).thenReturn(Mono.empty());
+        when(paymentRepository.existsByPolicyIdAndStatus(
+                7L,
+                PaymentStatus.SUCCESS
+        )).thenReturn(Mono.just(false));
+        when(paymentRepository.countByPolicyId(7L))
+                .thenReturn(Mono.just(0L));
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(inv->{
+                    Payment payment=inv.getArgument(0);
+                    payment.setId(9L);
+                    return Mono.just(payment);
+                });
+
+        StepVerifier.create(TestAuth.customer(
+                service.create(PaymentRequest.builder()
+                        .policyId(7L)
+                        .method(PaymentMethod.MOCK_CARD)
+                        .build()),
+                5L,
+                5L
+        ))
+                .assertNext(response->{
+                    assertThat(response.getQuoteId()).isNull();
+                    assertThat(response.getAmount())
+                            .isEqualByComparingTo("10000.00");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void createRejectsInactivePolicyWithoutQuote(){
+        InternalPolicyResponse pending=InternalPolicyResponse.builder()
+                .id(7L)
+                .policyNumber("POL-7")
+                .customerId(5L)
+                .status("PENDING")
+                .premiumAmount(new BigDecimal("10000.00"))
+                .build();
+
+        when(productServiceClient.findPolicy(7L))
+                .thenReturn(Mono.just(pending));
         when(quoteRepository.findByPolicyIdAndStatus(
                 7L,
                 QuoteStatus.CONSUMED

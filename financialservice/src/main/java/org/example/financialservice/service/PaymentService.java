@@ -2,7 +2,9 @@ package org.example.financialservice.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
+import org.example.financialservice.dto.InternalPolicyResponse;
 import org.example.financialservice.dto.PaymentActionRequest;
 import org.example.financialservice.dto.PaymentRequest;
 import org.example.financialservice.dto.PaymentResponse;
@@ -56,17 +58,20 @@ public class PaymentService{
                                 );
                             }
 
-return quoteRepository
-                    .findByPolicyIdAndStatus(
-                            policy.getId(),
-                            QuoteStatus.CONSUMED
-                    )
-                                    .switchIfEmpty(Mono.error(
-                                            new ConflictException(
-                                                    "Quote not consumed for this policy"
-                                            )
+                            // A quote is optional: policies applied for directly
+                            // from a product carry no quote and are paid at the
+                            // policy premium once the underwriter activates them.
+                            return quoteRepository
+                                    .findByPolicyIdAndStatus(
+                                            policy.getId(),
+                                            QuoteStatus.CONSUMED
+                                    )
+                                    .map(quote->Optional.of(quote.getId()))
+                                    .switchIfEmpty(Mono.defer(()->
+                                            requirePayableWithoutQuote(policy)
+                                                    .thenReturn(Optional.<Long>empty())
                                     ))
-                                    .flatMap(quote->paymentRepository
+                                    .flatMap(quoteId->paymentRepository
                                             .existsByPolicyIdAndStatus(
                                                     policy.getId(),
                                                     PaymentStatus.SUCCESS
@@ -100,7 +105,7 @@ return quoteRepository
                                                                         policy.getPolicyNumber()
                                                                 )
                                                                 .quoteId(
-                                                                        quote.getId()
+                                                                        quoteId.orElse(null)
                                                                 )
                                                                 .amount(
                                                                         policy.getPremiumAmount()
@@ -397,6 +402,25 @@ return quoteRepository
                                 "Payment not found"
                         )
                 ));
+    }
+
+    private Mono<Void> requirePayableWithoutQuote(
+            InternalPolicyResponse policy
+    ){
+        if(!"ACTIVE".equals(policy.getStatus())){
+            return Mono.error(new ConflictException(
+                    "Policy must be active before payment"
+            ));
+        }
+
+        if(policy.getPremiumAmount()==null||
+                policy.getPremiumAmount().signum()<=0){
+            return Mono.error(new ConflictException(
+                    "Policy has no premium to pay"
+            ));
+        }
+
+        return Mono.empty();
     }
 
     private String generateReference(){
