@@ -22,6 +22,7 @@ public class UserProfileService{
     private final UserCredentialRepository userRepository;
     private final UserProfileRepository profileRepository;
     private final AddressRepository addressRepository;
+    private final NotificationServiceClient notificationServiceClient;
 
     @Transactional
     public Mono<UserResponse> saveProfile(Long authUserId,UpdateProfileRequest request){
@@ -43,7 +44,11 @@ public class UserProfileService{
                                             profile,
                                             request.getAddress()
                                     ).then(buildUserResponse(savedUser,profile))));
-                });
+                })
+                .flatMap(response->notificationServiceClient.audit(
+                        "PROFILE_UPDATED","USER",authUserId,authUserId,
+                        "ROLE_CUSTOMER","Updated profile details"
+                ).thenReturn(response));
     }
 
     public Mono<UserResponse> getMyProfile(Long authUserId){
@@ -67,6 +72,10 @@ public class UserProfileService{
                     profile.setUpdatedAt(LocalDateTime.now());
                     return profileRepository.save(profile);
                 })
+                .flatMap(saved->notificationServiceClient.audit(
+                        "PROFILE_DEACTIVATED","USER",authUserId,authUserId,
+                        null,"Deactivated own profile"
+                ))
                 .thenReturn(MessageResponse.builder()
                         .message("Profile deactivated successfully")
                         .build());
@@ -130,7 +139,11 @@ public class UserProfileService{
                                     .flatMap(savedProfile->
                                             buildUserResponse(user,savedProfile)
                                     );
-                        }));
+                        }))
+                .flatMap(response->notificationServiceClient.audit(
+                        "USER_STATUS_CHANGED","USER",authUserId,null,null,
+                        "Changed status of user "+response.getEmail()+" to "+status
+                ).thenReturn(response));
     }
 
     private Mono<UserProfile> saveOrUpdateProfile(

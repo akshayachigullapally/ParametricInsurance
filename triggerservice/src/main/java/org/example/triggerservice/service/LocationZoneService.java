@@ -325,6 +325,7 @@ import java.util.Locale;
 public class LocationZoneService{
     private final LocationZoneRepository locationZoneRepository;
     private final ProductTriggerClient productTriggerClient;
+    private final NotificationService notificationService;
 
     public Flux<LocationZoneResponse> getAll(String state){
         if(StringUtils.hasText(state)){
@@ -436,6 +437,10 @@ public class LocationZoneService{
 
                     return locationZoneRepository.save(zone);
                 })
+                .flatMap(saved->notificationService.audit(
+                        "ZONE_CREATED","LOCATION_ZONE",saved.getId(),userId,
+                        "Created location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")"
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -476,6 +481,10 @@ public class LocationZoneService{
                                     return locationZoneRepository.save(zone);
                                 })
                 )
+                .flatMap(saved->notificationService.audit(
+                        "ZONE_UPDATED","LOCATION_ZONE",saved.getId(),userId,
+                        "Updated location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")"
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -510,6 +519,10 @@ public class LocationZoneService{
 
                     return locationZoneRepository.save(zone);
                 })
+                .flatMap(saved->notificationService.audit(
+                        "ZONE_STATUS_CHANGED","LOCATION_ZONE",saved.getId(),userId,
+                        "Changed status of location zone "+saved.getZoneCode()+" to "+saved.getStatus()
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -531,6 +544,10 @@ public class LocationZoneService{
                                     return locationZoneRepository.save(zone);
                                 })
                 )
+                .flatMap(saved->notificationService.audit(
+                        "ZONE_ARCHIVED","LOCATION_ZONE",saved.getId(),userId,
+                        "Archived location zone "+saved.getZoneCode()
+                ))
                 .then();
     }
 

@@ -142,6 +142,10 @@ public class TriggerEventService{
                                         }))
                         .switchIfEmpty(Mono.empty()))
                         .thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "TRIGGER_VERIFIED", "TRIGGER_EVENT", saved.getId(), userId,
+                        "Verified trigger event " + saved.getEventReference()
+                ).thenReturn(saved))
                 .flatMap(this::buildResponse);
     }
 
@@ -169,6 +173,11 @@ public class TriggerEventService{
                 })
                 .flatMap(saved -> notificationService.notifyTriggerRejected(
                         null, saved.getId(), saved.getEventReference()
+                ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "TRIGGER_REJECTED", "TRIGGER_EVENT", saved.getId(), userId,
+                        "Rejected trigger event " + saved.getEventReference() +
+                                ": " + reviewNotes.trim()
                 ).thenReturn(saved))
                 .flatMap(this::buildResponse);
     }

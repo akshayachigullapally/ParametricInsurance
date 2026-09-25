@@ -9,6 +9,7 @@ import org.example.triggerservice.repository.PerilRepository;
 import org.example.triggerservice.repository.TriggerDefinitionRepository;
 import org.example.triggerservice.repository.TriggerEventRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -34,6 +35,12 @@ class TriggerEventServiceTest {
     @Mock private IdempotencyService idempotencyService;
     @Mock private NotificationService notificationService;
     @InjectMocks private TriggerEventService service;
+
+    @BeforeEach
+    void stubAudit(){
+        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
+    }
 
     @Test
     void getAll_shouldReturnEnrichedEvents() {

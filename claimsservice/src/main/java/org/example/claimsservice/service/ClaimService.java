@@ -88,6 +88,11 @@ public class ClaimService{
                         resp.getClaimSource(),
                         resp.getId(),
                         resp.getClaimNumber()
+                ).thenReturn(resp))
+                .flatMap(resp -> notificationService.audit(
+                        "CLAIM_SUBMITTED", "CLAIM", resp.getId(), null,
+                        "Submitted claim " + resp.getClaimNumber() +
+                                " for " + resp.getClaimedAmount()
                 ).thenReturn(resp));
     }
 
@@ -140,6 +145,10 @@ public class ClaimService{
                 })
                 .flatMap(saved -> notificationService.notifyClaimCancelled(
                         customerId, saved.getId(), saved.getClaimNumber()
+                ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "CLAIM_CANCELLED", "CLAIM", saved.getId(), null,
+                        "Cancelled claim " + saved.getClaimNumber()
                 ).thenReturn(saved))
                 .thenReturn(MessageResponse.builder()
                         .message("Claim cancelled successfully")
@@ -318,6 +327,10 @@ public class ClaimService{
                 .flatMap(saved -> notificationService.notifyClaimUnderReview(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber()
                 ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "CLAIM_REVIEW_STARTED", "CLAIM", saved.getId(), reviewerId,
+                        "Started review of claim " + saved.getClaimNumber()
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -381,6 +394,11 @@ public class ClaimService{
                 .flatMap(saved -> notificationService.notifyClaimApproved(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber()
                 ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "CLAIM_APPROVED", "CLAIM", saved.getId(), reviewerId,
+                        "Approved claim " + saved.getClaimNumber() +
+                                " for " + saved.getApprovedAmount()
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -438,6 +456,11 @@ public class ClaimService{
                 .flatMap(saved -> notificationService.notifyClaimRejected(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber(), request.getReason().trim()
                 ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "CLAIM_REJECTED", "CLAIM", saved.getId(), reviewerId,
+                        "Rejected claim " + saved.getClaimNumber() +
+                                ": " + request.getReason().trim()
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -481,6 +504,10 @@ public class ClaimService{
                 })
                 .flatMap(saved -> notificationService.notifyClaimSettled(
                         saved.getCustomerId(), saved.getId(), saved.getClaimNumber()
+                ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "CLAIM_SETTLED", "CLAIM", saved.getId(), officerId,
+                        "Settled claim " + saved.getClaimNumber()
                 ).thenReturn(saved))
                 .map(this::toResponse);
     }

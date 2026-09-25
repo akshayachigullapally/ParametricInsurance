@@ -358,7 +358,7 @@ public class QuoteService{
                         "QUOTE_CONSUMED",
                         "QUOTE",
                         saved.getId(),
-                        saved.getCustomerId(),
+                        null,
                         "policyId="+saved.getPolicyId()
                 ).thenReturn(saved))
                 .flatMap(saved->notifications

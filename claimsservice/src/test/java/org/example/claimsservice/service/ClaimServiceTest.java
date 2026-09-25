@@ -59,6 +59,9 @@ class ClaimServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private FinancialServiceClient financialServiceClient;
+
     private ExchangeFunction exchangeFunction;
     private ClaimService claimService;
 
@@ -74,7 +77,8 @@ class ClaimServiceTest {
                 claimTimelineRepository,
                 webClientBuilder,
                 triggerEligibilityClient,
-                notificationService
+                notificationService,
+                financialServiceClient
         );
 
         when(notificationService.notifyClaimSubmitted(anyLong(),anyLong(),any()))
@@ -92,6 +96,8 @@ class ClaimServiceTest {
         when(notificationService.notifyManualClaimSubmitted(anyLong(),anyLong(),any()))
                 .thenReturn(Mono.empty());
         when(notificationService.notifyClaimPendingReview(anyLong(),any()))
+                .thenReturn(Mono.empty());
+        when(notificationService.audit(any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
 
         ReflectionTestUtils.setField(

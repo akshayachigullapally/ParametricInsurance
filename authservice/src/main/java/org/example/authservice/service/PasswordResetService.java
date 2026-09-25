@@ -23,6 +23,7 @@ public class PasswordResetService{
     private final PasswordResetTokenRepository tokenRepository;
     private final UserCredentialRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationServiceClient notificationServiceClient;
 
     @Value("${password.reset-token-expiration-hours:1}")
     private long tokenExpirationHours;
@@ -82,6 +83,10 @@ public class PasswordResetService{
                                 user.setUpdatedAt(LocalDateTime.now());
                                 return userRepository.save(user);
                             })
+                            .flatMap(user->notificationServiceClient.audit(
+                                    "PASSWORD_RESET","USER",user.getId(),user.getId(),
+                                    user.getRole(),"Reset account password"
+                            ))
                             .thenReturn(MessageResponse.builder()
                                     .message("Password reset successfully")
                                     .build());

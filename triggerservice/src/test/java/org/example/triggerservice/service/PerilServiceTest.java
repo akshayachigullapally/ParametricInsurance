@@ -8,6 +8,7 @@ import org.example.triggerservice.model.Peril;
 import org.example.triggerservice.model.PerilStatus;
 import org.example.triggerservice.repository.PerilRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -26,7 +27,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PerilServiceTest {
     @Mock private PerilRepository perilRepository;
+    @Mock private NotificationService notificationService;
     @InjectMocks private PerilService perilService;
+
+    @BeforeEach
+    void stubAudit(){
+        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
+    }
 
     @Test
     void getAll_shouldReturnNonArchivedPerils() {

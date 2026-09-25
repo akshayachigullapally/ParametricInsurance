@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.claimsservice.dto.AuditEventRequest;
 import org.example.claimsservice.dto.NotificationRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -17,14 +20,16 @@ public class NotificationService {
     }
 
     public Mono<Void> audit(String eventType, String entityType, Long entityId, Long actorId, String details) {
-        AuditEventRequest request = AuditEventRequest.builder()
-                .eventType(eventType)
-                .entityType(entityType)
-                .entityId(entityId)
-                .actorUserId(actorId)
-                .description(details)
-                .build();
-        return client.sendAuditEvent(request)
+        return currentActor()
+                .defaultIfEmpty(new AuditActor(actorId, actorId == null ? "SYSTEM" : null))
+                .flatMap(actor -> client.sendAuditEvent(AuditEventRequest.builder()
+                        .eventType(eventType)
+                        .entityType(entityType)
+                        .entityId(entityId)
+                        .actorUserId(actor.userId())
+                        .actorRole(actor.role())
+                        .description(details)
+                        .build()))
                 .onErrorResume(e -> {
                     log.warn("Audit event {} failed: {}", eventType, e.getMessage());
                     return Mono.empty();
@@ -114,4 +119,23 @@ public class NotificationService {
                     return Mono.empty();
                 });
     }
+
+    // The signed-in user behind the current request. Empty for scheduled jobs and
+    // service-to-service calls, which carry no user identity.
+    private Mono<AuditActor> currentActor() {
+        return ReactiveSecurityContextHolder.getContext()
+                .mapNotNull(SecurityContext::getAuthentication)
+                .filter(auth -> auth.isAuthenticated()
+                        && auth.getName() != null
+                        && auth.getName().matches("\\d+"))
+                .map(auth -> new AuditActor(
+                        Long.valueOf(auth.getName()),
+                        auth.getAuthorities().stream()
+                                .findFirst()
+                                .map(GrantedAuthority::getAuthority)
+                                .orElse(null)
+                ));
+    }
+
+    private record AuditActor(Long userId, String role) {}
 }

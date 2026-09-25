@@ -35,6 +35,8 @@ class ProductServiceTest{
                 .thenReturn(Mono.empty());
         lenient().when(notificationService.notifyProductUpdated(any(),any()))
                 .thenReturn(Mono.empty());
+        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
         lenient().when(triggerServiceClient.syncProductDefinition(any()))
                 .thenReturn(Mono.empty());
         lenient().when(thresholdHistoryRepository

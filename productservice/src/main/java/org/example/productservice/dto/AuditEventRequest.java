@@ -16,6 +16,7 @@ public class AuditEventRequest {
     private String entityType;
     private Long entityId;
     private Long actorUserId;
+    private String actorRole;
     private String description;
     private LocalDateTime timestamp;
 }

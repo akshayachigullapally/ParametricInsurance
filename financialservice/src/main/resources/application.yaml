@@ -6,7 +6,7 @@ spring:
     name: FINANCIAL-SERVICE
 
   r2dbc:
-    url: r2dbc:h2:mem:///financialdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    url: r2dbc:h2:file:///./data/financialdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     username: sa
     password:
 

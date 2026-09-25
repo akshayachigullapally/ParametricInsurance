@@ -42,8 +42,35 @@ public class AuditEventService {
     }
 
     public Flux<AuditEventResponse> all() {
-        return SecurityUtil.requireAdmin().thenMany(repository.findAllByOrderByCreatedAtDesc())
+        return all(null, null);
+    }
+
+    // Admin view of every user's history, optionally narrowed to one user and/or role.
+    public Flux<AuditEventResponse> all(Long actorUserId, String actorRole) {
+        String role = normalizeRole(actorRole);
+        Flux<AuditEvent> events = Flux.defer(() -> actorUserId != null
+                ? repository.findAllByActorUserIdOrderByCreatedAtDesc(actorUserId)
+                : repository.findAllByOrderByCreatedAtDesc());
+
+        return SecurityUtil.requireAdmin()
+                .thenMany(events)
+                .filter(e -> role == null || role.equals(normalizeRole(e.getActorRole())))
                 .map(this::response);
+    }
+
+    // The signed-in user's own history, whatever their role.
+    public Flux<AuditEventResponse> mine() {
+        return SecurityUtil.userId()
+                .flatMapMany(repository::findAllByActorUserIdOrderByCreatedAtDesc)
+                .map(this::response);
+    }
+
+    private static String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return null;
+        }
+        String upper = role.trim().toUpperCase();
+        return upper.startsWith("ROLE_") ? upper.substring(5) : upper;
     }
 
     private AuditEventResponse response(AuditEvent e) {

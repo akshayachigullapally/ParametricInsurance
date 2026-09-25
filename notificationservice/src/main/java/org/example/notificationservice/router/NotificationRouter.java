@@ -29,6 +29,7 @@ public class NotificationRouter {
                 .GET("/api/notifications/me", n::mine)
                 .GET("/api/notifications/me/unread", n::unread)
                 .GET("/api/notifications/me/unread-count", n::count)
+                .GET("/api/notifications/audit/me", a::mine)
                 .GET("/api/notifications/me/stream", n::stream)
                 .PUT("/api/notifications/{notificationId}/read", n::read)
                 .PUT("/api/notifications/me/read-all", n::readAll)

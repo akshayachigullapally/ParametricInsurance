@@ -28,14 +28,18 @@ class PasswordResetServiceTest {
     @Mock private PasswordResetTokenRepository tokenRepository;
     @Mock private UserCredentialRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private NotificationServiceClient notificationServiceClient;
 
     private PasswordResetService passwordResetService;
 
     @BeforeEach
     void setUp() {
         passwordResetService=new PasswordResetService(
-                tokenRepository,userRepository,passwordEncoder
+                tokenRepository,userRepository,passwordEncoder,
+                notificationServiceClient
         );
+        lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
+                .thenReturn(reactor.core.publisher.Mono.empty());
         ReflectionTestUtils.setField(passwordResetService,"tokenExpirationHours",1L);
     }
 

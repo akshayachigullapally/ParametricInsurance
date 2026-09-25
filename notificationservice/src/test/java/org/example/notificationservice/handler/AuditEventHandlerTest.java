@@ -54,7 +54,7 @@ class AuditEventHandlerTest {
     @Test
     void all_returnsAllAuditEvents() {
         ServerRequest request = mock(ServerRequest.class);
-        when(service.all()).thenReturn(Flux.just(buildResponse(1L), buildResponse(2L)));
+        when(service.all(null, null)).thenReturn(Flux.just(buildResponse(1L), buildResponse(2L)));
 
         StepVerifier.create(handler.all(request))
                 .assertNext(response -> {
@@ -64,9 +64,31 @@ class AuditEventHandlerTest {
     }
 
     @Test
+    void all_withFilters_passesThemToService() {
+        ServerRequest request = mock(ServerRequest.class);
+        when(request.queryParam("actorUserId")).thenReturn(java.util.Optional.of("7"));
+        when(request.queryParam("actorRole")).thenReturn(java.util.Optional.of("CUSTOMER"));
+        when(service.all(7L, "CUSTOMER")).thenReturn(Flux.just(buildResponse(1L)));
+
+        StepVerifier.create(handler.all(request))
+                .assertNext(response -> assertThat(response.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+
+    @Test
+    void mine_returnsOk() {
+        ServerRequest request = mock(ServerRequest.class);
+        when(service.mine()).thenReturn(Flux.just(buildResponse(1L)));
+
+        StepVerifier.create(handler.mine(request))
+                .assertNext(response -> assertThat(response.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+
+    @Test
     void all_noEvents_returnsEmpty() {
         ServerRequest request = mock(ServerRequest.class);
-        when(service.all()).thenReturn(Flux.empty());
+        when(service.all(null, null)).thenReturn(Flux.empty());
 
         StepVerifier.create(handler.all(request))
                 .assertNext(response -> {

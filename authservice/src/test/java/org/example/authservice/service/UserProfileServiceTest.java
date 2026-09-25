@@ -41,6 +41,9 @@ class UserProfileServiceTest {
     @Mock
     private AddressRepository addressRepository;
 
+    @Mock
+    private NotificationServiceClient notificationServiceClient;
+
     private UserProfileService userProfileService;
 
     @BeforeEach
@@ -48,8 +51,11 @@ class UserProfileServiceTest {
         userProfileService=new UserProfileService(
                 userRepository,
                 profileRepository,
-                addressRepository
+                addressRepository,
+                notificationServiceClient
         );
+        lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
+                .thenReturn(reactor.core.publisher.Mono.empty());
     }
 
     @Test

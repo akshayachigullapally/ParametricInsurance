@@ -36,6 +36,7 @@ class AuthServiceTest{
     @Mock private RoleRepository roleRepository;
     @Mock private UserRoleRepository userRoleRepository;
     @Mock private AddressRepository addressRepository;
+    @Mock private NotificationServiceClient notificationServiceClient;
 
     private AuthService authService;
 
@@ -44,8 +45,11 @@ class AuthServiceTest{
         authService=new AuthService(
                 userRepository,refreshTokenRepository,sessionRepository,
                 passwordEncoder,jwtUtil,profileRepository,
-                roleRepository,userRoleRepository,addressRepository
+                roleRepository,userRoleRepository,addressRepository,
+                notificationServiceClient
         );
+        lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
+                .thenReturn(reactor.core.publisher.Mono.empty());
         ReflectionTestUtils.setField(authService,"refreshExpiration",604_800_000L);
     }
 

@@ -31,6 +31,7 @@ public class AuthService{
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final AddressRepository addressRepository;
+    private final NotificationServiceClient notificationServiceClient;
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpiration;
@@ -57,7 +58,10 @@ public class AuthService{
                         .flatMap(user->createUserRole(user.getId(),role.getId())
                                 .then(createInitialProfile(user))
                                 .then(createTokens(user,deviceName,ipAddress)))
-                );
+                )
+                .flatMap(response->auditUser(
+                        "USER_REGISTERED",response,"Registered a new account"
+                ).thenReturn(response));
 
     }
 
@@ -84,7 +88,13 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                         new AuthenticationException("Invalid email or password")
                 ))
                 .flatMap(user->validateUserForLogin(user,request.getPassword()))
-                .flatMap(user->createTokens(user,deviceName,ipAddress));
+                .flatMap(user->createTokens(user,deviceName,ipAddress))
+                .flatMap(response->auditUser(
+                        "USER_LOGIN",response,
+                        "Signed in"+(deviceName!=null&&!deviceName.isBlank()
+                                ?" from "+deviceName
+                                :"")
+                ).thenReturn(response));
 
     }
 
@@ -128,6 +138,9 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .flatMap(token->revokeRefreshToken(token)
                         .then(deactivateSessionByRefreshToken(token.getId()))
                 )
+                .then(notificationServiceClient.audit(
+                        "USER_LOGOUT","USER",userId,userId,null,"Signed out"
+                ))
                 .thenReturn(MessageResponse.builder()
                         .message("Logged out successfully")
                         .build());
@@ -377,5 +390,15 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
         if(ipAddress==null||ipAddress.isBlank()) return "Unknown";
         return ipAddress.length()>100
                 ?ipAddress.substring(0,100):ipAddress;
+    }
+
+    private Mono<Void> auditUser(String eventType,AuthResponse response,String description){
+        UserResponse user=response.getUser();
+        if(user==null||user.getId()==null){
+            return Mono.empty();
+        }
+        return notificationServiceClient.audit(
+                eventType,"USER",user.getId(),user.getId(),user.getRole(),description
+        );
     }
 }

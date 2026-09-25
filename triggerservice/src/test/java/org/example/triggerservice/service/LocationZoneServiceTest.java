@@ -8,6 +8,7 @@ import org.example.triggerservice.model.LocationZone;
 import org.example.triggerservice.model.LocationZoneStatus;
 import org.example.triggerservice.repository.LocationZoneRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -27,7 +28,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LocationZoneServiceTest {
     @Mock private LocationZoneRepository locationZoneRepository;
+    @Mock private NotificationService notificationService;
     @InjectMocks private LocationZoneService locationZoneService;
+
+    @BeforeEach
+    void stubAudit(){
+        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
+    }
 
     @Test
     void getAll_whenStateIsAbsent_shouldReturnNonArchivedZones() {

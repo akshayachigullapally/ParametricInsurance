@@ -125,7 +125,13 @@ public class PolicyService{
                         customerId, resp.getId(), resp.getPolicyNumber()
                 ).then(notificationService.notifyPolicyPendingReview(
                         resp.getId(), resp.getPolicyNumber()
-                )).thenReturn(resp));
+                )).thenReturn(resp))
+                .flatMap(resp -> notificationService.audit(
+                        "POLICY_APPLIED", "POLICY", resp.getId(), null,
+                        "Applied for policy " + resp.getPolicyNumber() +
+                                " (sum insured " + request.getSumInsured() +
+                                ", term " + request.getTermMonths() + " months)"
+                ).thenReturn(resp));
     }
 
     @Transactional
@@ -289,6 +295,10 @@ public class PolicyService{
                 .flatMap(saved -> notificationService.notifyPolicyCancelled(
                         customerId, saved.getId(), saved.getPolicyNumber()
                 ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "POLICY_CANCELLED", "POLICY", saved.getId(), null,
+                        "Cancelled policy application " + saved.getPolicyNumber()
+                ).thenReturn(saved))
                 .thenReturn(MessageResponse.builder()
                         .message("Policy cancelled successfully")
                         .build());
@@ -374,6 +384,10 @@ public class PolicyService{
                 .flatMap(saved -> notificationService.notifyPolicyApproved(
                         saved.getCustomerId(), saved.getId(), saved.getPolicyNumber()
                 ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "POLICY_APPROVED", "POLICY", saved.getId(), reviewerId,
+                        "Approved policy " + saved.getPolicyNumber()
+                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -434,6 +448,11 @@ public class PolicyService{
                 .flatMap(saved -> notificationService.notifyPolicyRejected(
                         saved.getCustomerId(), saved.getId(),
                         saved.getPolicyNumber(), request.getReason().trim()
+                ).thenReturn(saved))
+                .flatMap(saved -> notificationService.audit(
+                        "POLICY_REJECTED", "POLICY", saved.getId(), reviewerId,
+                        "Rejected policy " + saved.getPolicyNumber() +
+                                ": " + request.getReason().trim()
                 ).thenReturn(saved))
                 .map(this::toResponse);
     }

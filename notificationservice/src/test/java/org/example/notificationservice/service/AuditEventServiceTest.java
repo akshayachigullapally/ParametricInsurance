@@ -157,4 +157,59 @@ class AuditEventServiceTest {
         StepVerifier.create(service.all())
                 .verifyComplete();
     }
+
+    @Test
+    void mine_returnsOnlyCurrentUsersEvents() {
+        securityUtilMock.when(SecurityUtil::userId).thenReturn(Mono.just(42L));
+
+        AuditEvent own = buildAuditEvent(1L, "CLAIM_SUBMITTED", LocalDateTime.now());
+        own.setActorUserId(42L);
+
+        when(repository.findAllByActorUserIdOrderByCreatedAtDesc(42L)).thenReturn(Flux.just(own));
+
+        StepVerifier.create(service.mine())
+                .assertNext(r -> {
+                    assertThat(r.getActorUserId()).isEqualTo(42L);
+                    assertThat(r.getEventType()).isEqualTo("CLAIM_SUBMITTED");
+                })
+                .verifyComplete();
+
+        verify(repository, never()).findAllByOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void all_filtersByRoleIgnoringRolePrefix() {
+        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
+
+        AuditEvent admin = buildAuditEvent(1L, "PRODUCT_CREATED", LocalDateTime.now());
+        AuditEvent customer = buildAuditEvent(2L, "POLICY_APPLIED", LocalDateTime.now());
+        customer.setActorRole("ROLE_CUSTOMER");
+
+        when(repository.findAllByOrderByCreatedAtDesc()).thenReturn(Flux.just(admin, customer));
+
+        StepVerifier.create(service.all(null, "customer"))
+                .assertNext(r -> assertThat(r.getEventType()).isEqualTo("POLICY_APPLIED"))
+                .verifyComplete();
+    }
+
+    @Test
+    void all_byUser_usesUserQuery() {
+        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
+
+        when(repository.findAllByActorUserIdOrderByCreatedAtDesc(5L))
+                .thenReturn(Flux.just(buildAuditEvent(3L, "CLAIM_APPROVED", LocalDateTime.now())));
+
+        StepVerifier.create(service.all(5L, null))
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void all_byUser_nonAdmin_throwsForbiddenException() {
+        securityUtilMock.when(SecurityUtil::requireAdmin)
+                .thenReturn(Mono.error(new ForbiddenException("Admin access required")));
+        StepVerifier.create(service.all(5L, null))
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
 }

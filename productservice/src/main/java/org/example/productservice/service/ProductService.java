@@ -102,6 +102,11 @@ public class ProductService{
                             .flatMap(saved->buildResponse(saved,false))
                             .flatMap(resp -> notificationService.notifyProductCreated(
                                     resp.getId(), resp.getName()
+                            ).thenReturn(resp))
+                            .flatMap(resp -> notificationService.audit(
+                                    "PRODUCT_CREATED", "PRODUCT", resp.getId(), adminId,
+                                    "Created product " + resp.getName() +
+                                            " (" + resp.getProductCode() + ")"
                             ).thenReturn(resp));
                 });
     }
@@ -251,6 +256,11 @@ public class ProductService{
                                                     buildResponse(saved,false))
                                             .flatMap(resp -> notificationService.notifyProductUpdated(
                                                     resp.getId(), resp.getName()
+                                            ).thenReturn(resp))
+                                            .flatMap(resp -> notificationService.audit(
+                                                    "PRODUCT_UPDATED", "PRODUCT", resp.getId(), null,
+                                                    "Updated product " + resp.getName() +
+                                                            " (" + resp.getProductCode() + ")"
                                             ).thenReturn(resp));
                                 })
                 );
@@ -348,6 +358,11 @@ public class ProductService{
                     product.setUpdatedAt(LocalDateTime.now());
                     return productRepository.save(product);
                 })
+                .flatMap(product->notificationService.audit(
+                        "PRODUCT_STATUS_CHANGED", "PRODUCT", product.getId(), null,
+                        "Changed status of product " + product.getProductCode() +
+                                " to " + status
+                ).thenReturn(product))
                 .flatMap(product->buildResponse(product,false));
     }
 
@@ -373,6 +388,10 @@ public class ProductService{
                                     return productRepository.save(product);
                                 })
                 )
+                .flatMap(product->notificationService.audit(
+                        "PRODUCT_ARCHIVED", "PRODUCT", product.getId(), null,
+                        "Archived product " + product.getProductCode()
+                ).thenReturn(product))
                 .thenReturn(MessageResponse.builder()
                         .message("Product archived successfully")
                         .build());
@@ -410,6 +429,12 @@ public class ProductService{
                                     request.getChangeReason()
                             )
                             .then(productRepository.save(product))
+                            .flatMap(saved->notificationService.audit(
+                                    "PRODUCT_THRESHOLD_UPDATED", "PRODUCT", saved.getId(), adminId,
+                                    "Changed trigger threshold of product " + saved.getProductCode() +
+                                            " from " + previous.thresholdValue() +
+                                            " to " + saved.getThresholdValue()
+                            ).thenReturn(saved))
                             .map(saved->ProductThresholdUpdateResponse.builder()
                                     .productId(saved.getId())
                                     .productCode(saved.getProductCode())

@@ -40,6 +40,7 @@ public class MeasurementService{
     private final ClaimsServiceClient claimsServiceClient;
     private final IdempotencyService idempotencyService;
     private final TriggerEventRepository triggerEventRepository;
+    private final NotificationService notificationService;
 
     public Flux<MeasurementTypeInfo> getMeasurementTypes(){
         return Flux.fromArray(MeasurementType.values())
@@ -68,6 +69,15 @@ public class MeasurementService{
                             .build()));
                 }
                 return processNewMeasurement(request,recordedBy,now)
+                        .flatMap(result->notificationService.audit(
+                                "MEASUREMENT_RECORDED","PRODUCT",result.getProductId(),recordedBy,
+                                "Recorded current measurement "+result.getCurrentValue()+
+                                        " for product "+result.getProductCode()+
+                                        " in zone "+result.getLocationZoneId()+
+                                        (result.getTriggerEventReference()!=null
+                                                ?" (created trigger event "+result.getTriggerEventReference()+")"
+                                                :" (no trigger)")
+                        ).thenReturn(result))
                         .flatMap(result->{
                         if(result.getTriggerEventId()==null){
                             return idempotencyService.record(request.getIdempotencyKey(),"CURRENT_MEASUREMENT_NO_MATCH",null)
