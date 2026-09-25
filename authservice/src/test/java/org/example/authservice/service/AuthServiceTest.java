@@ -85,7 +85,7 @@ class AuthServiceTest{
                     profile.setId(10L);
                     return Mono.just(profile);
                 });
-        when(jwtUtil.generateToken(any(UserCredential.class),isNull()))
+        when(jwtUtil.generateToken(any(UserCredential.class),any()))
                 .thenReturn("access-token");
         when(jwtUtil.getExpirationSeconds()).thenReturn(3600L);
         when(refreshTokenRepository.save(any(RefreshToken.class)))
@@ -188,7 +188,7 @@ class AuthServiceTest{
                 .thenReturn(Mono.just(user));
         when(passwordEncoder.matches("Password@123","encoded-password"))
                 .thenReturn(true);
-        when(jwtUtil.generateToken(user,null)).thenReturn("access-token");
+        when(jwtUtil.generateToken(user,user.getId())).thenReturn("access-token");
         when(jwtUtil.getExpirationSeconds()).thenReturn(3600L);
         when(refreshTokenRepository.save(any(RefreshToken.class)))
                 .thenAnswer(invocation->{
@@ -300,7 +300,7 @@ class AuthServiceTest{
         when(sessionRepository.save(oldSession))
                 .thenReturn(Mono.just(oldSession));
         when(userRepository.findById(1L)).thenReturn(Mono.just(user));
-        when(jwtUtil.generateToken(user,null))
+        when(jwtUtil.generateToken(user,user.getId()))
                 .thenReturn("new-access-token");
         when(jwtUtil.getExpirationSeconds()).thenReturn(3600L);
         when(refreshTokenRepository.save(
@@ -598,7 +598,7 @@ class AuthServiceTest{
                 .thenReturn(Mono.just(user));
         when(passwordEncoder.matches("Password@123","encoded-password"))
                 .thenReturn(true);
-        when(jwtUtil.generateToken(user,null))
+        when(jwtUtil.generateToken(user,user.getId()))
                 .thenReturn("access-token");
         when(jwtUtil.getExpirationSeconds()).thenReturn(3600L);
         when(refreshTokenRepository.save(any(RefreshToken.class)))

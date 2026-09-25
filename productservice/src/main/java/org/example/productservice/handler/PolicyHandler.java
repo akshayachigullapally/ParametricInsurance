@@ -8,6 +8,7 @@ import org.example.productservice.dto.CreateCustomPolicyRequest;
 import org.example.productservice.dto.CreatePolicyRequest;
 import org.example.productservice.dto.PolicyDecisionRequest;
 import org.example.productservice.dto.PolicyResponse;
+import org.example.productservice.dto.PolicyReviewHistoryResponse;
 import org.example.productservice.dto.PolicyStatusHistoryResponse;
 import org.example.productservice.exception.ValidationException;
 import org.example.productservice.service.PolicyService;
@@ -93,6 +94,16 @@ public class PolicyHandler{
                 .flatMap(response->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response));
+    }
+
+    public Mono<ServerResponse> getReviewHistory(ServerRequest request){
+        return SecurityUtil.getUserId(request)
+                .flatMap(reviewerId->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(
+                                policyService.getReviewHistory(reviewerId),
+                                PolicyReviewHistoryResponse.class
+                        ));
     }
 
     public Mono<ServerResponse> getPendingPolicies(ServerRequest request){

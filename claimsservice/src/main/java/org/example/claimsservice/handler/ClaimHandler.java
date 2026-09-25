@@ -59,6 +59,14 @@ public class ClaimHandler{
                 .flatMap(response->ServerResponse.ok().bodyValue(response));
     }
 
+    public Mono<ServerResponse> getReviewHistory(ServerRequest request){
+        return SecurityUtil.getUserId(request)
+                .flatMap(officerId->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(claimService.getReviewHistory(officerId),
+                                org.example.claimsservice.dto.ClaimReviewHistoryResponse.class));
+    }
+
     public Mono<ServerResponse> getSubmittedClaims(ServerRequest request){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)

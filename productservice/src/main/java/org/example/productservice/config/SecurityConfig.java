@@ -104,7 +104,8 @@ public class SecurityConfig{
                         ).hasAnyRole("CUSTOMER","UNDERWRITER","ADMIN")
 
                         .pathMatchers(HttpMethod.GET,
-                                "/api/policies/review/pending"
+                                "/api/policies/review/pending",
+                                "/api/policies/review/history"
                         ).hasAnyRole("UNDERWRITER","ADMIN")
 
                         .pathMatchers(HttpMethod.PUT,

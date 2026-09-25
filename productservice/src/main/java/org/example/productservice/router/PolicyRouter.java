@@ -32,6 +32,10 @@ public class PolicyRouter{
                         handler::getPendingPolicies
                 )
                 .GET(
+                        "/api/policies/review/history",
+                        handler::getReviewHistory
+                )
+                .GET(
                         "/api/policies/me",
                         handler::getMyPolicies
                 )

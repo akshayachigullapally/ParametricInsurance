@@ -155,6 +155,33 @@ public class ClaimService{
                         .build());
     }
 
+    /**
+     * Every action this officer took on a claim, newest first. Filtering on the
+     * CLAIMS_OFFICER role keeps out customer timeline entries whose customer id
+     * happens to equal the officer's user id.
+     */
+    public Flux<org.example.claimsservice.dto.ClaimReviewHistoryResponse> getReviewHistory(Long officerId){
+        return claimTimelineRepository
+                .findAllByActionByAndActionByRoleOrderByCreatedAtDesc(officerId,"CLAIMS_OFFICER")
+                .concatMap(entry->claimRepository.findById(entry.getClaimId())
+                        .map(claim->org.example.claimsservice.dto.ClaimReviewHistoryResponse.builder()
+                                .timelineId(entry.getId())
+                                .claimId(claim.getId())
+                                .claimNumber(claim.getClaimNumber())
+                                .policyNumber(claim.getPolicyNumber())
+                                .customerId(claim.getCustomerId())
+                                .claimSource(claim.getClaimSource())
+                                .action(entry.getAction())
+                                .oldStatus(entry.getOldStatus())
+                                .newStatus(entry.getNewStatus())
+                                .notes(entry.getNotes())
+                                .actedAt(entry.getCreatedAt())
+                                .claimedAmount(claim.getClaimedAmount())
+                                .approvedAmount(claim.getApprovedAmount())
+                                .currentStatus(claim.getStatus())
+                                .build()));
+    }
+
     public Flux<ClaimResponse> getSubmittedClaims(){
         return claimRepository.findAllByStatus(
                 ClaimStatus.SUBMITTED.name()

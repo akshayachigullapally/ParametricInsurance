@@ -42,6 +42,7 @@ public class SecurityConfig{
                         ).hasAnyRole("CLAIMS_OFFICER","ADMIN")
                         .pathMatchers(HttpMethod.GET,
                                 "/api/claims/review/submitted",
+                                "/api/claims/review/history",
                                 "/api/claims/review/{claimId:[0-9]+}"
                         ).hasAnyRole("CLAIMS_OFFICER","ADMIN")
                         .pathMatchers(HttpMethod.PUT,

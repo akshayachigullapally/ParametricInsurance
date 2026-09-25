@@ -6,4 +6,6 @@ import reactor.core.publisher.Flux;
 
 public interface PolicyStatusHistoryRepository extends ReactiveCrudRepository<PolicyStatusHistory,Long>{
     Flux<PolicyStatusHistory> findAllByPolicyIdOrderByChangedAtDesc(Long policyId);
+    Flux<PolicyStatusHistory> findAllByChangedByAndOldStatusOrderByChangedAtDesc(
+            Long changedBy,String oldStatus);
 }

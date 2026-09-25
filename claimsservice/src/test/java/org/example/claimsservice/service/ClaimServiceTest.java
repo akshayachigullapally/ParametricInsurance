@@ -981,7 +981,7 @@ class ClaimServiceTest {
                 .thenReturn(Flux.just(claim));
 
         StepVerifier.create(
-                        claimService.getAllClaims("approved")
+                        claimService.getAllClaims("approved", null)
                 )
                 .assertNext(response->
                         assertThat(response.getStatus())
@@ -1001,7 +1001,7 @@ class ClaimServiceTest {
         when(claimRepository.findAll())
                 .thenReturn(Flux.just(first,second));
 
-        StepVerifier.create(claimService.getAllClaims(null))
+        StepVerifier.create(claimService.getAllClaims(null, null))
                 .assertNext(response->
                         assertThat(response.getStatus())
                                 .isEqualTo("SUBMITTED")
@@ -1884,7 +1884,7 @@ class ClaimServiceTest {
     @Test
     void getAllClaims_whenStatusIsInvalid_shouldReturnValidationException() {
         StepVerifier.create(Flux.defer(
-                () -> claimService.getAllClaims("INVALID_STATUS")
+                () -> claimService.getAllClaims("INVALID_STATUS", null)
         ))
                 .expectErrorSatisfies(error->{
                     assertThat(error)

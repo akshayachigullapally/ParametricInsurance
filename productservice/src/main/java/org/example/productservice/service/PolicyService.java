@@ -304,6 +304,42 @@ public class PolicyService{
                         .build());
     }
 
+    /**
+     * Approve/reject decisions made by this reviewer, newest first. Only
+     * PENDING -> ACTIVE/REJECTED transitions are reviewer decisions; customer
+     * cancellations also leave PENDING but end in CANCELLED.
+     */
+    public Flux<PolicyReviewHistoryResponse> getReviewHistory(Long reviewerId){
+        validateReviewerId(reviewerId);
+
+        return historyRepository
+                .findAllByChangedByAndOldStatusOrderByChangedAtDesc(
+                        reviewerId,
+                        PolicyStatus.PENDING.name()
+                )
+                .filter(entry->PolicyStatus.ACTIVE.name().equals(entry.getNewStatus())||
+                        PolicyStatus.REJECTED.name().equals(entry.getNewStatus()))
+                .concatMap(entry->policyRepository.findById(entry.getPolicyId())
+                        .map(policy->PolicyReviewHistoryResponse.builder()
+                                .historyId(entry.getId())
+                                .policyId(policy.getId())
+                                .policyNumber(policy.getPolicyNumber())
+                                .customerId(policy.getCustomerId())
+                                .productId(policy.getProductId())
+                                .productCode(policy.getProductCode())
+                                .productName(policy.getProductName())
+                                .sumInsured(policy.getSumInsured())
+                                .premiumAmount(policy.getPremiumAmount())
+                                .termMonths(policy.getTermMonths())
+                                .decision(PolicyStatus.ACTIVE.name().equals(entry.getNewStatus())
+                                        ?"APPROVED"
+                                        :"REJECTED")
+                                .reason(entry.getChangeReason())
+                                .decidedAt(entry.getChangedAt())
+                                .currentStatus(policy.getStatus())
+                                .build()));
+    }
+
     public Flux<PolicyResponse> getPendingPolicies(){
         return policyRepository
                 .findAllByStatus(PolicyStatus.PENDING.name())

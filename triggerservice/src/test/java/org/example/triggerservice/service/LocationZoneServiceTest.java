@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.LocationZoneRequest;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 class LocationZoneServiceTest {
     @Mock private LocationZoneRepository locationZoneRepository;
     @Mock private NotificationService notificationService;
+    @Mock private ProductTriggerClient productTriggerClient;
     @InjectMocks private LocationZoneService locationZoneService;
 
     @BeforeEach
@@ -260,6 +262,7 @@ class LocationZoneServiceTest {
     void archive_shouldSaveArchivedZone() {
         when(locationZoneRepository.findById(1L))
                 .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
+        when(productTriggerClient.hasActivePoliciesForZone(1L)).thenReturn(Mono.just(false));
         when(locationZoneRepository.save(any(LocationZone.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
 
@@ -269,6 +272,19 @@ class LocationZoneServiceTest {
         verify(locationZoneRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(LocationZoneStatus.ARCHIVED);
         assertThat(captor.getValue().getUpdatedBy()).isEqualTo(9L);
+    }
+
+    @Test
+    void archive_whenZoneHasActivePolicies_shouldReturnConflict() {
+        when(locationZoneRepository.findById(1L))
+                .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
+        when(productTriggerClient.hasActivePoliciesForZone(1L)).thenReturn(Mono.just(true));
+
+        StepVerifier.create(locationZoneService.archive(1L,9L))
+                .expectError(ConflictException.class)
+                .verify();
+
+        verify(locationZoneRepository,never()).save(any(LocationZone.class));
     }
 
     private LocationZone zone(Long id,String code,String name,LocationZoneStatus status) {

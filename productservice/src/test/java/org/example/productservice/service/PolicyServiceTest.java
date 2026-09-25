@@ -1345,4 +1345,35 @@ class PolicyServiceTest{
                 .termMonths(termMonths)
                 .build();
     }
+
+    @Test
+    void getReviewHistory_returnsOnlyApproveAndRejectDecisions(){
+        LocalDateTime now=LocalDateTime.now();
+        PolicyStatusHistory approved=PolicyStatusHistory.builder()
+                .id(1L).policyId(100L).oldStatus("PENDING").newStatus("ACTIVE")
+                .changedBy(50L).changedAt(now).build();
+        PolicyStatusHistory rejected=PolicyStatusHistory.builder()
+                .id(2L).policyId(100L).oldStatus("PENDING").newStatus("REJECTED")
+                .changedBy(50L).changeReason("Outside risk appetite").changedAt(now.minusDays(1)).build();
+        // A customer cancellation whose customer id collides with the reviewer's user id
+        PolicyStatusHistory cancelled=PolicyStatusHistory.builder()
+                .id(3L).policyId(100L).oldStatus("PENDING").newStatus("CANCELLED")
+                .changedBy(50L).changedAt(now.minusDays(2)).build();
+
+        when(historyRepository.findAllByChangedByAndOldStatusOrderByChangedAtDesc(50L,"PENDING"))
+                .thenReturn(Flux.just(approved,rejected,cancelled));
+        when(policyRepository.findById(100L)).thenReturn(Mono.just(pendingPolicy));
+
+        StepVerifier.create(policyService.getReviewHistory(50L))
+                .assertNext(r->{
+                    assertThat(r.getDecision()).isEqualTo("APPROVED");
+                    assertThat(r.getPolicyNumber()).isEqualTo("POL-2026-ABC12345");
+                    assertThat(r.getProductName()).isEqualTo("Weather Shield");
+                })
+                .assertNext(r->{
+                    assertThat(r.getDecision()).isEqualTo("REJECTED");
+                    assertThat(r.getReason()).isEqualTo("Outside risk appetite");
+                })
+                .verifyComplete();
+    }
 }

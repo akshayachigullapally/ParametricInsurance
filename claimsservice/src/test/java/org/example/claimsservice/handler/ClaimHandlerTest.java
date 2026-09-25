@@ -328,7 +328,7 @@ class ClaimHandlerTest {
         ClaimResponse r1 = claimResponse(1L, "SUBMITTED");
         ClaimResponse r2 = claimResponse(2L, "APPROVED");
 
-        when(claimService.getAllClaims(null))
+        when(claimService.getAllClaims(null, null))
                 .thenReturn(Flux.just(r1, r2));
         when(serverRequest.queryParam("status")).thenReturn(java.util.Optional.empty());
 
@@ -343,7 +343,7 @@ class ClaimHandlerTest {
     void getAllClaims_withStatusFilter_shouldDelegateToService() {
         ClaimResponse r1 = claimResponse(1L, "APPROVED");
 
-        when(claimService.getAllClaims("APPROVED"))
+        when(claimService.getAllClaims("APPROVED", null))
                 .thenReturn(Flux.just(r1));
         when(serverRequest.queryParam("status"))
                 .thenReturn(java.util.Optional.of("APPROVED"));
@@ -354,7 +354,7 @@ class ClaimHandlerTest {
                 })
                 .verifyComplete();
 
-        verify(claimService).getAllClaims("APPROVED");
+        verify(claimService).getAllClaims("APPROVED", null);
     }
 
     @Test

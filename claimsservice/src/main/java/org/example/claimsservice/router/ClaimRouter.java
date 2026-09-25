@@ -17,6 +17,7 @@ public class ClaimRouter{
                         handler::getManualClaim)
                 .GET("/api/claims/review/submitted",
                         handler::getSubmittedClaims)
+                .GET("/api/claims/review/history",handler::getReviewHistory)
                 .GET("/api/claims/review/{claimId}",handler::getClaim)
                 .GET("/api/claims/me",handler::getMyClaims)
                 .GET("/api/claims/{claimId}",handler::getMyClaim)
