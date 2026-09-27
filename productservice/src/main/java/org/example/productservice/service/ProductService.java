@@ -1315,6 +1315,11 @@ public class ProductService{
                 .map(this::toInternalResponse);
     }
 
+    public Flux<InternalProductResponse> getAllInternalProducts(){
+        return productRepository.findAll()
+                .map(this::toInternalResponse);
+    }
+
     public Mono<InternalProductResponse> getInternalProductByCode(String productCode){
         if(productCode==null||productCode.isBlank()){
             return Mono.error(new ValidationException("Product code is required"));

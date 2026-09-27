@@ -141,6 +141,12 @@ public class ProductHandler{
                         .bodyValue(response));
     }
 
+    public Mono<ServerResponse> getInternalProducts(ServerRequest request){
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(productService.getAllInternalProducts(),InternalProductResponse.class);
+    }
+
     public Mono<ServerResponse> getInternalProductByCode(ServerRequest request){
         String productCode=request.pathVariable("productCode");
 

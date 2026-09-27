@@ -58,11 +58,17 @@ class PricingRuleServiceTest{
         when(productServiceClient.requireActiveProduct(anyLong()))
                 .thenReturn(Mono.empty());
 
+        DefaultPricingRuleProvisioner defaultRules=
+                mock(DefaultPricingRuleProvisioner.class);
+        when(defaultRules.provisionMissingRules())
+                .thenReturn(Mono.empty());
+
         service=new PricingRuleService(
                 repository,
                 productServiceClient,
                 triggerServiceClient,
-                notifications
+                notifications,
+                defaultRules
         );
     }
 

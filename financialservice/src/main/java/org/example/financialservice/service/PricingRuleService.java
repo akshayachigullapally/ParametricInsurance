@@ -14,26 +14,31 @@ import org.example.financialservice.model.PricingRuleStatus;
 import org.example.financialservice.repository.PricingRuleRepository;
 import org.example.financialservice.util.SecurityUtil;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class PricingRuleService{
     private final PricingRuleRepository repository;
     private final ProductServiceClient productServiceClient;
     private final TriggerServiceClient triggerServiceClient;
     private final NotificationService notifications;
+    private final DefaultPricingRuleProvisioner defaultRules;
 
     public PricingRuleService(
             PricingRuleRepository repository,
             ProductServiceClient productServiceClient,
             TriggerServiceClient triggerServiceClient,
-            NotificationService notifications
+            NotificationService notifications,
+            DefaultPricingRuleProvisioner defaultRules
     ){
         this.repository=repository;
         this.productServiceClient=productServiceClient;
         this.triggerServiceClient=triggerServiceClient;
         this.notifications=notifications;
+        this.defaultRules=defaultRules;
     }
 
     public Mono<PricingRuleResponse> create(
@@ -83,6 +88,14 @@ public class PricingRuleService{
 
     public Flux<PricingRuleResponse> findAll(){
         return SecurityUtil.requireAdmin()
+                .then(defaultRules.provisionMissingRules()
+                        .onErrorResume(error->{
+                            log.warn(
+                                    "Default pricing rule sync failed: {}",
+                                    error.getMessage()
+                            );
+                            return Mono.empty();
+                        }))
                 .thenMany(repository.findAllByOrderByCreatedAtDesc())
                 .map(this::response);
     }

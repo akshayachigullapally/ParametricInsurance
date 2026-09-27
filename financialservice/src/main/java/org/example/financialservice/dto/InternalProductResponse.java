@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 public class InternalProductResponse {
     private Long productId;
     private String productCode;
+    private String category;
     private String status;
     private BigDecimal minSumInsured;
     private BigDecimal maxSumInsured;

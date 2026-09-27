@@ -33,6 +33,7 @@ public class ProductRouter{
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                                 handler::updateThreshold)
                 )
+                .GET("/internal/products",handler::getInternalProducts)
                 .GET("/internal/products/code/{productCode}",handler::getInternalProductByCode)
                 .GET("/internal/products/{productId}",handler::getInternalProduct)
                 .POST("/internal/products/verified-event",
