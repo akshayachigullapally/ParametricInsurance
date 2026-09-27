@@ -263,24 +263,7 @@ public class NotificationService {
     public Flux<NotificationResponse> mine(NotificationQuery q) {
         return SecurityUtil.userId().flatMapMany(userId ->
                 SecurityUtil.role().flatMapMany(role -> {
-                    // Role-matched results are only genuine broadcasts (no specific
-                    // recipient) - a notification addressed to a specific user/customer
-                    // must never leak to someone else who merely shares its role.
-                    Flux<Notification> roleBroadcasts = (q.isUnreadOnly()
-                            ? repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc(role)
-                            : repository.findAllByRecipientRoleOrderByCreatedAtDesc(role))
-                            .filter(n -> n.getRecipientUserId() == null && n.getRecipientCustomerId() == null);
-                    Flux<Notification> all = Flux.concat(
-                            q.isUnreadOnly()
-                                    ? repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(userId)
-                                    : repository.findAllByRecipientUserIdOrderByCreatedAtDesc(userId),
-                            q.isUnreadOnly()
-                                    ? repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(userId)
-                                    : repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(userId),
-                            roleBroadcasts
-                    );
-                    Flux<Notification> filtered = all
-                            .distinct(Notification::getId)
+                    Flux<Notification> filtered = visibleTo(userId, role, q.isUnreadOnly())
                             .filter(n -> q.getNotificationType() == null || n.getType() == q.getNotificationType())
                             .filter(n -> q.getCreatedAfter() == null
                                     || (n.getCreatedAt() != null && n.getCreatedAt().isAfter(q.getCreatedAfter())))
@@ -292,6 +275,28 @@ public class NotificationService {
                             : filtered;
                     return paged.map(this::response);
                 }));
+    }
+
+    /**
+     * Every notification the user sees in their inbox: addressed to their user id,
+     * to their customer id (producers set it to the user id - see above), or a
+     * genuine broadcast to their role (no specific recipient, so it never leaks
+     * a notification meant for someone else who shares the role).
+     */
+    private Flux<Notification> visibleTo(Long userId, String role, boolean unreadOnly) {
+        Flux<Notification> roleBroadcasts = (unreadOnly
+                ? repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc(role)
+                : repository.findAllByRecipientRoleOrderByCreatedAtDesc(role))
+                .filter(n -> n.getRecipientUserId() == null && n.getRecipientCustomerId() == null);
+        return Flux.concat(
+                        unreadOnly
+                                ? repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(userId)
+                                : repository.findAllByRecipientUserIdOrderByCreatedAtDesc(userId),
+                        unreadOnly
+                                ? repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(userId)
+                                : repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(userId),
+                        roleBroadcasts)
+                .distinct(Notification::getId);
     }
 
         // Stream live notifications filtered for the current authenticated user.
@@ -328,9 +333,10 @@ public class NotificationService {
         }).map(this::response);
     }
 
+    /** Marks everything unread in the user's inbox (the same set as mine(true) and unreadCount()). */
     public Mono<MessageResponse> markAllRead() {
         return SecurityUtil.userId().flatMapMany(userId ->
-                repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(userId))
+                        SecurityUtil.role().flatMapMany(role -> visibleTo(userId, role, true)))
                 .flatMap(n -> {
                     n.setRead(true);
                     n.setReadAt(LocalDateTime.now());

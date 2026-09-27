@@ -355,11 +355,37 @@ class NotificationServiceTest {
         Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
 
         when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
+        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
+        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
         when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         StepVerifier.create(service.markAllRead())
                 .assertNext(response -> assertThat(response.getMessage()).contains("2 notification(s) marked as read"))
                 .verifyComplete();
+    }
+
+    @Test
+    void markAllRead_includesRoleBroadcastsAndCustomerNotifications() {
+        setupSecurityContext(1L, 100L, "ROLE_ADMIN");
+        Notification direct = buildNotification(1L, 1L, null, null, false, DeliveryStatus.DELIVERED);
+        Notification asCustomer = buildNotification(2L, null, 1L, null, false, DeliveryStatus.DELIVERED);
+        Notification broadcast = buildNotification(3L, null, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED);
+        Notification someoneElses = buildNotification(4L, 9L, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED);
+
+        when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(direct));
+        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(asCustomer));
+        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_ADMIN"))
+                .thenReturn(Flux.just(broadcast, someoneElses));
+        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+
+        StepVerifier.create(service.markAllRead())
+                .assertNext(response -> assertThat(response.getMessage()).contains("3 notification(s) marked as read"))
+                .verifyComplete();
+
+        assertThat(direct.isRead()).isTrue();
+        assertThat(asCustomer.isRead()).isTrue();
+        assertThat(broadcast.isRead()).isTrue();
+        assertThat(someoneElses.isRead()).isFalse();
     }
 
     @Test
