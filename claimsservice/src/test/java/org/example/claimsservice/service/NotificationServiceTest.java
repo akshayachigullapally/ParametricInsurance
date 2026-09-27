@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -94,11 +95,16 @@ class NotificationServiceTest{
     }
 
     @Test
-    void notifyClaimPendingReview_shouldTargetClaimsOfficerRole(){
-        NotificationRequest request=sentNotification(()->service.notifyClaimPendingReview(10L,"CLM-1"));
+    void notifyClaimPendingReview_shouldTargetClaimsOfficerAndAdminRoles(){
+        StepVerifier.create(service.notifyClaimPendingReview(10L,"CLM-1")).verifyComplete();
+        ArgumentCaptor<NotificationRequest> captor=ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(client,times(2)).sendNotification(captor.capture());
 
-        assertThat(request.getRecipientRole()).isEqualTo("ROLE_CLAIMS_OFFICER");
-        assertThat(request.getRecipientCustomerId()).isNull();
+        assertThat(captor.getAllValues())
+                .extracting(NotificationRequest::getRecipientRole)
+                .containsExactly("ROLE_CLAIMS_OFFICER","ROLE_ADMIN");
+        assertThat(captor.getAllValues())
+                .allSatisfy(request->assertThat(request.getRecipientCustomerId()).isNull());
     }
 
     @Test

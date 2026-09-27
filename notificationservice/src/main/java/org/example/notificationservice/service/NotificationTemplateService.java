@@ -108,6 +108,20 @@ public class NotificationTemplateService {
                         .build());
     }
 
+    public Mono<NotificationTemplate> findByCode(String templateCode) {
+        String code = templateCode.trim();
+        Mono<NotificationTemplate> builtIn = Mono.defer(() -> {
+            try {
+                return getDefaultTemplate(NotificationType.valueOf(code.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                return Mono.empty();
+            }
+        });
+        return repository.findByTemplateCodeAndActiveTrue(code)
+                .flatMap(opt -> opt.isPresent() ? Mono.just(opt.get()) : Mono.<NotificationTemplate>empty())
+                .switchIfEmpty(builtIn);
+    }
+
     public Mono<NotificationTemplate> findByType(NotificationType type) {
         return repository.findByNotificationTypeAndActiveTrue(type)
                 .flatMap(opt -> opt.isPresent() ? Mono.just(opt.get()) : Mono.empty());

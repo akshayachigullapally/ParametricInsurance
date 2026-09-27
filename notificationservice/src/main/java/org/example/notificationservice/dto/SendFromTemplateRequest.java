@@ -1,7 +1,6 @@
 package org.example.notificationservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +18,8 @@ import java.util.Map;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SendFromTemplateRequest {
-    @NotNull
+    /** Template to render; when omitted the template is chosen by notificationType. */
+    private String templateCode;
     private NotificationType notificationType;
     private Long recipientUserId;
     private Long recipientCustomerId;

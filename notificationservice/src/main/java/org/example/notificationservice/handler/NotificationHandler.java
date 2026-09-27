@@ -10,6 +10,7 @@ import org.example.notificationservice.exception.ValidationException;
 import org.example.notificationservice.model.NotificationType;
 import org.example.notificationservice.service.NotificationService;
 import org.example.notificationservice.util.RequestValidationUtil;
+import org.example.notificationservice.util.SecurityUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -45,7 +46,8 @@ public class NotificationHandler {
     }
 
     public Mono<ServerResponse> fromTemplate(ServerRequest r) {
-        return r.bodyToMono(SendFromTemplateRequest.class)
+        return SecurityUtil.requireAdmin()
+                .then(r.bodyToMono(SendFromTemplateRequest.class))
                 .map(validation::validate)
                 .flatMapMany(service::sendFromTemplate)
                 .collectList()
@@ -53,7 +55,9 @@ public class NotificationHandler {
     }
 
     public Mono<ServerResponse> batch(ServerRequest r) {
-        return r.bodyToMono(BatchNotificationRequest.class)
+        return SecurityUtil.requireAdmin()
+                .then(r.bodyToMono(BatchNotificationRequest.class))
+                .map(validation::validate)
                 .flatMap(req -> service.batch(req.getNotifications()).collectList())
                 .flatMap(list -> ServerResponse.status(HttpStatus.CREATED).bodyValue(list));
     }

@@ -81,9 +81,11 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyClaimPendingReview(Long claimId, String claimNumber) {
+        String message = "Claim " + claimNumber + " was submitted and is awaiting Claims Officer review.";
         return notifyRole("ROLE_CLAIMS_OFFICER", "CLAIM_SUBMITTED", "Claim Pending Review",
-                "Claim " + claimNumber + " was submitted and is awaiting Claims Officer review.",
-                "CLAIM", claimId);
+                message, "CLAIM", claimId)
+                .then(notifyRole("ROLE_ADMIN", "CLAIM_SUBMITTED", "Claim Pending Review",
+                        message, "CLAIM", claimId));
     }
 
     private Mono<Void> notify(Long customerId, String type, String title, String message,

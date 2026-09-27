@@ -48,11 +48,11 @@ public class NotificationRouter {
                 // Template management (admin)
                 .GET("/api/notifications/admin/templates", t::all)
                 .POST("/api/notifications/admin/templates", accept(org.springframework.http.MediaType.APPLICATION_JSON), t::create)
+                .GET("/api/notifications/admin/templates/defaults", t::defaults)
                 .GET("/api/notifications/admin/templates/{templateId}", t::get)
                 .PUT("/api/notifications/admin/templates/{templateId}", accept(org.springframework.http.MediaType.APPLICATION_JSON), t::update)
                 .PUT("/api/notifications/admin/templates/{templateId}/deactivate", t::deactivate)
                 .PUT("/api/notifications/admin/templates/{templateId}/activate", t::activate)
-                .GET("/api/notifications/admin/templates/defaults", t::defaults)
 
                 // Admin endpoints
                 .GET("/api/notifications/admin/all", n::all)

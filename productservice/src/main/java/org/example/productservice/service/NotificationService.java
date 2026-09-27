@@ -43,9 +43,11 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyPolicyPendingReview(Long policyId, String policyNumber) {
+        String message = "Policy application " + policyNumber + " was submitted and is awaiting underwriter review.";
         return notifyRole("ROLE_UNDERWRITER", "POLICY_SUBMITTED", "Policy Pending Review",
-                "Policy application " + policyNumber + " was submitted and is awaiting underwriter review.",
-                "POLICY", policyId);
+                message, "POLICY", policyId)
+                .then(notifyRole("ROLE_ADMIN", "POLICY_SUBMITTED", "Policy Pending Review",
+                        message, "POLICY", policyId));
     }
 
     public Mono<Void> notifyPolicyApproved(Long customerId, Long policyId, String policyNumber) {

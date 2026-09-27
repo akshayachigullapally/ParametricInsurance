@@ -163,15 +163,21 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> sendFromTemplate(SendFromTemplateRequest r) {
-        if (r.getNotificationType() == null) {
-            return Flux.error(new ValidationException("notificationType is required"));
+        boolean hasCode = r.getTemplateCode() != null && !r.getTemplateCode().isBlank();
+        if (!hasCode && r.getNotificationType() == null) {
+            return Flux.error(new ValidationException("templateCode or notificationType is required"));
         }
         if (r.getRecipientUserId() == null && r.getRecipientCustomerId() == null
                 && (r.getRecipientRole() == null || r.getRecipientRole().isBlank())) {
             return Flux.error(new ValidationException("At least one recipient identifier is required"));
         }
-        return templateService.getDefaultTemplate(r.getNotificationType())
-                .switchIfEmpty(Mono.defer(() -> templateService.findByType(r.getNotificationType())))
+        Mono<NotificationTemplate> resolved = hasCode
+                ? templateService.findByCode(r.getTemplateCode())
+                        .switchIfEmpty(Mono.error(new NotFoundException(
+                                "No active template found with code " + r.getTemplateCode().trim())))
+                : templateService.getDefaultTemplate(r.getNotificationType())
+                        .switchIfEmpty(Mono.defer(() -> templateService.findByType(r.getNotificationType())));
+        return resolved
                 .flatMapMany(template -> {
                     String title = render(template.getTitleTemplate(), r);
                     String message = render(template.getMessageTemplate(), r);
@@ -179,12 +185,16 @@ public class NotificationService {
                             .recipientUserId(r.getRecipientUserId())
                             .recipientCustomerId(r.getRecipientCustomerId())
                             .recipientRole(r.getRecipientRole())
-                            .type(r.getNotificationType())
+                            .type(r.getNotificationType() != null
+                                    ? r.getNotificationType()
+                                    : template.getNotificationType())
                             .title(title)
                             .message(message)
                             .relatedEntityType(r.getRelatedEntityType())
                             .relatedEntityId(r.getRelatedEntityId())
-                            .deliveryChannel(r.getDeliveryChannel())
+                            .deliveryChannel(r.getDeliveryChannel() != null
+                                    ? r.getDeliveryChannel()
+                                    : template.getDefaultChannel())
                             .deliveryChannels(r.getDeliveryChannels())
                             .maxRetries(r.getMaxRetries())
                             .build();
@@ -193,6 +203,9 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> batch(List<InternalNotificationRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return Flux.error(new ValidationException("notifications must not be empty"));
+        }
         return Flux.fromIterable(requests)
                 .flatMap(this::createForChannels);
     }
