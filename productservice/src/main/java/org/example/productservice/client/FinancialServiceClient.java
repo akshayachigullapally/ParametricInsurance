@@ -106,4 +106,33 @@ public class FinancialServiceClient{
                         quoteId,error.getMessage()
                 ));
     }
+
+    /**
+     * Premium from the active pricing rule. Empty when pricing is unavailable,
+     * so callers can fall back instead of failing the application.
+     */
+    public Mono<java.math.BigDecimal> calculatePremium(
+            Long productId,
+            Long locationZoneId,
+            java.math.BigDecimal sumInsured,
+            Integer termMonths
+    ){
+        return financialServiceWebClient.post()
+                .uri("/internal/financial/pricing/calculate")
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(java.util.Map.of(
+                        "productId",productId,
+                        "locationZoneId",locationZoneId,
+                        "sumInsured",sumInsured,
+                        "termMonths",termMonths))
+                .retrieve()
+                .bodyToMono(org.example.productservice.dto.InternalPricingResponse.class)
+                .mapNotNull(org.example.productservice.dto.InternalPricingResponse::getPremiumAmount)
+                .onErrorResume(error->{
+                    log.warn("Pricing unavailable for product {} zone {}: {}",
+                            productId,locationZoneId,error.getMessage());
+                    return Mono.empty();
+                });
+    }
 }

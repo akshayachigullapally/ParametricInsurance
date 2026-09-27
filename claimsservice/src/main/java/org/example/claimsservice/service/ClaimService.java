@@ -261,6 +261,17 @@ public class ClaimService{
                                     .claimSource(ClaimSource.AUTO_TRIGGERED.name())
                                     .manualReviewRequired(false).createdFromTriggerEvent(true)
                                     .triggerDetectionStatus(TriggerDetectionStatus.DETECTED.name())
+                                    .triggerMeasurementType(request.getMeasurementType())
+                                    .triggerMeasurementUnit(request.getMeasurementUnit())
+                                    .triggerObservedValue(request.getAggregatedValue()!=null
+                                            ?request.getAggregatedValue()
+                                            :request.getMeasuredValue())
+                                    .triggerThresholdValue(request.getThresholdValue())
+                                    .triggerComparisonOperator(request.getComparisonOperator()!=null
+                                            ?request.getComparisonOperator()
+                                            :"GREATER_THAN_OR_EQUAL")
+                                    .triggerWindowStart(request.getEventWindowStart())
+                                    .triggerWindowEnd(request.getEventWindowEnd())
                                     .submittedAt(now).updatedAt(now).payoutRequested(false).build();
                             return claimRepository.save(claim)
                                     .flatMap(saved->recordTimeline(saved,null,ClaimStatus.SUBMITTED.name(),
@@ -1115,6 +1126,13 @@ public class ClaimService{
                 .investigatedBy(claim.getInvestigatedBy())
                 .investigatedAt(claim.getInvestigatedAt())
                 .payoutRequested(claim.getPayoutRequested())
+                .triggerMeasurementType(claim.getTriggerMeasurementType())
+                .triggerMeasurementUnit(claim.getTriggerMeasurementUnit())
+                .triggerObservedValue(claim.getTriggerObservedValue())
+                .triggerThresholdValue(claim.getTriggerThresholdValue())
+                .triggerComparisonOperator(claim.getTriggerComparisonOperator())
+                .triggerWindowStart(claim.getTriggerWindowStart())
+                .triggerWindowEnd(claim.getTriggerWindowEnd())
                 .build();
     }
 

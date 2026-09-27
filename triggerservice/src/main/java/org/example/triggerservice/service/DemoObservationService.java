@@ -324,6 +324,20 @@ public class DemoObservationService{
                 });
     }
 
+    /** Operator of the definition that fired, so claims can explain the trigger exactly. */
+    private Mono<String> comparisonOperatorFor(TriggerEvent event){
+        String fallback="GREATER_THAN_OR_EQUAL";
+        if(event.getTriggerDefinitionId()==null){
+            return Mono.just(fallback);
+        }
+        return triggerDefinitionRepository.findById(event.getTriggerDefinitionId())
+                .map(definition->definition.getComparisonOperator()!=null
+                        ?definition.getComparisonOperator().name()
+                        :fallback)
+                .defaultIfEmpty(fallback)
+                .onErrorReturn(fallback);
+    }
+
     private Mono<Integer> createAutomaticClaims(
             TriggerEvent event,
             List<EligiblePolicyResponse> eligiblePolicies
@@ -351,7 +365,11 @@ public class DemoObservationService{
                         .toList())
                 .build();
 
-        return claimsServiceClient.createClaimsFromTriggerEvent(claimRequest)
+        return comparisonOperatorFor(event)
+                .flatMap(operator->{
+                    claimRequest.setComparisonOperator(operator);
+                    return claimsServiceClient.createClaimsFromTriggerEvent(claimRequest);
+                })
                 .flatMap(response->{
                     log.info("Claims created from trigger event {}: {} created, {} failed",
                             event.getId(),

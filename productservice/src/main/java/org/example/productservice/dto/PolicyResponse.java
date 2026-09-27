@@ -28,4 +28,6 @@ public class PolicyResponse{
     private LocalDateTime updatedAt;
     private Long locationZoneId;
     private Long triggerSnapshotId;
+    private Boolean autoRenew;
+    private Long renewedFromPolicyId;
 }

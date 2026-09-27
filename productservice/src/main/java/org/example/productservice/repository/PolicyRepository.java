@@ -13,6 +13,7 @@ public interface PolicyRepository extends ReactiveCrudRepository<Policy,Long>{
     Flux<Policy> findAllByProductIdAndStatus(Long productId, String status);
     Flux<Policy> findAllByLocationZoneIdAndStatus(Long locationZoneId, String status);
     Mono<Policy> findByIdAndCustomerId(Long id,Long customerId);
+    Flux<Policy> findAllByRenewedFromPolicyId(Long renewedFromPolicyId);
     Mono<Boolean> existsByCustomerIdAndProductIdAndStatus(
             Long customerId,
             Long productId,

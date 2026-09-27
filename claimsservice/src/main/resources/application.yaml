@@ -52,3 +52,6 @@ app:
     # Keep it outside OneDrive/Dropbox-synced folders.
     dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
     name: claimsdb
+  uploads:
+    # Claim evidence files (photos / PDFs). Metadata is in claim_documents.
+    dir: ${CITYSHIELD_UPLOAD_DIR:${user.home}/.cityshield/uploads}

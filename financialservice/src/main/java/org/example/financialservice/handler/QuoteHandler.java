@@ -61,6 +61,12 @@ public class QuoteHandler{
                 );
     }
 
+    public Mono<ServerResponse> priceInternal(ServerRequest request){
+        return request.bodyToMono(org.example.financialservice.dto.InternalPricingRequest.class)
+                .flatMap(service::priceInternal)
+                .flatMap(response->ServerResponse.ok().bodyValue(response));
+    }
+
     public Mono<ServerResponse> validateInternal(
             ServerRequest request
     ){

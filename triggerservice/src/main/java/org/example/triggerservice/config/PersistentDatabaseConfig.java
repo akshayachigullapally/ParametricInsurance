@@ -3,7 +3,6 @@ package org.example.triggerservice.config;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import io.r2dbc.spi.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,19 +53,16 @@ public class PersistentDatabaseConfig {
         migrateLegacyDatabase(dir.resolve(fileName), fileName);
         log.info("Database file: {}", dir.resolve(fileName));
 
-        // Options are passed individually (not as a URL) so paths with spaces work.
+        // Same connection as the old "r2dbc:pool:h2:file:///...;SETTINGS" URL, but the
+        // options are passed individually so paths with spaces work.
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
-                .option(ConnectionFactoryOptions.DRIVER, "h2")
-                .option(ConnectionFactoryOptions.PROTOCOL, "file")
+                .option(ConnectionFactoryOptions.DRIVER, "pool")
+                .option(ConnectionFactoryOptions.PROTOCOL, "h2:file")
                 .option(ConnectionFactoryOptions.DATABASE,
-                        dir.resolve(dbName).toString().replace(File.separatorChar, '/'))
+                        dir.resolve(dbName).toString().replace(File.separatorChar, '/')
+                                + ";DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
                 .option(ConnectionFactoryOptions.USER, username)
                 .option(ConnectionFactoryOptions.PASSWORD, password)
-                .option(Option.valueOf("DB_CLOSE_DELAY"), "-1")
-                // Non-driver H2 settings must go through "options"; the existing
-                // database files were created with these, so they are required.
-                .option(Option.valueOf("options"),
-                        "DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
                 .build());
     }
 

@@ -36,6 +36,17 @@ public class SecurityConfig{
                         .pathMatchers(HttpMethod.PUT,
                                 "/api/claims/{claimId:[0-9]+}/cancel"
                         ).hasRole("CUSTOMER")
+                        .pathMatchers(HttpMethod.POST,
+                                "/api/claims/{claimId:[0-9]+}/documents"
+                        ).hasRole("CUSTOMER")
+                        .pathMatchers(HttpMethod.GET,
+                                "/api/claims/{claimId:[0-9]+}/documents",
+                                "/api/claims/{claimId:[0-9]+}/documents/{documentId:[0-9]+}"
+                        ).hasRole("CUSTOMER")
+                        .pathMatchers(HttpMethod.GET,
+                                "/api/claims/review/{claimId:[0-9]+}/documents",
+                                "/api/claims/review/{claimId:[0-9]+}/documents/{documentId:[0-9]+}"
+                        ).hasAnyRole("CLAIMS_OFFICER","ADMIN")
                         .pathMatchers(HttpMethod.GET,
                                 "/api/claims/review/manual",
                                 "/api/claims/review/manual/{claimId:[0-9]+}"

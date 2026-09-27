@@ -73,6 +73,11 @@ public class FinancialRouter{
                         quoteHandler::cancel
                 )
                 .POST(
+                        "/internal/financial/pricing/calculate",
+                        accept(APPLICATION_JSON),
+                        quoteHandler::priceInternal
+                )
+                .POST(
                         "/internal/financial/quotes/{quoteId}/validate",
                         accept(APPLICATION_JSON),
                         quoteHandler::validateInternal

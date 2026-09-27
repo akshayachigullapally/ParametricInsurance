@@ -111,4 +111,25 @@ public class Claim{
 
     @Column("payout_requested")
     private Boolean payoutRequested;
+
+    @Column("trigger_measurement_type")
+    private String triggerMeasurementType;
+
+    @Column("trigger_measurement_unit")
+    private String triggerMeasurementUnit;
+
+    @Column("trigger_observed_value")
+    private BigDecimal triggerObservedValue;
+
+    @Column("trigger_threshold_value")
+    private BigDecimal triggerThresholdValue;
+
+    @Column("trigger_comparison_operator")
+    private String triggerComparisonOperator;
+
+    @Column("trigger_window_start")
+    private LocalDateTime triggerWindowStart;
+
+    @Column("trigger_window_end")
+    private LocalDateTime triggerWindowEnd;
 }

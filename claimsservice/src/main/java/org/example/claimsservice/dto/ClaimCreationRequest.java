@@ -24,6 +24,9 @@ public class ClaimCreationRequest {
     private String measurementUnit;
     private BigDecimal aggregatedValue;
     private BigDecimal thresholdValue;
+    /** Sent instead of aggregatedValue by the current-measurement flow. */
+    private BigDecimal measuredValue;
+    private String comparisonOperator;
     private LocalDateTime eventWindowStart;
     private LocalDateTime eventWindowEnd;
     private List<EligiblePolicyInfo> eligiblePolicies;

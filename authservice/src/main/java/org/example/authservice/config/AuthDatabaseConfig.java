@@ -3,7 +3,6 @@ package org.example.authservice.config;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import io.r2dbc.spi.Option;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -51,14 +50,14 @@ public class AuthDatabaseConfig {
         String dbPath = dir.resolve(DB_NAME).toString().replace('\\', '/');
         log.info("Auth database file: {}", dir.resolve(DB_FILE));
 
-        // Options are passed individually (not as a URL) so paths with spaces work.
+        // Same connection as the old "r2dbc:pool:h2:file:///...;DB_CLOSE_DELAY=-1" URL, but the
+        // options are passed individually so paths with spaces work.
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
-                .option(ConnectionFactoryOptions.DRIVER, "h2")
-                .option(ConnectionFactoryOptions.PROTOCOL, "file")
-                .option(ConnectionFactoryOptions.DATABASE, dbPath)
+                .option(ConnectionFactoryOptions.DRIVER, "pool")
+                .option(ConnectionFactoryOptions.PROTOCOL, "h2:file")
+                .option(ConnectionFactoryOptions.DATABASE, dbPath + ";DB_CLOSE_DELAY=-1")
                 .option(ConnectionFactoryOptions.USER, username)
                 .option(ConnectionFactoryOptions.PASSWORD, password)
-                .option(Option.valueOf("DB_CLOSE_DELAY"), "-1")
                 .build());
     }
 

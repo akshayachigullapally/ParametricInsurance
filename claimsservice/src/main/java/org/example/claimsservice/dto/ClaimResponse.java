@@ -43,4 +43,11 @@ public class ClaimResponse{
     private Long investigatedBy;
     private LocalDateTime investigatedAt;
     private Boolean payoutRequested;
+    private String triggerMeasurementType;
+    private String triggerMeasurementUnit;
+    private BigDecimal triggerObservedValue;
+    private BigDecimal triggerThresholdValue;
+    private String triggerComparisonOperator;
+    private LocalDateTime triggerWindowStart;
+    private LocalDateTime triggerWindowEnd;
 }

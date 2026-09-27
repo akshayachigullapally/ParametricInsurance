@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.UUID;
 import org.example.financialservice.dto.CreateQuoteRequest;
+import org.example.financialservice.dto.InternalPricingResponse;
+import org.example.financialservice.dto.InternalPricingRequest;
 import org.example.financialservice.dto.InternalQuoteConsumeRequest;
 import org.example.financialservice.dto.InternalQuoteResponse;
 import org.example.financialservice.dto.InternalQuoteValidateRequest;
@@ -123,6 +125,37 @@ public class QuoteService{
                         )
                         .thenReturn(saved))
                 .map(this::response);
+    }
+
+    /**
+     * Prices a policy with the active pricing rule without creating a quote.
+     * Used by the product service for renewals and applications made
+     * without a quote, so every policy premium comes from pricing rules.
+     */
+    public Mono<InternalPricingResponse> priceInternal(InternalPricingRequest request){
+        if(request==null||request.getProductId()==null||request.getLocationZoneId()==null
+                ||request.getSumInsured()==null||request.getTermMonths()==null
+                ||request.getSumInsured().signum()<=0||request.getTermMonths()<=0){
+            return Mono.error(new ValidationException(
+                    "productId, locationZoneId, positive sumInsured and termMonths are required"));
+        }
+
+        CreateQuoteRequest pricingInput=CreateQuoteRequest.builder()
+                .productId(request.getProductId())
+                .locationZoneId(request.getLocationZoneId())
+                .sumInsured(request.getSumInsured())
+                .termMonths(request.getTermMonths())
+                .build();
+
+        return findApplicableRule(request.getProductId(),request.getLocationZoneId())
+                .map(rule->InternalPricingResponse.builder()
+                        .pricingRuleId(rule.getId())
+                        .annualRate(rule.getBaseAnnualRate())
+                        .termFactor(rule.getTermFactor())
+                        .locationFactor(rule.getLocationFactor())
+                        .minimumPremium(rule.getMinimumPremium())
+                        .premiumAmount(calculatePremium(pricingInput,rule))
+                        .build());
     }
 
     public Mono<QuoteResponse> findMine(Long quoteId){

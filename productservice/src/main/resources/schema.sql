@@ -209,3 +209,11 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS customer_defined BOOLEAN DEFAULT F
 
 CREATE INDEX IF NOT EXISTS idx_products_customer_defined
     ON products(customer_defined);
+
+-- Renewals
+ALTER TABLE policies ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT FALSE;
+ALTER TABLE policies ADD COLUMN IF NOT EXISTS renewed_from_policy_id BIGINT;
+
+CREATE INDEX IF NOT EXISTS idx_policies_renewed_from
+    ON policies(renewed_from_policy_id);
+

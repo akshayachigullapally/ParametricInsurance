@@ -25,6 +25,7 @@ class PolicyServiceTest{
     @Mock private PolicyStatusHistoryRepository historyRepository;
     @Mock private NotificationService notificationService;
     @Mock private TriggerServiceClient triggerServiceClient;
+    @Mock private org.example.productservice.client.FinancialServiceClient financialServiceClient;
     @InjectMocks private PolicyService policyService;
 
     private Product product;
@@ -58,6 +59,10 @@ class PolicyServiceTest{
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
+        // No pricing rule reachable: applications fall back to the temporary rate.
+        lenient().when(financialServiceClient.calculatePremium(any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
 
         lenient().when(historyRepository.save(any(PolicyStatusHistory.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));

@@ -48,12 +48,27 @@ public class PolicyService{
             CreatePolicyRequest request
     ){
         validateCreateRequest(customerId,request);
+        return createApplication(customerId,request,null);
+    }
 
+    /**
+     * Creates a PENDING policy application. Used for new applications and
+     * renewals (renewedFromPolicyId set). The premium is the accepted quote's
+     * premium when a quote is supplied, otherwise the active pricing rule's
+     * price, falling back to the flat temporary rate if pricing is unavailable.
+     */
+    private Mono<PolicyResponse> createApplication(
+            Long customerId,
+            CreatePolicyRequest request,
+            Long renewedFromPolicyId
+    ){
         return validateQuoteIfPresent(customerId,request)
-                .then(productRepository.findByIdAndStatus(
+                .map(java.util.Optional::of)
+                .defaultIfEmpty(java.util.Optional.empty())
+                .flatMap(quotePremium->productRepository.findByIdAndStatus(
                         request.getProductId(),
                         ProductStatus.ACTIVE.name()
-                ))
+                )
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Active product not found")
                 ))
@@ -74,52 +89,16 @@ public class PolicyService{
                                     ));
                                 }
 
-                                LocalDateTime now=LocalDateTime.now();
-
-                                Policy policy=Policy.builder()
-                                        .policyNumber(generatePolicyNumber())
-                                        .customerId(customerId)
-                                        .productId(product.getId())
-                                        .productCode(product.getProductCode())
-                                        .productName(product.getName())
-                                        .locationZoneId(request.getLocationZoneId())
-                                        .sumInsured(request.getSumInsured())
-                                        .premiumAmount(calculateTemporaryPremium(
-                                                request.getSumInsured(),
-                                                request.getTermMonths()
-                                        ))
-                                        .termMonths(request.getTermMonths())
-                                        .status(PolicyStatus.PENDING.name())
-                                        .createdAt(now)
-                                        .updatedAt(now)
-                                        .build();
-
-                                return policyRepository.save(policy)
-                                        .flatMap(saved->{
-                                            Mono<Void> historyMono=recordHistory(
-                                                    saved.getId(),
-                                                    null,
-                                                    PolicyStatus.PENDING.name(),
-                                                    customerId,
-                                                    null
-                                            );
-
-                                            return resolveSnapshot(product,saved.getId(),request)
-                                                    .flatMap(snapshot->{
-                                                        saved.setTriggerSnapshotId(
-                                                                snapshot.getId()
-                                                        );
-                                                        return policyRepository.save(saved);
-                                                    })
-                                                    .defaultIfEmpty(saved)
-                                                    .flatMap(updated->historyMono
-                                                            .then(Mono.just(updated)))
-                                                    .flatMap(updated->consumeQuoteIfPresent(
-                                                            request,updated
-                                                    ).thenReturn(updated));
-                                        });
+                                return resolvePremium(quotePremium,request)
+                                        .flatMap(premium->savePendingApplication(
+                                                customerId,
+                                                request,
+                                                product,
+                                                premium,
+                                                renewedFromPolicyId
+                                        ));
                             });
-                })
+                }))
                 .map(this::toResponse)
                 .flatMap(resp -> notificationService.notifyPolicySubmitted(
                         customerId, resp.getId(), resp.getPolicyNumber()
@@ -127,11 +106,87 @@ public class PolicyService{
                         resp.getId(), resp.getPolicyNumber()
                 )).thenReturn(resp))
                 .flatMap(resp -> notificationService.audit(
-                        "POLICY_APPLIED", "POLICY", resp.getId(), null,
-                        "Applied for policy " + resp.getPolicyNumber() +
+                        renewedFromPolicyId!=null?"POLICY_RENEWAL_APPLIED":"POLICY_APPLIED",
+                        "POLICY", resp.getId(), null,
+                        (renewedFromPolicyId!=null
+                                ?"Applied to renew policy #"+renewedFromPolicyId+" as "
+                                :"Applied for policy ")
+                                + resp.getPolicyNumber() +
                                 " (sum insured " + request.getSumInsured() +
                                 ", term " + request.getTermMonths() + " months)"
                 ).thenReturn(resp));
+    }
+
+    private Mono<Policy> savePendingApplication(
+            Long customerId,
+            CreatePolicyRequest request,
+            Product product,
+            BigDecimal premium,
+            Long renewedFromPolicyId
+    ){
+        LocalDateTime now=LocalDateTime.now();
+
+        Policy policy=Policy.builder()
+                .policyNumber(generatePolicyNumber())
+                .customerId(customerId)
+                .productId(product.getId())
+                .productCode(product.getProductCode())
+                .productName(product.getName())
+                .locationZoneId(request.getLocationZoneId())
+                .sumInsured(request.getSumInsured())
+                .premiumAmount(premium)
+                .termMonths(request.getTermMonths())
+                .status(PolicyStatus.PENDING.name())
+                .autoRenew(false)
+                .renewedFromPolicyId(renewedFromPolicyId)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        return policyRepository.save(policy)
+                .flatMap(saved->{
+                    Mono<Void> historyMono=recordHistory(
+                            saved.getId(),
+                            null,
+                            PolicyStatus.PENDING.name(),
+                            customerId,
+                            renewedFromPolicyId!=null
+                                    ?"Renewal of policy #"+renewedFromPolicyId
+                                    :null
+                    );
+
+                    return resolveSnapshot(product,saved.getId(),request)
+                            .flatMap(snapshot->{
+                                saved.setTriggerSnapshotId(
+                                        snapshot.getId()
+                                );
+                                return policyRepository.save(saved);
+                            })
+                            .defaultIfEmpty(saved)
+                            .flatMap(updated->historyMono
+                                    .then(Mono.just(updated)))
+                            .flatMap(updated->consumeQuoteIfPresent(
+                                    request,updated
+                            ).thenReturn(updated));
+                });
+    }
+
+    private Mono<BigDecimal> resolvePremium(
+            java.util.Optional<BigDecimal> quotePremium,
+            CreatePolicyRequest request
+    ){
+        if(quotePremium.isPresent()){
+            return Mono.just(quotePremium.get());
+        }
+        return Mono.defer(()->financialServiceClient.calculatePremium(
+                        request.getProductId(),
+                        request.getLocationZoneId(),
+                        request.getSumInsured(),
+                        request.getTermMonths()))
+                .defaultIfEmpty(calculateTemporaryPremium(
+                        request.getSumInsured(),
+                        request.getTermMonths()
+                ));
     }
 
     @Transactional
@@ -394,8 +449,8 @@ public class PolicyService{
                         ));
                     }
 
+                    return renewalStartDate(policy).flatMap(startDate->{
                     LocalDateTime now=LocalDateTime.now();
-                    LocalDate startDate=LocalDate.now();
                     String oldStatus=policy.getStatus();
 
                     policy.setStatus(PolicyStatus.ACTIVE.name());
@@ -416,6 +471,7 @@ public class PolicyService{
                                     reviewerId,
                                     null
                             ).thenReturn(saved));
+                    });
                 })
                 .flatMap(saved -> notificationService.notifyPolicyApproved(
                         saved.getCustomerId(), saved.getId(), saved.getPolicyNumber()
@@ -705,7 +761,7 @@ public class PolicyService{
         }
     }
 
-    private Mono<Void> validateQuoteIfPresent(
+    private Mono<BigDecimal> validateQuoteIfPresent(
             Long customerId,
             CreatePolicyRequest request
     ){
@@ -732,7 +788,8 @@ public class PolicyService{
                                         :"Quote is not valid for this application"
                         ));
                     }
-                    return Mono.empty();
+                    // The accepted quote's premium is the policy premium.
+                    return Mono.justOrEmpty(response.getPremiumAmount());
                 });
     }
 
@@ -832,6 +889,116 @@ public class PolicyService{
     private static final BigDecimal BASE_ANNUAL_RATE=new BigDecimal("0.02");
     private static final BigDecimal MONTHS_PER_YEAR=BigDecimal.valueOf(12);
 
+    // ---------------------------------------------------------------- renewals
+
+    public static final int RENEWAL_WINDOW_DAYS=30;
+
+    /** Renew an ACTIVE policy in its last 30 days, or an EXPIRED one up to 30 days after it ended. */
+    @Transactional
+    public Mono<PolicyResponse> renewPolicy(Long customerId,Long policyId){
+        validateCustomerId(customerId);
+        validatePolicyId(policyId);
+
+        return policyRepository.findByIdAndCustomerId(policyId,customerId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Policy not found")))
+                .flatMap(policy->checkRenewable(policy).then(createRenewal(policy)));
+    }
+
+    /** Called by the auto-renew job; creates the renewal application for the customer. */
+    public Mono<PolicyResponse> createAutomaticRenewal(Policy policy){
+        return checkRenewable(policy).then(createRenewal(policy));
+    }
+
+    @Transactional
+    public Mono<PolicyResponse> setAutoRenew(Long customerId,Long policyId,boolean enabled){
+        validateCustomerId(customerId);
+        validatePolicyId(policyId);
+
+        return policyRepository.findByIdAndCustomerId(policyId,customerId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Policy not found")))
+                .flatMap(policy->{
+                    if(!PolicyStatus.ACTIVE.name().equals(policy.getStatus())
+                            &&!PolicyStatus.PENDING.name().equals(policy.getStatus())){
+                        return Mono.error(new ConflictException(
+                                "Auto-renew can only be changed on pending or active policies"));
+                    }
+                    policy.setAutoRenew(enabled);
+                    policy.setUpdatedAt(LocalDateTime.now());
+                    return policyRepository.save(policy);
+                })
+                .flatMap(saved->notificationService.audit(
+                        "POLICY_AUTO_RENEW_CHANGED","POLICY",saved.getId(),customerId,
+                        "Auto-renew "+(enabled?"enabled":"disabled")+" for "+saved.getPolicyNumber()
+                ).thenReturn(saved))
+                .map(this::toResponse);
+    }
+
+    private Mono<Void> checkRenewable(Policy policy){
+        LocalDate today=LocalDate.now();
+        boolean active=PolicyStatus.ACTIVE.name().equals(policy.getStatus());
+        boolean expired=PolicyStatus.EXPIRED.name().equals(policy.getStatus());
+
+        if(!active&&!expired){
+            return Mono.error(new ConflictException("Only active or expired policies can be renewed"));
+        }
+        if(policy.getEndDate()==null){
+            return Mono.error(new ConflictException("Policy has no end date to renew from"));
+        }
+        if(active&&policy.getEndDate().isAfter(today.plusDays(RENEWAL_WINDOW_DAYS))){
+            return Mono.error(new ConflictException(
+                    "Renewal opens "+RENEWAL_WINDOW_DAYS+" days before the policy ends ("
+                            +policy.getEndDate().minusDays(RENEWAL_WINDOW_DAYS)+")"));
+        }
+        if(expired&&policy.getEndDate().isBefore(today.minusDays(RENEWAL_WINDOW_DAYS))){
+            return Mono.error(new ConflictException(
+                    "This policy ended more than "+RENEWAL_WINDOW_DAYS+" days ago; apply for a new policy instead"));
+        }
+
+        return policyRepository.findAllByRenewedFromPolicyId(policy.getId())
+                .filter(renewal->PolicyStatus.PENDING.name().equals(renewal.getStatus())
+                        ||PolicyStatus.ACTIVE.name().equals(renewal.getStatus()))
+                .hasElements()
+                .flatMap(renewed->renewed
+                        ?Mono.error(new ConflictException("This policy has already been renewed"))
+                        :Mono.empty());
+    }
+
+    private Mono<PolicyResponse> createRenewal(Policy policy){
+        CreatePolicyRequest request=CreatePolicyRequest.builder()
+                .productId(policy.getProductId())
+                .sumInsured(policy.getSumInsured())
+                .termMonths(policy.getTermMonths())
+                .locationZoneId(policy.getLocationZoneId())
+                .build();
+
+        return createApplication(policy.getCustomerId(),request,policy.getId())
+                .flatMap(renewal->{
+                    // Keep auto-renew going on the new policy when it was on.
+                    if(!Boolean.TRUE.equals(policy.getAutoRenew())){
+                        return Mono.just(renewal);
+                    }
+                    return policyRepository.findById(renewal.getId())
+                            .flatMap(created->{
+                                created.setAutoRenew(true);
+                                return policyRepository.save(created);
+                            })
+                            .map(this::toResponse);
+                });
+    }
+
+    /** Cover for a renewal starts when the previous policy ends (no gap, no overlap). */
+    private Mono<LocalDate> renewalStartDate(Policy policy){
+        LocalDate today=LocalDate.now();
+        if(policy.getRenewedFromPolicyId()==null){
+            return Mono.just(today);
+        }
+        return policyRepository.findById(policy.getRenewedFromPolicyId())
+                .map(previous->previous.getEndDate()!=null&&previous.getEndDate().isAfter(today)
+                        ?previous.getEndDate()
+                        :today)
+                .defaultIfEmpty(today);
+    }
+
     private BigDecimal calculateTemporaryPremium(
             BigDecimal sumInsured,
             Integer termMonths
@@ -904,6 +1071,8 @@ public class PolicyService{
                 .createdAt(policy.getCreatedAt())
                 .updatedAt(policy.getUpdatedAt())
                 .triggerSnapshotId(policy.getTriggerSnapshotId())
+                .autoRenew(Boolean.TRUE.equals(policy.getAutoRenew()))
+                .renewedFromPolicyId(policy.getRenewedFromPolicyId())
                 .build();
     }
 

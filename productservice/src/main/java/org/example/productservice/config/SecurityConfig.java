@@ -98,6 +98,22 @@ public class SecurityConfig{
                                 "/api/policies/{policyId:[0-9]+}/cancel"
                         ).hasRole("CUSTOMER")
 
+                        .pathMatchers(HttpMethod.POST,
+                                "/api/policies/{policyId:[0-9]+}/renew"
+                        ).hasRole("CUSTOMER")
+
+                        .pathMatchers(HttpMethod.PUT,
+                                "/api/policies/{policyId:[0-9]+}/auto-renew"
+                        ).hasRole("CUSTOMER")
+
+                        .pathMatchers(HttpMethod.GET,
+                                "/api/policies/{policyId:[0-9]+}/certificate"
+                        ).hasRole("CUSTOMER")
+
+                        .pathMatchers(HttpMethod.GET,
+                                "/api/policies/admin/{policyId:[0-9]+}/certificate"
+                        ).hasAnyRole("ADMIN","UNDERWRITER")
+
                         .pathMatchers(HttpMethod.GET,
                                 "/api/policies/{policyId:[0-9]+}/history",
                                 "/api/policies/{policyId:[0-9]+}/snapshot"

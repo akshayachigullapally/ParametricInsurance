@@ -67,4 +67,10 @@ public class Policy{
 
     @Column("trigger_snapshot_id")
     private Long triggerSnapshotId;
+
+    @Column("auto_renew")
+    private Boolean autoRenew;
+
+    @Column("renewed_from_policy_id")
+    private Long renewedFromPolicyId;
 }
