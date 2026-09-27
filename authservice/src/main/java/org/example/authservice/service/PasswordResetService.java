@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PasswordResetService{
@@ -43,6 +44,7 @@ public class PasswordResetService{
                             .createdAt(LocalDateTime.now())
                             .build();
 
+                    log.info("Password reset token generated for userId={}",user.getId());
                     return tokenRepository.save(token)
                             .map(saved->{
                                 return MessageResponse.builder()
@@ -62,6 +64,7 @@ public class PasswordResetService{
                 ))
                 .flatMap(token->{
                     if(Boolean.TRUE.equals(token.getRevoked())){
+                        log.warn("Revoked password reset token used by userId={}",token.getUserId());
                         return Mono.error(new AuthenticationException(
                                 "Reset token has been revoked"
                         ));
@@ -79,6 +82,7 @@ public class PasswordResetService{
                             .flatMap(saved->userRepository.findById(saved.getUserId()))
                             .switchIfEmpty(Mono.error(new NotFoundException("User not found")))
                             .flatMap(user->{
+                                log.info("Password reset completed for userId={}",user.getId());
                                 user.setPassword(passwordEncoder.encode(newPassword));
                                 user.setUpdatedAt(LocalDateTime.now());
                                 return userRepository.save(user);

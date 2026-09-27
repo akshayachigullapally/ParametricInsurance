@@ -353,6 +353,34 @@ public class NotificationService {
         }).thenReturn(new MessageResponse("Notification deleted"));
     }
 
+    /** Admin view of all notifications: mark any notification as read. */
+    public Mono<NotificationResponse> adminMarkRead(Long id) {
+        return SecurityUtil.requireAdmin()
+                .then(Mono.defer(() -> repository.findById(id)))
+                .switchIfEmpty(Mono.error(new NotFoundException("Notification not found")))
+                .flatMap(n -> {
+                    if (n.isRead()) {
+                        return Mono.just(n);
+                    }
+                    n.setRead(true);
+                    n.setReadAt(LocalDateTime.now());
+                    return repository.save(n);
+                })
+                .map(this::response);
+    }
+
+    /** Admin view of all notifications: delete any notification. */
+    public Mono<MessageResponse> adminDelete(Long id) {
+        return SecurityUtil.requireAdmin()
+                .then(Mono.defer(() -> repository.findById(id)))
+                .switchIfEmpty(Mono.error(new NotFoundException("Notification not found")))
+                .flatMap(n -> {
+                    log.info("Admin deleting notification: id={}", id);
+                    return repository.delete(n);
+                })
+                .thenReturn(new MessageResponse("Notification deleted"));
+    }
+
     public Flux<NotificationResponse> all() {
         return SecurityUtil.requireAdmin().thenMany(repository.findAllByOrderByCreatedAtDesc())
                 .map(this::response);

@@ -26,7 +26,6 @@ eureka:
     prefer-ip-address: false
     hostname: localhost
 
-
 gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
 
@@ -36,14 +35,24 @@ demo:
     interval-ms: ${DEMO_FEED_INTERVAL_MS:60000}
     backfill-hours: 24
 
+app:
+  db:
+    # Fixed location, independent of the folder the service is started from.
+    # Keep it outside OneDrive/Dropbox-synced folders.
+    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
+    name: triggerdb
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
+  info:
+    env:
+      enabled: true
 
 info:
   application:
@@ -51,9 +60,13 @@ info:
     description: Parametric trigger definition, observation and event evaluation service
     version: 1.0.0
 
-app:
-  db:
-    # Fixed location, independent of the folder the service is started from.
-    # Keep it outside OneDrive/Dropbox-synced folders.
-    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
-    name: triggerdb
+logging:
+  level:
+    root: INFO
+    org.example.triggerservice: ${APP_LOG_LEVEL:DEBUG}
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/trigger-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

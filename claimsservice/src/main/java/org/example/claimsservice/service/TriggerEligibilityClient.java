@@ -1,5 +1,6 @@
 package org.example.claimsservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.claimsservice.dto.PolicyTriggerEligibilityResponse;
 import org.example.claimsservice.exception.DependentServiceException;
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TriggerEligibilityClient{
@@ -61,9 +63,13 @@ public class TriggerEligibilityClient{
                 ))
                 .onErrorMap(
                         WebClientRequestException.class,
-                        exception->new DependentServiceException(
-                                "Trigger service is currently unavailable"
-                        )
+                        exception->{
+                            log.error("Could not reach trigger service for policy {}: {}",
+                                    policyId,exception.getMessage());
+                            return new DependentServiceException(
+                                    "Trigger service is currently unavailable"
+                            );
+                        }
                 );
     }
 }

@@ -1,5 +1,6 @@
 package org.example.productservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 
 import org.example.productservice.dto.InternalPolicyResponse;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolicyService{
@@ -48,6 +50,8 @@ public class PolicyService{
             CreatePolicyRequest request
     ){
         validateCreateRequest(customerId,request);
+        log.info("Policy application received from customerId={} for productId={}",
+                customerId,request.getProductId());
         return createApplication(customerId,request,null);
     }
 
@@ -183,10 +187,14 @@ public class PolicyService{
                         request.getLocationZoneId(),
                         request.getSumInsured(),
                         request.getTermMonths()))
-                .defaultIfEmpty(calculateTemporaryPremium(
-                        request.getSumInsured(),
-                        request.getTermMonths()
-                ));
+                .switchIfEmpty(Mono.fromSupplier(()->{
+                    log.warn("Pricing unavailable for productId={} zoneId={}, using temporary premium",
+                            request.getProductId(),request.getLocationZoneId());
+                    return calculateTemporaryPremium(
+                            request.getSumInsured(),
+                            request.getTermMonths()
+                    );
+                }));
     }
 
     @Transactional
@@ -637,6 +645,9 @@ public class PolicyService{
                 .changedAt(LocalDateTime.now())
                 .build();
 
+        log.info("Policy {} status {} -> {} by {} ({})",
+                policyId,oldStatus,newStatus,changedBy,changeReason);
+
         return historyRepository.save(history).then();
     }
 
@@ -964,6 +975,8 @@ public class PolicyService{
     }
 
     private Mono<PolicyResponse> createRenewal(Policy policy){
+        log.info("Creating renewal for policy {} (autoRenew={})",
+                policy.getPolicyNumber(),policy.getAutoRenew());
         CreatePolicyRequest request=CreatePolicyRequest.builder()
                 .productId(policy.getProductId())
                 .sumInsured(policy.getSumInsured())

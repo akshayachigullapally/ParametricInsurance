@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.CreateObservationRequest;
 import org.example.triggerservice.dto.ObservationResponse;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ObservationService{
@@ -115,6 +117,10 @@ public class ObservationService{
                             .receivedBy(userId)
                             .receivedAt(now)
                             .build();
+
+                    log.debug("Recording {} observation {} {} for zone {}",
+                            source,request.getObservedValue(),measurementUnit,
+                            request.getLocationZoneId());
 
                     return observationRepository.save(observation);
                 }))

@@ -1,5 +1,6 @@
 package org.example.triggerservice.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
@@ -17,6 +18,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Component
 @Order(-2)
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler{
     @Override
     public Mono<Void> handle(ServerWebExchange exchange,Throwable ex){
         HttpStatus status=resolveStatus(ex);
+        logFailure(exchange,status,ex);
         List<String> messages=ex instanceof ValidationException validation
                 ?validation.getErrors()
                 :List.of(ex.getMessage()==null?"Unexpected error":ex.getMessage());
@@ -47,7 +50,19 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler{
                     exchange.getResponse().bufferFactory().wrap(bytes)
             ));
         }catch(Exception e){
+            log.error("Failed to write error response body",e);
             return exchange.getResponse().setComplete();
+        }
+    }
+
+    private void logFailure(ServerWebExchange exchange,HttpStatus status,Throwable ex){
+        String method=String.valueOf(exchange.getRequest().getMethod());
+        String path=exchange.getRequest().getPath().value();
+
+        if(status.is5xxServerError()){
+            log.error("{} {} failed with {}",method,path,status.value(),ex);
+        }else{
+            log.warn("{} {} rejected with {}: {}",method,path,status.value(),ex.getMessage());
         }
     }
 

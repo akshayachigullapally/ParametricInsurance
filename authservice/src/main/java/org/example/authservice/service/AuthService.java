@@ -1,5 +1,6 @@
 package org.example.authservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.authservice.dto.*;
 import org.example.authservice.exception.AuthenticationException;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService{
@@ -61,7 +63,9 @@ public class AuthService{
                 )
                 .flatMap(response->auditUser(
                         "USER_REGISTERED",response,"Registered a new account"
-                ).thenReturn(response));
+                ).thenReturn(response))
+                .doOnNext(response->log.info("New user registered userId={}",
+                        response.getUser().getId()));
 
     }
 
@@ -94,7 +98,9 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                         "Signed in"+(deviceName!=null&&!deviceName.isBlank()
                                 ?" from "+deviceName
                                 :"")
-                ).thenReturn(response));
+                ).thenReturn(response))
+                .doOnNext(response->log.info("User logged in userId={} role={}",
+                        response.getUser().getId(),response.getUser().getRole()));
 
     }
 
@@ -120,6 +126,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                                 "Account is disabled"
                         ));
                     }
+                    log.debug("Refreshing tokens for userId={}",user.getId());
                     return createTokens(user,deviceName,ipAddress);
                 });
 
@@ -141,6 +148,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .then(notificationServiceClient.audit(
                         "USER_LOGOUT","USER",userId,userId,null,"Signed out"
                 ))
+                .doOnSuccess(ignored->log.info("User logged out userId={}",userId))
                 .thenReturn(MessageResponse.builder()
                         .message("Logged out successfully")
                         .build());
@@ -188,6 +196,8 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                     return sessionRepository.save(session)
                             .then(revokeToken);
                 })
+                .doOnSuccess(ignored->log.info(
+                        "Session {} revoked for userId={}",sessionId,userId))
                 .thenReturn(MessageResponse.builder()
                         .message("Session revoked successfully")
                         .build());
@@ -222,10 +232,12 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
     private Mono<UserCredential> validateUserForLogin(UserCredential user,
                                                       String password){
         if(!Boolean.TRUE.equals(user.getEnabled())){
+            log.warn("Login blocked for disabled account userId={}",user.getId());
             return Mono.error(new AuthenticationException("Account is disabled"));
         }
 
         if(!passwordEncoder.matches(password,user.getPassword())){
+            log.warn("Failed login attempt for userId={}",user.getId());
             return Mono.error(new AuthenticationException(
                     "Invalid email or password"
             ));
@@ -236,6 +248,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
 
     private Mono<RefreshToken> validateRefreshToken(RefreshToken token){
         if(Boolean.TRUE.equals(token.getRevoked())){
+            log.warn("Revoked refresh token used by userId={}",token.getUserId());
             return Mono.error(new AuthenticationException(
                     "Refresh token is revoked"
             ));

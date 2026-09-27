@@ -1,5 +1,6 @@
 package org.example.triggerservice.filter;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GatewayAuthenticationFilter implements WebFilter{
@@ -29,6 +31,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
 
         String receivedKey=exchange.getRequest().getHeaders().getFirst(GatewayHeaders.GATEWAY_KEY);
         if(!StringUtils.hasText(receivedKey)||!internalKey.equals(receivedKey)){
+            log.warn("Blocked request without valid gateway key: {} {}",
+                    exchange.getRequest().getMethod(),path);
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             return exchange.getResponse().setComplete();
         }

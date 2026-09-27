@@ -96,6 +96,14 @@ public class NotificationHandler {
         return service.markRead(id(r)).flatMap(x -> ServerResponse.ok().bodyValue(x));
     }
 
+    public Mono<ServerResponse> adminRead(ServerRequest r) {
+        return service.adminMarkRead(id(r)).flatMap(x -> ServerResponse.ok().bodyValue(x));
+    }
+
+    public Mono<ServerResponse> adminDelete(ServerRequest r) {
+        return service.adminDelete(id(r)).flatMap(x -> ServerResponse.ok().bodyValue(x));
+    }
+
     public Mono<ServerResponse> readAll(ServerRequest r) {
         return service.markAllRead().flatMap(x -> ServerResponse.ok().bodyValue(x));
     }

@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.EvaluateTriggerRequest;
 import org.example.triggerservice.dto.ProductTriggerSyncRequest;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TriggerEvaluationService{
@@ -203,6 +205,9 @@ public class TriggerEvaluationService{
         LocalDateTime windowStart=windowEnd.minusHours(
                 definition.getObservationWindowHours());
 
+        log.debug("Evaluating trigger definition {} for window {} - {}",
+                definition.getId(),windowStart,windowEnd);
+
         return observationRepository
                 .findAllByLocationZoneIdAndMeasurementTypeAndStatusAndObservedAtBetweenOrderByObservedAtAsc(
                         definition.getLocationZoneId(),
@@ -232,6 +237,9 @@ public class TriggerEvaluationService{
         int observationCount=observations.size();
 
         if(observationCount<definition.getMinimumObservationCount()){
+            log.info("Trigger definition {}: insufficient observations ({}/{})",
+                    definition.getId(),observationCount,
+                    definition.getMinimumObservationCount());
             return saveEvaluationRecord(
                     definition,
                     windowStart,
@@ -255,6 +263,11 @@ public class TriggerEvaluationService{
         TriggerEvaluationResult result=matched
                 ?TriggerEvaluationResult.MATCHED
                 :TriggerEvaluationResult.NOT_MATCHED;
+
+        log.info("Trigger definition {} evaluated: {} {} {} -> {}",
+                definition.getId(),aggregatedValue,
+                definition.getComparisonOperator(),
+                definition.getThresholdValue(),result);
 
         return saveEvaluationRecord(
                 definition,
@@ -315,6 +328,8 @@ public class TriggerEvaluationService{
                         TriggerEventStatus.REJECTED)
                 .flatMap(exists->{
                     if(exists){
+                        log.debug("Trigger event already exists for definition {} in this window",
+                                definition.getId());
                         return Mono.empty();
                     }
 
@@ -334,6 +349,10 @@ public class TriggerEvaluationService{
                             .status(TriggerEventStatus.DETECTED)
                             .detectedAt(LocalDateTime.now())
                             .build();
+
+                    log.info("Trigger event {} DETECTED for definition {} zone {}",
+                            event.getEventReference(),definition.getId(),
+                            definition.getLocationZoneId());
 
                     return triggerEventRepository.save(event);
                 });

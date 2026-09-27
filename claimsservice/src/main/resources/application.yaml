@@ -26,26 +26,6 @@ eureka:
 gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-
-info:
-  application:
-    name: CityShield Claims Service
-    description: Reactive insurance claim management service
-    version: 1.0.0
-
-logging:
-  level:
-    org.springframework.r2dbc: INFO
-    org.springframework.security: INFO
-
 app:
   db:
     # Fixed location, independent of the folder the service is started from.
@@ -55,3 +35,34 @@ app:
   uploads:
     # Claim evidence files (photos / PDFs). Metadata is in claim_documents.
     dir: ${CITYSHIELD_UPLOAD_DIR:${user.home}/.cityshield/uploads}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Claims Service
+    description: Reactive insurance claim management service
+    version: 1.0.0
+
+logging:
+  level:
+    root: INFO
+    org.example.claimsservice: ${APP_LOG_LEVEL:DEBUG}
+    org.springframework.r2dbc: INFO
+    org.springframework.security: INFO
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/claims-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

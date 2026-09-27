@@ -1,5 +1,6 @@
 package org.example.productservice.filter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@Slf4j
 @Component
 public class GatewayAuthenticationFilter implements WebFilter{
     private final String internalGatewayKey;
@@ -42,6 +44,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
                 .getFirst(GatewayHeaders.GATEWAY_KEY);
 
         if(requireGatewayKey && !internalGatewayKey.equals(gatewayKey)){
+            log.warn("Blocked request without valid gateway key: {} {}",
+                    exchange.getRequest().getMethod(),path);
             return forbidden(
                     exchange,
                     "Request must pass through API Gateway"

@@ -18,3 +18,29 @@ eureka:
 
 management:
   endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Eureka Server
+    description: Service discovery registry
+    version: 1.0.0
+
+logging:
+  level:
+    root: INFO
+    org.example.eurekaserver: ${APP_LOG_LEVEL:DEBUG}
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/eureka-server.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

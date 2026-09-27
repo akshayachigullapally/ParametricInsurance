@@ -1,5 +1,6 @@
 package org.example.claimsservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.claimsservice.dto.ApproveClaimRequest;
 import org.example.claimsservice.dto.ClaimResponse;
@@ -41,6 +42,7 @@ import java.time.Year;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClaimService{
@@ -235,11 +237,16 @@ public class ClaimService{
         if(request.getTriggerEventId()==null||request.getEligiblePolicies()==null){
             return Mono.error(new ValidationException("Trigger event and matched policies are required"));
         }
+        log.info("Creating automatic claims for triggerEventId={} across {} policies",
+                request.getTriggerEventId(),request.getEligiblePolicies().size());
+
         return Flux.fromIterable(request.getEligiblePolicies())
                 .concatMap(policy->claimRepository.existsByPolicyIdAndTriggerEventId(
                                 policy.getPolicyId(),request.getTriggerEventId())
                         .flatMap(existing->{
                             if(existing){
+                                log.debug("Claim already exists for policyId={} triggerEventId={}",
+                                        policy.getPolicyId(),request.getTriggerEventId());
                                 return Mono.just(org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
                                         .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
                                         .status("EXISTING").build());
@@ -286,6 +293,8 @@ public class ClaimService{
                                             .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
                                             .claimId(saved.getId()).claimNumber(saved.getClaimNumber()).status("CREATED").build());
                         })
+                        .doOnError(error->log.error("Automatic claim failed for policyId={} triggerEventId={}: {}",
+                                policy.getPolicyId(),request.getTriggerEventId(),error.getMessage()))
                         .onErrorResume(error->Mono.just(org.example.claimsservice.dto.ClaimCreationResponse.ClaimResult.builder()
                                 .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber())
                                 .status("FAILED").errorMessage(error.getMessage()).build())))
@@ -293,7 +302,9 @@ public class ClaimService{
                 .map(results->org.example.claimsservice.dto.ClaimCreationResponse.builder()
                         .claimsCreated((int)results.stream().filter(r->"CREATED".equals(r.getStatus())).count())
                         .claimsFailed((int)results.stream().filter(r->"FAILED".equals(r.getStatus())).count())
-                        .results(results).build());
+                        .results(results).build())
+                .doOnNext(response->log.info("Trigger event {} processed: created={} failed={}",
+                        request.getTriggerEventId(),response.getClaimsCreated(),response.getClaimsFailed()));
     }
     
         @Transactional
@@ -443,6 +454,7 @@ public class ClaimService{
     // Must run after approveClaim's transaction commits: the financial
     // service reads the claim back and rejects it unless it is APPROVED.
     public Mono<Void> requestPayout(Long claimId){
+        log.info("Requesting payout for approved claim {}",claimId);
         return financialServiceClient.createPayoutForClaim(claimId);
     }
 
@@ -599,9 +611,13 @@ public class ClaimService{
                 ))
                 .onErrorMap(
                         WebClientRequestException.class,
-                        exception->new DependentServiceException(
-                                "Product service is currently unavailable"
-                        )
+                        exception->{
+                            log.error("Could not reach product service for policy {}: {}",
+                                    policyId,exception.getMessage());
+                            return new DependentServiceException(
+                                    "Product service is currently unavailable"
+                            );
+                        }
                 );
     }
 
@@ -1017,6 +1033,10 @@ public class ClaimService{
                 .notes(notes)
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        log.info("Claim {} {}: {} -> {} by {} ({})",
+                claim.getClaimNumber(),action,oldStatus,newStatus,
+                actionBy,actionByRole);
 
         return claimTimelineRepository.save(timeline).then();
     }

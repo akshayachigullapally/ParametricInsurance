@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class QuoteService{
     private final QuoteRepository quoteRepository;
@@ -74,6 +76,8 @@ public class QuoteService{
                                     request,
                                     rule
                             );
+                            log.info("Quote priced for customerId={} productId={} using rule {}: premium={}",
+                                    customerId,request.getProductId(),rule.getId(),premium);
 
                             Quote quote=Quote.builder()
                                     .quoteReference(generateReference())
@@ -227,6 +231,7 @@ public class QuoteService{
                         return Mono.just(quote);
                     }
 
+                    log.info("Quote {} accepted",quote.getQuoteReference());
                     quote.setStatus(QuoteStatus.ACCEPTED);
                     quote.setAcceptedAt(LocalDateTime.now());
 
@@ -276,6 +281,7 @@ public class QuoteService{
                         );
                     }
 
+                    log.info("Quote {} cancelled",quote.getQuoteReference());
                     quote.setStatus(QuoteStatus.CANCELLED);
 
                     return quoteRepository.save(quote);
@@ -343,6 +349,8 @@ public class QuoteService{
 
                     if(quote.getExpiresAt()
                             .isBefore(LocalDateTime.now())){
+                        log.warn("Quote {} expired before it could be consumed",
+                                quote.getQuoteReference());
                         quote.setStatus(QuoteStatus.EXPIRED);
 
                         return quoteRepository.save(quote)
@@ -379,6 +387,8 @@ public class QuoteService{
                                 quote.setPolicyNumber(
                                         request.getPolicyNumber()
                                 );
+                                log.info("Quote {} consumed by policy {}",
+                                        quote.getQuoteReference(),request.getPolicyNumber());
                                 quote.setStatus(QuoteStatus.CONSUMED);
                                 quote.setConsumedAt(
                                         LocalDateTime.now()
@@ -527,6 +537,7 @@ public class QuoteService{
                 quote.getExpiresAt().isBefore(
                         LocalDateTime.now()
                 )){
+            log.debug("Quote {} expired",quote.getQuoteReference());
             quote.setStatus(QuoteStatus.EXPIRED);
 
             return quoteRepository.save(quote)

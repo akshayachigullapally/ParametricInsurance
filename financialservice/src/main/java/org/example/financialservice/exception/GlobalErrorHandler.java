@@ -1,5 +1,6 @@
 package org.example.financialservice.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 @Order(-2)
 public class GlobalErrorHandler implements ErrorWebExceptionHandler{
@@ -28,6 +30,7 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler{
             Throwable exception
     ){
         HttpStatus status=resolveStatus(exception);
+        logFailure(exchange,status,exception);
         String message=resolveMessage(exception,status);
 
         ErrorResponse response=ErrorResponse.builder()
@@ -54,7 +57,19 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler{
                     )
             );
         }catch(Exception serializationException){
+            log.error("Failed to write error response body",serializationException);
             return exchange.getResponse().setComplete();
+        }
+    }
+
+    private void logFailure(ServerWebExchange exchange,HttpStatus status,Throwable ex){
+        String method=String.valueOf(exchange.getRequest().getMethod());
+        String path=exchange.getRequest().getPath().value();
+
+        if(status.is5xxServerError()){
+            log.error("{} {} failed with {}",method,path,status.value(),ex);
+        }else{
+            log.warn("{} {} rejected with {}: {}",method,path,status.value(),ex.getMessage());
         }
     }
 

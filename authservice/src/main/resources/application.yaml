@@ -44,20 +44,6 @@ email:
 password:
   reset-token-expiration-hours: 1
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-  info:
-    app:
-      name: CityShield Auth Service
-      description: Reactive JWT authentication service
-      version: 1.0.0
-
 eureka:
   client:
     register-with-eureka: true
@@ -68,7 +54,33 @@ eureka:
     prefer-ip-address: false
     hostname: localhost
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Auth Service
+    description: Reactive JWT authentication service
+    version: 1.0.0
+
 logging:
   level:
+    root: INFO
+    org.example.authservice: ${APP_LOG_LEVEL:DEBUG}
     org.springframework.r2dbc: DEBUG
     org.springframework.data.r2dbc: DEBUG
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/auth-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

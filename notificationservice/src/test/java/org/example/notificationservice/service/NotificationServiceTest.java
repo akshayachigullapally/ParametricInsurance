@@ -389,6 +389,42 @@ class NotificationServiceTest {
     }
 
     @Test
+    void adminMarkRead_marksAnyNotification() {
+        setupSecurityContext(1L, null, "ROLE_ADMIN");
+        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
+        Notification other = buildNotification(7L, 99L, null, null, false, DeliveryStatus.DELIVERED);
+        when(repository.findById(7L)).thenReturn(Mono.just(other));
+        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+
+        StepVerifier.create(service.adminMarkRead(7L))
+                .assertNext(response -> assertThat(response.isRead()).isTrue())
+                .verifyComplete();
+    }
+
+    @Test
+    void adminMarkRead_requiresAdmin() {
+        setupSecurityContext(1L, 100L, "ROLE_CUSTOMER");
+        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.error(new org.example.notificationservice.exception.ForbiddenException("Admin access required")));
+
+        StepVerifier.create(service.adminMarkRead(7L))
+                .expectError(org.example.notificationservice.exception.ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    void adminDelete_deletesAnyNotification() {
+        setupSecurityContext(1L, null, "ROLE_ADMIN");
+        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
+        Notification other = buildNotification(7L, 99L, null, null, false, DeliveryStatus.DELIVERED);
+        when(repository.findById(7L)).thenReturn(Mono.just(other));
+        when(repository.delete(other)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.adminDelete(7L))
+                .assertNext(response -> assertThat(response.getMessage()).isEqualTo("Notification deleted"))
+                .verifyComplete();
+    }
+
+    @Test
     void delete_existingNotification_deletesSuccessfully() {
         setupSecurityContext(1L, 100L, "ROLE_USER");
         Notification n = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);

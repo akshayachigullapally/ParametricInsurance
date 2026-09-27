@@ -26,6 +26,13 @@ gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
   require-gateway-key: ${GATEWAY_REQUIRE_KEY:false}
 
+app:
+  db:
+    # Fixed location, independent of the folder the service is started from.
+    # Keep it outside OneDrive/Dropbox-synced folders.
+    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
+    name: productdb
+
 management:
   endpoints:
     web:
@@ -34,16 +41,26 @@ management:
   endpoint:
     health:
       show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Product Service
+    description: Insurance product and policy management service
+    version: 1.0.0
 
 logging:
   level:
+    root: INFO
+    org.example.productservice: ${APP_LOG_LEVEL:DEBUG}
     org.springframework.r2dbc: DEBUG
     org.springframework.data.r2dbc: DEBUG
     io.r2dbc.h2: DEBUG
-
-app:
-  db:
-    # Fixed location, independent of the folder the service is started from.
-    # Keep it outside OneDrive/Dropbox-synced folders.
-    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
-    name: productdb
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/product-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

@@ -1,5 +1,6 @@
 package org.example.authservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.authservice.dto.*;
 import org.example.authservice.exception.ForbiddenException;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserProfileService{
@@ -68,6 +70,7 @@ public class UserProfileService{
                         "User profile not found"
                 )))
                 .flatMap(profile->{
+                    log.info("Profile deactivated by userId={}",authUserId);
                     profile.setStatus(UserStatus.INACTIVE.name());
                     profile.setUpdatedAt(LocalDateTime.now());
                     return profileRepository.save(profile);
@@ -132,6 +135,8 @@ public class UserProfileService{
                                 "User profile not found"
                         )))
                         .flatMap(profile->{
+                            log.info("User status changed userId={} {} -> {}",
+                                    authUserId,profile.getStatus(),status);
                             profile.setStatus(status);
                             profile.setUpdatedAt(LocalDateTime.now());
 

@@ -1,5 +1,6 @@
 package org.example.financialservice.filter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.financialservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GatewayAuthenticationFilter implements WebFilter{
@@ -45,6 +47,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
                 .getFirst(GatewayHeaders.GATEWAY_KEY);
 
         if(!internalKey.equals(gatewayKey)){
+            log.warn("Blocked request without valid gateway key: {} {}",
+                    exchange.getRequest().getMethod(),path);
             return reject(
                     exchange,
                     HttpStatus.UNAUTHORIZED,

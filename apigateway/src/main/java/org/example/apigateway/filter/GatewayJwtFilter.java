@@ -1,6 +1,7 @@
 package org.example.apigateway.filter;
 
 import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.example.apigateway.dto.ErrorResponse;
 import org.example.apigateway.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+@Slf4j
 @Component
 public class GatewayJwtFilter implements WebFilter{
     public static final String GATEWAY_KEY_HEADER="X-Gateway-Key";
@@ -137,6 +139,10 @@ public class GatewayJwtFilter implements WebFilter{
                     .request(securedRequest)
                     .build();
 
+            log.debug("Authenticated userId={} role={} for {} {}",
+                    userId,role,sanitizedRequest.getMethod(),
+                    sanitizedRequest.getPath().value());
+
             return chain.filter(securedExchange);
         }catch(IllegalArgumentException e){
             return unauthorized(
@@ -215,6 +221,11 @@ public class GatewayJwtFilter implements WebFilter{
 
         if(exchange.getResponse().isCommitted()) return Mono.empty();
 
+        log.warn("Rejected {} {}: {}",
+                exchange.getRequest().getMethod(),
+                exchange.getRequest().getPath().value(),
+                message);
+
         ErrorResponse error=ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.UNAUTHORIZED.value())
@@ -236,6 +247,7 @@ public class GatewayJwtFilter implements WebFilter{
             return exchange.getResponse()
                     .writeWith(Mono.just(buffer));
         }catch(Exception e){
+            log.error("Failed to write unauthorized response body",e);
             return exchange.getResponse().setComplete();
         }
     }

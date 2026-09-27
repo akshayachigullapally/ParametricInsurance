@@ -1,5 +1,6 @@
 server:
   port: 8085
+
 spring:
   application:
     name: NOTIFICATION-SERVICE
@@ -10,6 +11,7 @@ spring:
   sql:
     init:
       mode: always
+
 eureka:
   client:
     service-url:
@@ -17,13 +19,9 @@ eureka:
   instance:
     prefer-ip-address: false
     hostname: localhost
+
 gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
 
 app:
   db:
@@ -31,3 +29,32 @@ app:
     # Keep it outside OneDrive/Dropbox-synced folders.
     dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
     name: notificationdb
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Notification Service
+    description: Notifications, delivery and audit event service
+    version: 1.0.0
+
+logging:
+  level:
+    root: INFO
+    org.example.notificationservice: ${APP_LOG_LEVEL:DEBUG}
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/notification-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

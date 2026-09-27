@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class PayoutService{
     private final PayoutRepository payoutRepository;
@@ -69,6 +71,8 @@ public class PayoutService{
                             .createdAt(LocalDateTime.now())
                             .build();
 
+                    log.info("Creating payout for claim {} amount={}",
+                            claim.getClaimNumber(),claim.getApprovedAmount());
                     return payoutRepository.save(payout);
                 })
                 .flatMap(saved->notifications.audit(
@@ -152,6 +156,7 @@ public class PayoutService{
                         );
                     }
 
+                    log.info("Payout {} processing",payout.getPayoutReference());
                     payout.setStatus(PayoutStatus.PROCESSING);
                     payout.setProcessedAt(LocalDateTime.now());
                     payout.setUpdatedAt(LocalDateTime.now());
@@ -184,6 +189,7 @@ public class PayoutService{
                         );
                     }
 
+                    log.info("Payout {} succeeded",payout.getPayoutReference());
                     payout.setStatus(PayoutStatus.SUCCESS);
                     payout.setUpdatedAt(LocalDateTime.now());
 
@@ -248,6 +254,8 @@ public class PayoutService{
                         );
                     }
 
+                    log.warn("Payout {} failed: {}",
+                            payout.getPayoutReference(),request.getFailureReason());
                     payout.setStatus(PayoutStatus.FAILED);
                     payout.setUpdatedAt(LocalDateTime.now());
 
@@ -293,6 +301,8 @@ public class PayoutService{
                         );
                     }
 
+                    log.info("Retrying payout {} (retry {})",
+                            payout.getPayoutReference(),payout.getRetryCount()+1);
                     payout.setStatus(PayoutStatus.PROCESSING);
                     payout.setRetryCount(payout.getRetryCount()+1);
                     payout.setProcessedAt(LocalDateTime.now());

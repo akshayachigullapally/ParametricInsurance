@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class PaymentService{
     private final PaymentRepository paymentRepository;
@@ -124,6 +126,9 @@ public class PaymentService{
                                                                 )
                                                                 .build();
 
+                                                log.info("Creating payment for policyId={} amount={} attempt={}",
+                                                        policy.getId(),policy.getPremiumAmount(),count+1);
+
                                                 return paymentRepository
                                                         .save(payment);
                                             })
@@ -195,6 +200,7 @@ public class PaymentService{
                         );
                     }
 
+                    log.info("Payment {} succeeded",payment.getPaymentReference());
                     payment.setStatus(PaymentStatus.SUCCESS);
                     payment.setCompletedAt(LocalDateTime.now());
                     payment.setUpdatedAt(LocalDateTime.now());
@@ -250,6 +256,7 @@ public class PaymentService{
                         );
                     }
 
+                    log.info("Payment {} failed",payment.getPaymentReference());
                     payment.setStatus(PaymentStatus.FAILED);
                     payment.setCompletedAt(LocalDateTime.now());
                     payment.setUpdatedAt(LocalDateTime.now());
@@ -293,6 +300,7 @@ public class PaymentService{
                         );
                     }
 
+                    log.info("Payment {} refunded",payment.getPaymentReference());
                     payment.setStatus(PaymentStatus.REFUNDED);
                     payment.setUpdatedAt(LocalDateTime.now());
 
@@ -343,6 +351,8 @@ public class PaymentService{
                         );
                     }
 
+                    log.info("Retrying payment {} (attempt {})",
+                            payment.getPaymentReference(),payment.getAttemptNumber()+1);
                     payment.setStatus(PaymentStatus.PENDING);
                     payment.setAttemptNumber(payment.getAttemptNumber()+1);
                     payment.setFailureReason(null);

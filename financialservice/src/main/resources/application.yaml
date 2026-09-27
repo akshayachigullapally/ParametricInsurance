@@ -32,15 +32,38 @@ financial:
   quote:
     expiry-days: 7
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
 app:
   db:
     # Fixed location, independent of the folder the service is started from.
     # Keep it outside OneDrive/Dropbox-synced folders.
     dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
     name: financialdb
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: CityShield Financial Service
+    description: Quotes, payments, payouts and pricing service
+    version: 1.0.0
+
+logging:
+  level:
+    root: INFO
+    org.example.financialservice: ${APP_LOG_LEVEL:DEBUG}
+  file:
+    name: ${LOG_DIR:${user.home}/.cityshield/logs}/financial-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

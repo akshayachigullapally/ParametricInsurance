@@ -56,6 +56,8 @@ public class NotificationRouter {
 
                 // Admin endpoints
                 .GET("/api/notifications/admin/all", n::all)
+                .PUT("/api/notifications/admin/{notificationId}/read", n::adminRead)
+                .DELETE("/api/notifications/admin/{notificationId}", n::adminDelete)
                 .GET("/api/notifications/admin/failed", n::failed)
                 .GET("/api/notifications/admin/audit", a::all)
                 .POST("/api/notifications/admin/batch", accept(org.springframework.http.MediaType.APPLICATION_JSON), n::batch)
