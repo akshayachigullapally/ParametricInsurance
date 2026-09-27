@@ -162,7 +162,7 @@ class PolicyHandlerTest{
 
     @Test
     void getAllPolicies_shouldReturnAllPolicies(){
-        when(policyService.getAllPolicies(isNull()))
+        when(policyService.getAllPolicies(isNull(),isNull()))
                 .thenReturn(Flux.just(buildResponse(100L),buildResponse(101L)));
         authClient("ADMIN","1").get().uri("/api/policies/admin/all")
                 .exchange().expectStatus().isOk()
@@ -171,7 +171,7 @@ class PolicyHandlerTest{
 
     @Test
     void getAllPolicies_withStatusFilter_shouldReturnFiltered(){
-        when(policyService.getAllPolicies(eq("ACTIVE"))).thenReturn(Flux.just(buildResponse(100L)));
+        when(policyService.getAllPolicies(eq("ACTIVE"),isNull())).thenReturn(Flux.just(buildResponse(100L)));
         authClient("ADMIN","1").get()
                 .uri(uriBuilder->uriBuilder.path("/api/policies/admin/all").queryParam("status","ACTIVE").build())
                 .exchange().expectStatus().isOk()
@@ -344,7 +344,7 @@ class PolicyHandlerTest{
 
     @Test
     void getAllPolicies_whenAdminRole_shouldReturn200(){
-        when(policyService.getAllPolicies(isNull()))
+        when(policyService.getAllPolicies(isNull(),isNull()))
                 .thenReturn(Flux.just(buildResponse(100L),buildResponse(101L)));
         authClient("ADMIN","1").get().uri("/api/policies/admin/all")
                 .exchange().expectStatus().isOk();
