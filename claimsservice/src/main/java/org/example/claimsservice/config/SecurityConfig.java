@@ -26,7 +26,7 @@ public class SecurityConfig{
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(auth->auth
                         .pathMatchers(HttpMethod.OPTIONS,"/**").permitAll()
-                        .pathMatchers("/actuator/health","/actuator/info").permitAll()
+                        .pathMatchers("/actuator","/actuator/**").permitAll()
                         .pathMatchers(HttpMethod.POST,"/api/claims").hasRole("CUSTOMER")
                         .pathMatchers(HttpMethod.GET,"/api/claims/me").hasRole("CUSTOMER")
                         .pathMatchers(HttpMethod.GET,
@@ -67,7 +67,6 @@ public class SecurityConfig{
                                 "/api/claims/admin/{claimId:[0-9]+}",
                                 "/api/claims/admin/{claimId:[0-9]+}/timeline"
                         ).hasRole("ADMIN")
-                        .pathMatchers("/actuator/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.GET,
                                 "/internal/claims/**"
                         ).permitAll()

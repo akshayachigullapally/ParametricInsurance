@@ -130,11 +130,13 @@ class SecurityIntegrationTest{
     }
 
     @Test
-    void nonPermittedActuatorEndpointRequiresGatewayKey(){
+    void anyActuatorPathSkipsGatewayKeyCheck(){
+        // Reaches actuator itself (404: no such health component)
+        // instead of being rejected for a missing gateway key.
         webClient.get()
                 .uri("/actuator/health/details")
                 .exchange()
-                .expectStatus().isUnauthorized();
+                .expectStatus().isNotFound();
     }
 
     @Test

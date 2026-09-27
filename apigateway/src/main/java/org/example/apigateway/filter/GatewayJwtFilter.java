@@ -192,8 +192,9 @@ public class GatewayJwtFilter implements WebFilter{
 
         if(HttpMethod.OPTIONS.equals(method)) return true;
 
-        if(path.equals("/actuator/health")||
-                path.equals("/actuator/info")){
+        // Gateway's own actuator (/actuator/**) and each service's
+        // actuator proxied through the gateway (/{service}/actuator/**).
+        if(path.matches("^(/[a-z-]+)?/actuator(/.*)?$")){
             return true;
         }
 

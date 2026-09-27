@@ -27,7 +27,7 @@ public class GatewayAuthenticationFilter implements WebFilter{
     public Mono<Void> filter(ServerWebExchange exchange,WebFilterChain chain){
         String path=exchange.getRequest().getPath().value();
 
-        if(path.equals("/actuator/health")||path.equals("/actuator/info")){
+        if(path.equals("/actuator")||path.startsWith("/actuator/")){
             return chain.filter(exchange);
         }
 

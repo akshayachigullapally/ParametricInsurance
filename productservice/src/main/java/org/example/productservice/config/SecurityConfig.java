@@ -39,10 +39,7 @@ public class SecurityConfig{
                 )
                 .authorizeExchange(auth->auth
                         .pathMatchers(HttpMethod.OPTIONS,"/**").permitAll()
-                        .pathMatchers(
-                                "/actuator/health",
-                                "/actuator/info"
-                        ).permitAll()
+                        .pathMatchers("/actuator","/actuator/**").permitAll()
 
                         .pathMatchers(
                                 HttpMethod.GET,
@@ -134,7 +131,6 @@ public class SecurityConfig{
                                 "/api/policies/admin/{policyId:[0-9]+}"
                         ).hasAnyRole("ADMIN", "UNDERWRITER")
 
-                        .pathMatchers("/actuator/**").hasRole("ADMIN")
                         .anyExchange().denyAll()
                 )
                 .addFilterAt(

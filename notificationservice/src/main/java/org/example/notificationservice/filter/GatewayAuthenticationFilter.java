@@ -22,7 +22,7 @@ private final String internalKey;
 public GatewayAuthenticationFilter(@Value("${gateway.internal-key}")String internalKey){this.internalKey=internalKey;}
 @Override public Mono<Void> filter(ServerWebExchange exchange,WebFilterChain chain){
 String path=exchange.getRequest().getPath().value();
-if(path.equals("/actuator/health")||path.equals("/actuator/info"))return chain.filter(exchange);
+if(path.equals("/actuator")||path.startsWith("/actuator/"))return chain.filter(exchange);
 String key=exchange.getRequest().getHeaders().getFirst(GatewayHeaders.GATEWAY_KEY);
 if(!internalKey.equals(key))return reject(exchange,HttpStatus.UNAUTHORIZED,"Invalid gateway key");
 if(path.startsWith("/internal/"))return chain.filter(exchange);

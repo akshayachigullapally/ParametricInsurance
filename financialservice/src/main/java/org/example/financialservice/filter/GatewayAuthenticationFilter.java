@@ -37,8 +37,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
     ){
         String path=exchange.getRequest().getPath().value();
 
-        if(path.equals("/actuator/health")||
-                path.equals("/actuator/info")){
+        if(path.equals("/actuator")||
+                path.startsWith("/actuator/")){
             return chain.filter(exchange);
         }
 

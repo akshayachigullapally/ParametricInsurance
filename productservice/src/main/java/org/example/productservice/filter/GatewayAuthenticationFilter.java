@@ -108,8 +108,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
     }
 
     private boolean isActuatorPath(String path){
-        return path.equals("/actuator/health")||
-                path.equals("/actuator/info");
+        return path.equals("/actuator")||
+                path.startsWith("/actuator/");
     }
 
     private boolean isInternalPath(String path){

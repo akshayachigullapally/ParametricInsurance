@@ -94,8 +94,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
     }
 
     private boolean isPublicInfrastructurePath(String path){
-        return path.equals("/actuator/health")||
-                path.equals("/actuator/info")||
+        return path.equals("/actuator")||
+                path.startsWith("/actuator/")||
                 path.startsWith("/api/auth/");
     }
 

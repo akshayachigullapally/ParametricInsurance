@@ -20,11 +20,7 @@ public class SecurityConfig{
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchange->exchange
-                        .pathMatchers(
-                                "/actuator/health",
-                                "/actuator/health/**",
-                                "/actuator/info"
-                        ).permitAll()
+                        .pathMatchers("/actuator","/actuator/**").permitAll()
                         .pathMatchers(
                                 "/internal/triggers/**"
                         ).permitAll()
