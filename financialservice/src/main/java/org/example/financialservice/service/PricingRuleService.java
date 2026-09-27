@@ -203,6 +203,9 @@ public class PricingRuleService{
                             return repository.save(rule);
                         })
                 )
+                .flatMap(saved->saved.getStatus()==PricingRuleStatus.ACTIVE
+                        ?supersedeCurrentRules(saved).thenReturn(saved)
+                        :Mono.just(saved))
                 .flatMap(saved->notifications.audit(
                         "PRICING_RULE_STATUS_CHANGED",
                         "PRICING_RULE",
@@ -211,6 +214,44 @@ public class PricingRuleService{
                         "status="+saved.getStatus()
                 ).thenReturn(saved))
                 .map(this::response);
+    }
+
+    /**
+     * A newly activated rule that is already in effect replaces the active
+     * rule(s) for the same product and zone: those become INACTIVE.
+     * A future-dated rule is activated alongside the current one; quotes pick
+     * the latest rule in effect, so it takes over on its start date.
+     */
+    private Mono<Void> supersedeCurrentRules(PricingRule activated){
+        if(activated.getEffectiveFrom()!=null&&
+                activated.getEffectiveFrom().isAfter(LocalDate.now())){
+            return Mono.empty();
+        }
+
+        return repository
+                .findAllByProductIdAndStatus(
+                        activated.getProductId(),
+                        PricingRuleStatus.ACTIVE
+                )
+                .filter(existing->!existing.getId().equals(activated.getId()))
+                .filter(existing->sameZone(
+                        existing.getLocationZoneId(),
+                        activated.getLocationZoneId()
+                ))
+                .concatMap(existing->{
+                    existing.setStatus(PricingRuleStatus.INACTIVE);
+                    existing.setUpdatedBy(activated.getUpdatedBy());
+                    existing.setUpdatedAt(LocalDateTime.now());
+                    return repository.save(existing)
+                            .flatMap(retired->notifications.audit(
+                                    "PRICING_RULE_SUPERSEDED",
+                                    "PRICING_RULE",
+                                    retired.getId(),
+                                    activated.getUpdatedBy(),
+                                    "Replaced by pricing rule "+activated.getId()
+                            ));
+                })
+                .then();
     }
 
     public Mono<PricingRuleResponse> archive(Long ruleId){
@@ -312,32 +353,8 @@ public class PricingRuleService{
 
         return Mono.when(
                 productCheck,
-                zoneCheck,
-                checkDuplicateActiveRule(rule)
+                zoneCheck
         );
-    }
-
-    private Mono<Void> checkDuplicateActiveRule(PricingRule rule){
-        return repository
-                .findAllByProductIdAndStatus(
-                        rule.getProductId(),
-                        PricingRuleStatus.ACTIVE
-                )
-                .filter(existing->
-                        !existing.getId().equals(rule.getId())
-                )
-                .filter(existing->
-                        sameZone(
-                                existing.getLocationZoneId(),
-                                rule.getLocationZoneId()
-                        )
-                )
-                .hasElements()
-                .flatMap(exists->exists
-                                ?Mono.error(new ConflictException(
-                                "Active pricing rule already exists for product and zone"
-                        ))
-                                :Mono.empty());
     }
 
     private boolean sameZone(Long first,Long second){

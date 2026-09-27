@@ -1030,12 +1030,36 @@ class ProductServiceTest{
 
         when(coverageRepository.findAllByProductId(10L))
                 .thenReturn(Flux.empty());
+        when(policyRepository.findAllByProductIdAndStatus(10L,"PENDING"))
+                .thenReturn(Flux.empty());
+        when(policyRepository.findAllByProductIdAndStatus(10L,"ACTIVE"))
+                .thenReturn(Flux.empty());
 
         StepVerifier.create(productService.updateStatus(10L,request))
                 .assertNext(response->{
                     assertThat(response.getStatus()).isEqualTo("ARCHIVED");
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void updateStatus_whenArchivingWithActivePolicies_shouldBeRefused(){
+        UpdateProductStatusRequest request=UpdateProductStatusRequest.builder()
+                .status("ARCHIVED")
+                .build();
+
+        when(productRepository.findById(10L))
+                .thenReturn(Mono.just(product));
+        when(policyRepository.findAllByProductIdAndStatus(10L,"PENDING"))
+                .thenReturn(Flux.empty());
+        when(policyRepository.findAllByProductIdAndStatus(10L,"ACTIVE"))
+                .thenReturn(Flux.just(Policy.builder().id(1L).status("ACTIVE").build()));
+
+        StepVerifier.create(productService.updateStatus(10L,request))
+                .expectError(ConflictException.class)
+                .verify();
+
+        verify(productRepository,never()).save(any(Product.class));
     }
 
     @Test

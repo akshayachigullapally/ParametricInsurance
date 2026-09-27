@@ -187,54 +187,72 @@ class PricingRuleServiceTest{
                 .verifyComplete();
     }
 
-    @Test
-    void duplicateActiveDefaultRuleIsRejected(){
-        PricingRule rule=rule(1L,1L,null,PricingRuleStatus.DRAFT);
-        PricingRule existing=rule(2L,1L,null,PricingRuleStatus.ACTIVE);
+    private org.example.financialservice.dto.UpdatePricingRuleStatusRequest activate(){
+        return org.example.financialservice.dto.UpdatePricingRuleStatusRequest.builder()
+                .status(PricingRuleStatus.ACTIVE)
+                .build();
+    }
 
-        when(repository.findById(1L)).thenReturn(Mono.just(rule));
-        when(repository.findAllByProductIdAndStatus(
-                1L,
-                PricingRuleStatus.ACTIVE
-        )).thenReturn(Flux.just(existing));
-
-        StepVerifier.create(TestAuth.admin(
-                service.updateStatus(
-                        1L,
-                        org.example.financialservice.dto
-                                .UpdatePricingRuleStatusRequest.builder()
-                                .status(PricingRuleStatus.ACTIVE)
-                                .build()
-                ),
-                1L
-        ))
-                .expectError(ConflictException.class)
-                .verify();
+    private void saveReturnsArgument(){
+        when(repository.save(any(PricingRule.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
     }
 
     @Test
-    void duplicateActiveZoneRuleIsRejected(){
-        PricingRule rule=rule(1L,1L,2L,PricingRuleStatus.DRAFT);
-        PricingRule existing=rule(2L,1L,2L,PricingRuleStatus.ACTIVE);
+    void activatingReplacesTheCurrentDefaultRule(){
+        PricingRule rule=rule(1L,1L,null,PricingRuleStatus.DRAFT);
+        PricingRule current=rule(2L,1L,null,PricingRuleStatus.ACTIVE);
 
         when(repository.findById(1L)).thenReturn(Mono.just(rule));
-        when(repository.findAllByProductIdAndStatus(
-                1L,
-                PricingRuleStatus.ACTIVE
-        )).thenReturn(Flux.just(existing));
+        when(repository.findAllByProductIdAndStatus(1L,PricingRuleStatus.ACTIVE))
+                .thenReturn(Flux.just(current));
+        saveReturnsArgument();
 
-        StepVerifier.create(TestAuth.admin(
-                service.updateStatus(
-                        1L,
-                        org.example.financialservice.dto
-                                .UpdatePricingRuleStatusRequest.builder()
-                                .status(PricingRuleStatus.ACTIVE)
-                                .build()
-                ),
-                1L
-        ))
-                .expectError(ConflictException.class)
-                .verify();
+        StepVerifier.create(TestAuth.admin(service.updateStatus(1L,activate()),1L))
+                .assertNext(response->assertThat(response.getStatus())
+                        .isEqualTo(PricingRuleStatus.ACTIVE))
+                .verifyComplete();
+
+        assertThat(current.getStatus()).isEqualTo(PricingRuleStatus.INACTIVE);
+    }
+
+    @Test
+    void activatingAZoneRuleLeavesOtherZonesActive(){
+        PricingRule rule=rule(1L,1L,2L,PricingRuleStatus.DRAFT);
+        PricingRule sameZone=rule(2L,1L,2L,PricingRuleStatus.ACTIVE);
+        PricingRule otherZone=rule(3L,1L,5L,PricingRuleStatus.ACTIVE);
+        PricingRule defaultRule=rule(4L,1L,null,PricingRuleStatus.ACTIVE);
+
+        when(repository.findById(1L)).thenReturn(Mono.just(rule));
+        when(repository.findAllByProductIdAndStatus(1L,PricingRuleStatus.ACTIVE))
+                .thenReturn(Flux.just(sameZone,otherZone,defaultRule));
+        saveReturnsArgument();
+
+        StepVerifier.create(TestAuth.admin(service.updateStatus(1L,activate()),1L))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(sameZone.getStatus()).isEqualTo(PricingRuleStatus.INACTIVE);
+        assertThat(otherZone.getStatus()).isEqualTo(PricingRuleStatus.ACTIVE);
+        assertThat(defaultRule.getStatus()).isEqualTo(PricingRuleStatus.ACTIVE);
+    }
+
+    @Test
+    void futureDatedRuleIsActivatedAlongsideTheCurrentOne(){
+        PricingRule rule=rule(1L,1L,null,PricingRuleStatus.DRAFT);
+        rule.setEffectiveFrom(LocalDate.now().plusMonths(1));
+        PricingRule current=rule(2L,1L,null,PricingRuleStatus.ACTIVE);
+
+        when(repository.findById(1L)).thenReturn(Mono.just(rule));
+        when(repository.findAllByProductIdAndStatus(1L,PricingRuleStatus.ACTIVE))
+                .thenReturn(Flux.just(current));
+        saveReturnsArgument();
+
+        StepVerifier.create(TestAuth.admin(service.updateStatus(1L,activate()),1L))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(current.getStatus()).isEqualTo(PricingRuleStatus.ACTIVE);
     }
 
     @Test

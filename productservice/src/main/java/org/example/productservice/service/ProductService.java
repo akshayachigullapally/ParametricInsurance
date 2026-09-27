@@ -354,9 +354,16 @@ public class ProductService{
                         validateCompleteTrigger(product);
                     }
 
-                    product.setStatus(status);
-                    product.setUpdatedAt(LocalDateTime.now());
-                    return productRepository.save(product);
+                    // Archiving from the status dropdown follows the same rule as the Archive action.
+                    Mono<Void> archiveCheck=ProductStatus.ARCHIVED.name().equals(status)
+                            ?requireNoOpenPolicies(productId)
+                            :Mono.empty();
+
+                    return archiveCheck.then(Mono.defer(()->{
+                        product.setStatus(status);
+                        product.setUpdatedAt(LocalDateTime.now());
+                        return productRepository.save(product);
+                    }));
                 })
                 .flatMap(product->notificationService.audit(
                         "PRODUCT_STATUS_CHANGED", "PRODUCT", product.getId(), null,
@@ -364,6 +371,18 @@ public class ProductService{
                                 " to " + status
                 ).thenReturn(product))
                 .flatMap(product->buildResponse(product,false));
+    }
+
+    private Mono<Void> requireNoOpenPolicies(Long productId){
+        return Flux.merge(
+                        policyRepository.findAllByProductIdAndStatus(productId, PolicyStatus.PENDING.name()),
+                        policyRepository.findAllByProductIdAndStatus(productId, PolicyStatus.ACTIVE.name())
+                )
+                .hasElements()
+                .flatMap(open->open
+                        ?Mono.error(new ConflictException(
+                                "Cannot archive product: it has pending or active policies referencing it"))
+                        :Mono.empty());
     }
 
     @Transactional

@@ -270,7 +270,7 @@ class FinancialRoutesIntegrationTest{
                 .jsonPath("$.status")
                 .isEqualTo(PricingRuleStatus.ACTIVE.name());
 
-        // Duplicate default rule cannot be activated
+        // Activating a second default rule replaces the first
         Long duplicateId=adminHeaders(webClient.post()
                 .uri("/api/financial/pricing-rules")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -291,11 +291,22 @@ class FinancialRoutesIntegrationTest{
                 .bodyValue("{\"status\":\"ACTIVE\"}")
         )
                 .exchange()
-                .expectStatus().isEqualTo(409);
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status")
+                .isEqualTo(PricingRuleStatus.ACTIVE.name());
+
+        adminHeaders(webClient.get()
+                .uri("/api/financial/pricing-rules/"+firstId))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status")
+                .isEqualTo(PricingRuleStatus.INACTIVE.name());
 
         // Edit active rule blocked
         adminHeaders(webClient.put()
-                .uri("/api/financial/pricing-rules/"+firstId)
+                .uri("/api/financial/pricing-rules/"+duplicateId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(ruleJson)
@@ -305,7 +316,7 @@ class FinancialRoutesIntegrationTest{
 
         // Archive active rule blocked
         adminHeaders(webClient.delete()
-                .uri("/api/financial/pricing-rules/"+firstId))
+                .uri("/api/financial/pricing-rules/"+duplicateId))
                 .exchange()
                 .expectStatus().isEqualTo(409);
 
