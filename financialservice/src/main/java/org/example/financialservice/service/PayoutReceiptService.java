@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.financialservice.dto.InternalPolicyResponse;
 import org.example.financialservice.exception.ConflictException;
 import org.example.financialservice.exception.NotFoundException;
@@ -20,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /** PDF receipt for a completed claim payout. */
+@Slf4j
 @Service
 public class PayoutReceiptService{
     private static final DateTimeFormatter DATE_TIME=DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
@@ -34,6 +36,7 @@ public class PayoutReceiptService{
     }
 
     public Mono<Receipt> receiptForCustomer(Long payoutId){
+        log.debug("Receipt for customer [payout receipt]: payoutId={}",payoutId);
         return SecurityUtil.requireCustomer()
                 .flatMap(customerId->payoutRepository.findByIdAndCustomerId(payoutId,customerId))
                 .switchIfEmpty(Mono.error(new NotFoundException("Payout not found")))
@@ -41,6 +44,7 @@ public class PayoutReceiptService{
     }
 
     public Mono<Receipt> receiptForAdmin(Long payoutId){
+        log.debug("Receipt for admin [payout receipt]: payoutId={}",payoutId);
         return SecurityUtil.requireAdmin()
                 .then(payoutRepository.findById(payoutId))
                 .switchIfEmpty(Mono.error(new NotFoundException("Payout not found")))

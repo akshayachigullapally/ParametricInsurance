@@ -155,6 +155,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
     }
 
     public Mono<UserResponse> getCurrentUser(Long userId){
+        log.debug("Get current user [auth]: userId={}",userId);
         return userRepository.findById(userId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("User not found")
@@ -172,6 +173,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
     }
 
     public Flux<SessionResponse> getSessions(Long userId){
+        log.debug("Get sessions [auth]: userId={}",userId);
         return sessionRepository.findAllByUserIdAndActiveTrue(userId)
                 .map(this::toSessionResponse);
     }

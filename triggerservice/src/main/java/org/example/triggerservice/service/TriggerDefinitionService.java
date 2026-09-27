@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.TriggerDefinitionRequest;
 import org.example.triggerservice.dto.TriggerDefinitionResponse;
@@ -31,6 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TriggerDefinitionService{
@@ -39,23 +41,27 @@ public class TriggerDefinitionService{
     private final LocationZoneRepository locationZoneRepository;
 
     public Flux<TriggerDefinitionResponse> getAll(){
+        log.debug("Get all [trigger definition]");
         return triggerDefinitionRepository
                 .findAllByStatusNotOrderByDefinitionNameAsc(TriggerDefinitionStatus.ARCHIVED)
                 .flatMap(this::buildResponse);
     }
 
     public Flux<TriggerDefinitionResponse> getActive(){
+        log.debug("Get active [trigger definition]");
         return triggerDefinitionRepository
                 .findAllByStatusOrderByDefinitionNameAsc(TriggerDefinitionStatus.ACTIVE)
                 .flatMap(this::buildResponse);
     }
 
     public Mono<TriggerDefinitionResponse> getById(Long definitionId){
+        log.debug("Get by id [trigger definition]: definitionId={}",definitionId);
         return findAvailableDefinition(definitionId)
                 .flatMap(this::buildResponse);
     }
 
     public Flux<TriggerDefinitionResponse> getByPerilId(Long perilId){
+        log.debug("Get by peril id [trigger definition]: perilId={}",perilId);
         validateId(perilId,"Peril ID");
 
         return perilRepository.findById(perilId)
@@ -70,6 +76,7 @@ public class TriggerDefinitionService{
     }
 
     public Flux<TriggerDefinitionResponse> getByLocationZoneId(Long locationZoneId){
+        log.debug("Get by location zone id [trigger definition]: locationZoneId={}",locationZoneId);
         validateId(locationZoneId,"Location zone ID");
 
         return locationZoneRepository.findById(locationZoneId)
@@ -84,6 +91,7 @@ public class TriggerDefinitionService{
     }
 
     public Flux<TriggerDefinitionResponse> getByProductId(Long productId){
+        log.debug("Get by product id [trigger definition]: productId={}",productId);
         validateId(productId,"Product ID");
 
         return triggerDefinitionRepository
@@ -98,6 +106,7 @@ public class TriggerDefinitionService{
             TriggerDefinitionRequest request,
             Long userId
     ){
+        log.info("Create [trigger definition]: userId={}",userId);
         normalize(request);
         ParsedRule parsedRule=parseRule(request);
         validateDates(request.getEffectiveFrom(),request.getEffectiveTo());
@@ -165,6 +174,7 @@ public class TriggerDefinitionService{
             TriggerDefinitionRequest request,
             Long userId
     ){
+        log.info("Update [trigger definition]: definitionId={}, userId={}",definitionId,userId);
         normalize(request);
         ParsedRule parsedRule=parseRule(request);
         validateDates(request.getEffectiveFrom(),request.getEffectiveTo());
@@ -243,6 +253,7 @@ public class TriggerDefinitionService{
             String statusValue,
             Long userId
     ){
+        log.info("Update status [trigger definition]: definitionId={}, statusValue={}, userId={}",definitionId,statusValue,userId);
         TriggerDefinitionStatus requestedStatus=parseStatus(statusValue);
 
         if(requestedStatus==TriggerDefinitionStatus.ARCHIVED){
@@ -275,6 +286,7 @@ public class TriggerDefinitionService{
     }
 
     public Mono<Void> archive(Long definitionId,Long userId){
+        log.info("Archive [trigger definition]: definitionId={}, userId={}",definitionId,userId);
         return findAvailableDefinition(definitionId)
                 .flatMap(definition->{
                     if(definition.getStatus()==TriggerDefinitionStatus.ACTIVE){

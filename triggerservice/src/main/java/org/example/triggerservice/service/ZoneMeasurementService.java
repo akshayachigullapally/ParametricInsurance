@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.dto.ZoneMeasurementResponse;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  * measurement type in every zone (the same data the header measurement panel
  * shows, but for all zones instead of only the most recent one overall).
  */
+@Slf4j
 @Service
 public class ZoneMeasurementService{
     private static final String LATEST_PER_ZONE_SQL=
@@ -36,6 +38,7 @@ public class ZoneMeasurementService{
     }
 
     public Flux<ZoneMeasurementResponse> latestPerZone(){
+        log.debug("Latest per zone");
         return databaseClient.sql(LATEST_PER_ZONE_SQL)
                 .map((row,meta)->ZoneMeasurementResponse.builder()
                         .locationZoneId(row.get("location_zone_id",Long.class))

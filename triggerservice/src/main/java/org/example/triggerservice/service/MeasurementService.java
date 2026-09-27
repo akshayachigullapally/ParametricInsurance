@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.MeasurementCurrentResponse;
 import org.example.triggerservice.dto.MeasurementTypeInfo;
@@ -30,6 +31,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MeasurementService{
@@ -43,6 +45,7 @@ public class MeasurementService{
     private final NotificationService notificationService;
 
     public Flux<MeasurementTypeInfo> getMeasurementTypes(){
+        log.debug("Get measurement types");
         return Flux.fromArray(MeasurementType.values())
                 .map(type->MeasurementTypeInfo.builder()
                         .measurementType(type)
@@ -53,6 +56,7 @@ public class MeasurementService{
 
     public Mono<CurrentMeasurementResult> processCurrentMeasurement(
             CurrentMeasurementRequest request,Long recordedBy){
+        log.info("Process current measurement: recordedBy={}",recordedBy);
         LocalDateTime now=LocalDateTime.now();
         return idempotencyService.isDuplicate(request.getIdempotencyKey())
             .flatMap(duplicate->{
@@ -240,6 +244,7 @@ public class MeasurementService{
     }
 
     public Flux<org.example.triggerservice.dto.CurrentMeasurementSnapshotResponse> getCurrentMeasurementSnapshots(){
+        log.debug("Get current measurement snapshots");
         return currentMeasurementRepository.findAll()
                 .map(current->org.example.triggerservice.dto.CurrentMeasurementSnapshotResponse.builder()
                         .productId(current.getProductId())
@@ -253,6 +258,7 @@ public class MeasurementService{
     }
 
     public Flux<MeasurementCurrentResponse> getCurrentMeasurements(){
+        log.debug("Get current measurements");
         return Flux.fromArray(MeasurementType.values())
                 .flatMap(this::latestValidatedFor)
                 .flatMap(observation->locationZoneRepository

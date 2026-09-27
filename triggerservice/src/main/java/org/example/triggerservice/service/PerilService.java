@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.PerilRequest;
 import org.example.triggerservice.dto.PerilResponse;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PerilService{
@@ -23,20 +25,24 @@ public class PerilService{
     private final NotificationService notificationService;
 
     public Flux<PerilResponse> getAll(){
+        log.debug("Get all [peril]");
         return perilRepository.findAllByStatusNotOrderByPerilNameAsc(PerilStatus.ARCHIVED)
                 .map(this::toResponse);
     }
 
     public Flux<PerilResponse> getActive(){
+        log.debug("Get active [peril]");
         return perilRepository.findAllByStatusOrderByPerilNameAsc(PerilStatus.ACTIVE)
                 .map(this::toResponse);
     }
 
     public Mono<PerilResponse> getById(Long perilId){
+        log.debug("Get by id [peril]: perilId={}",perilId);
         return findActiveRecord(perilId).map(this::toResponse);
     }
 
     public Mono<PerilResponse> create(PerilRequest request,Long userId){
+        log.info("Create [peril]: userId={}",userId);
         normalize(request);
         return perilRepository.existsByPerilCodeIgnoreCase(request.getPerilCode())
                 .flatMap(exists->{
@@ -64,6 +70,7 @@ public class PerilService{
     }
 
     public Mono<PerilResponse> update(Long perilId,PerilRequest request,Long userId){
+        log.info("Update [peril]: perilId={}, userId={}",perilId,userId);
         normalize(request);
         return findActiveRecord(perilId)
                 .flatMap(peril->perilRepository.existsByPerilCodeAndIdNot(request.getPerilCode(),perilId)
@@ -85,6 +92,7 @@ public class PerilService{
     }
 
     public Mono<PerilResponse> updateStatus(Long perilId,String statusValue,Long userId){
+        log.info("Update status [peril]: perilId={}, statusValue={}, userId={}",perilId,statusValue,userId);
         PerilStatus status=parseStatus(statusValue);
         if(status==PerilStatus.ARCHIVED)
             return Mono.error(new ValidationException("Use the delete endpoint to archive a peril"));
@@ -104,6 +112,7 @@ public class PerilService{
     }
 
     public Mono<Void> archive(Long perilId,Long userId){
+        log.info("Archive [peril]: perilId={}, userId={}",perilId,userId);
         return findActiveRecord(perilId)
                 .flatMap(peril->{
                     peril.setStatus(PerilStatus.ARCHIVED);

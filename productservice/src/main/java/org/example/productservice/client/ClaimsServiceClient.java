@@ -1,5 +1,6 @@
 package org.example.productservice.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.dto.InternalClaimResponse;
 import org.example.productservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class ClaimsServiceClient{
     private final WebClient webClient;
@@ -24,6 +26,7 @@ public class ClaimsServiceClient{
     }
 
     public Mono<InternalClaimResponse> createInternalClaim(Object payload){
+        log.debug("Create internal claim [claims service]");
         return webClient.post()
                 .uri("/internal/claims")
                 .bodyValue(payload)

@@ -40,6 +40,7 @@ public class ProductTriggerSyncService{
             Long productId,
             ProductTriggerSyncRequest request
     ){
+        log.info("Sync product definition: productId={}",productId);
         LocalDateTime now=LocalDateTime.now();
 
         validateRequest(productId,request);

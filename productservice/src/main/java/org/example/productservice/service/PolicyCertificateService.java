@@ -1,5 +1,6 @@
 package org.example.productservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.client.TriggerServiceClient;
 import org.example.productservice.dto.InternalZoneResponse;
 import org.example.productservice.exception.ConflictException;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /** PDF certificate of insurance for an issued (active or expired) policy. */
+@Slf4j
 @Service
 public class PolicyCertificateService{
     private static final DateTimeFormatter DATE=DateTimeFormatter.ofPattern("dd MMM yyyy");
@@ -45,12 +47,14 @@ public class PolicyCertificateService{
     }
 
     public Mono<Certificate> forCustomer(Long customerId,Long policyId){
+        log.debug("For customer [policy certificate]: customerId={}, policyId={}",customerId,policyId);
         return policyRepository.findByIdAndCustomerId(policyId,customerId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Policy not found")))
                 .flatMap(this::render);
     }
 
     public Mono<Certificate> forStaff(Long policyId){
+        log.debug("For staff [policy certificate]: policyId={}",policyId);
         return policyRepository.findById(policyId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Policy not found")))
                 .flatMap(this::render);

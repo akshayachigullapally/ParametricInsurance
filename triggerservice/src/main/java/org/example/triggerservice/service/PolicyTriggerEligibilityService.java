@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.InternalPolicyResponse;
 import org.example.triggerservice.dto.PolicyTriggerEligibilityResponse;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolicyTriggerEligibilityService{
@@ -32,6 +34,7 @@ public class PolicyTriggerEligibilityService{
     private String internalKey;
 
     public Mono<PolicyTriggerEligibilityResponse> checkEligibility(Long policyId){
+        log.debug("Check eligibility [policy trigger eligibility]: policyId={}",policyId);
         validateId(policyId,"Policy ID");
 
         return getPolicy(policyId)

@@ -37,18 +37,21 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyTriggerDetected(Long customerId, Long eventId, String eventReference) {
+        log.debug("Notify trigger detected: customerId={}, eventId={}, eventReference={}",customerId,eventId,eventReference);
         return notify(customerId, "TRIGGER_DETECTED", "Trigger Event Detected",
                 "A trigger event " + eventReference + " has been detected and is pending verification.",
                 "TRIGGER_EVENT", eventId);
     }
 
     public Mono<Void> notifyTriggerVerified(Long customerId, Long eventId, String eventReference) {
+        log.debug("Notify trigger verified: customerId={}, eventId={}, eventReference={}",customerId,eventId,eventReference);
         return notify(customerId, "TRIGGER_VERIFIED", "Trigger Event Verified",
                 "Trigger event " + eventReference + " has been verified. You may now submit a claim.",
                 "TRIGGER_EVENT", eventId);
     }
 
     public Mono<Void> notifyTriggerRejected(Long customerId, Long eventId, String eventReference) {
+        log.debug("Notify trigger rejected: customerId={}, eventId={}, eventReference={}",customerId,eventId,eventReference);
         return notify(customerId, "TRIGGER_REJECTED", "Trigger Event Rejected",
                 "Trigger event " + eventReference + " has been rejected.",
                 "TRIGGER_EVENT", eventId);

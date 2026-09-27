@@ -66,6 +66,7 @@ public class ClaimDocumentService{
             Long customerId,
             Long claimId,
             List<FilePart> files){
+        log.info("Upload [claim document]: customerId={}, claimId={}",customerId,claimId);
         if(files==null||files.isEmpty()){
             return Mono.error(new ValidationException("Select at least one file to upload"));
         }
@@ -99,23 +100,27 @@ public class ClaimDocumentService{
     }
 
     public Flux<ClaimDocumentResponse> listForCustomer(Long customerId,Long claimId){
+        log.debug("List for customer [claim document]: customerId={}, claimId={}",customerId,claimId);
         return ownedClaim(customerId,claimId)
                 .flatMapMany(claim->documentRepository.findAllByClaimIdOrderByUploadedAtAsc(claimId))
                 .map(this::toResponse);
     }
 
     public Flux<ClaimDocumentResponse> listForStaff(Long claimId){
+        log.debug("List for staff [claim document]: claimId={}",claimId);
         return existingClaim(claimId)
                 .flatMapMany(claim->documentRepository.findAllByClaimIdOrderByUploadedAtAsc(claimId))
                 .map(this::toResponse);
     }
 
     public Mono<DocumentContent> downloadForCustomer(Long customerId,Long claimId,Long documentId){
+        log.debug("Download for customer [claim document]: customerId={}, claimId={}, documentId={}",customerId,claimId,documentId);
         return ownedClaim(customerId,claimId)
                 .then(readDocument(claimId,documentId));
     }
 
     public Mono<DocumentContent> downloadForStaff(Long claimId,Long documentId){
+        log.debug("Download for staff [claim document]: claimId={}, documentId={}",claimId,documentId);
         return existingClaim(claimId)
                 .then(readDocument(claimId,documentId));
     }

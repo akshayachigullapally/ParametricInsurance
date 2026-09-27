@@ -52,12 +52,14 @@ public class NotificationPreferenceService {
     }
 
     public Flux<NotificationPreferenceResponse> myPreferences() {
+        log.debug("Fetching my notification preferences");
         return SecurityUtil.userId().flatMapMany(userId ->
                 repository.findAll().filter(p -> userId.equals(p.getUserId())))
                 .map(this::response);
     }
 
     public Mono<Boolean> isEnabled(Long userId, NotificationType type, String channel) {
+        log.debug("Checking notification channel enabled: userId={}, channel={}",userId,channel);
         return repository.findByUserIdAndNotificationType(userId, type)
                 .map(p -> {
                     return switch (channel) {

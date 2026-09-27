@@ -44,6 +44,7 @@ public class PricingRuleService{
     public Mono<PricingRuleResponse> create(
             PricingRuleRequest request
     ){
+        log.info("Create [pricing rule]");
         validateValues(request);
 
         return SecurityUtil.requireAdmin()
@@ -101,6 +102,7 @@ public class PricingRuleService{
     }
 
     public Mono<PricingRuleResponse> findById(Long ruleId){
+        log.debug("Find by id [pricing rule]: ruleId={}",ruleId);
         return SecurityUtil.requireAdmin()
                 .then(findEntity(ruleId))
                 .map(this::response);
@@ -110,6 +112,7 @@ public class PricingRuleService{
             Long ruleId,
             PricingRuleRequest request
     ){
+        log.info("Update [pricing rule]: ruleId={}",ruleId);
         validateValues(request);
 
         return SecurityUtil.requireAdmin()
@@ -184,6 +187,7 @@ public class PricingRuleService{
             Long ruleId,
             UpdatePricingRuleStatusRequest request
     ){
+        log.info("Update status [pricing rule]: ruleId={}",ruleId);
         return SecurityUtil.requireAdmin()
                 .then(findEntity(ruleId))
                 .flatMap(rule->validateTransition(
@@ -255,6 +259,7 @@ public class PricingRuleService{
     }
 
     public Mono<PricingRuleResponse> archive(Long ruleId){
+        log.info("Archive [pricing rule]: ruleId={}",ruleId);
         return SecurityUtil.requireAdmin()
                 .then(SecurityUtil.userId())
                 .flatMap(actor->findEntity(ruleId)

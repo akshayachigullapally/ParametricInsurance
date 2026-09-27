@@ -16,10 +16,12 @@ public class IdempotencyService{
     private final IdempotencyRecordRepository idempotencyRecordRepository;
 
     public Mono<Boolean> isDuplicate(String idempotencyKey){
+        log.debug("Is duplicate [idempotency]");
         return idempotencyRecordRepository.existsByIdempotencyKey(idempotencyKey);
     }
 
         public Mono<Long> resourceId(String idempotencyKey){
+            log.debug("Resource id [idempotency]");
                 return idempotencyRecordRepository.findByIdempotencyKey(idempotencyKey).map(IdempotencyRecord::getResourceId);
         }
 

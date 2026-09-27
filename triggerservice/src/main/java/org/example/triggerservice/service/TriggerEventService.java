@@ -37,11 +37,13 @@ public class TriggerEventService{
     private final ProductTriggerClient productTriggerClient;
 
     public Flux<TriggerEventResponse> getAll(){
+        log.debug("Get all [trigger event]");
         return triggerEventRepository.findAllByOrderByDetectedAtDesc()
                 .flatMap(this::buildResponse);
     }
 
     public Flux<TriggerEventResponse> getByStatus(String statusValue){
+        log.debug("Get by status [trigger event]: statusValue={}",statusValue);
         TriggerEventStatus status=parseStatus(statusValue);
 
         return triggerEventRepository
@@ -50,6 +52,7 @@ public class TriggerEventService{
     }
 
     public Flux<TriggerEventResponse> getByDefinitionId(Long definitionId){
+        log.debug("Get by definition id [trigger event]: definitionId={}",definitionId);
         validateId(definitionId,"Trigger definition ID");
 
         return triggerDefinitionRepository.findById(definitionId)
@@ -62,6 +65,7 @@ public class TriggerEventService{
     }
 
     public Flux<TriggerEventResponse> getByProductId(Long productId){
+        log.debug("Get by product id [trigger event]: productId={}",productId);
         validateId(productId,"Product ID");
 
         return triggerEventRepository
@@ -70,6 +74,7 @@ public class TriggerEventService{
     }
 
     public Flux<TriggerEventResponse> getByZoneId(Long zoneId){
+        log.debug("Get by zone id [trigger event]: zoneId={}",zoneId);
         validateId(zoneId,"Location zone ID");
 
         return locationZoneRepository.findById(zoneId)
@@ -81,6 +86,7 @@ public class TriggerEventService{
     }
 
     public Mono<TriggerEventResponse> getById(Long eventId){
+        log.debug("Get by id [trigger event]: eventId={}",eventId);
         return findEvent(eventId).flatMap(this::buildResponse);
     }
 
@@ -88,6 +94,7 @@ public class TriggerEventService{
             Long eventId,
             Long userId
     ){
+        log.info("Start validation [trigger event]: eventId={}, userId={}",eventId,userId);
         return findEvent(eventId)
                 .flatMap(event->{
                     if(event.getStatus()!=TriggerEventStatus.DETECTED){
@@ -154,6 +161,7 @@ public class TriggerEventService{
             String reviewNotes,
             Long userId
     ){
+        log.info("Reject [trigger event]: eventId={}, userId={}",eventId,userId);
         validateNotes(reviewNotes);
 
         return findEvent(eventId)
@@ -187,6 +195,7 @@ public class TriggerEventService{
             String reviewNotes,
             Long userId
     ){
+        log.info("Process event [trigger event]: eventId={}, userId={}",eventId,userId);
         validateNotes(reviewNotes);
 
         return findEvent(eventId)
@@ -226,6 +235,7 @@ public class TriggerEventService{
     }
 
     public Mono<Void> markEventProcessed(Long eventId){
+        log.info("Mark event processed [trigger event]: eventId={}",eventId);
         validateId(eventId,"Trigger event ID");
 
         return triggerEventRepository.findById(eventId)

@@ -58,6 +58,7 @@ public class DemoObservationService{
             DemoObservationRequest request,
             Long userId
     ){
+        log.info("Record and evaluate [demo observation]: userId={}",userId);
         validateRequest(request);
 
         return triggerDefinitionRepository.findById(request.getTriggerDefinitionId())

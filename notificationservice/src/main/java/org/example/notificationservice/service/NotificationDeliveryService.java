@@ -26,6 +26,7 @@ public class NotificationDeliveryService {
     }
 
     public Mono<Notification> dispatch(Notification n) {
+        log.debug("Dispatching notification");
         DeliveryChannel channel = n.getDeliveryChannel() == null ? DeliveryChannel.IN_APP : n.getDeliveryChannel();
         return switch (channel) {
             case IN_APP -> markDelivered(n);

@@ -45,6 +45,7 @@ public class ProductTriggerClient{
     }
 
         public Mono<InternalProductConfig> getProduct(Long productId){
+            log.debug("Get product: productId={}",productId);
                 return webClient.get()
                                 .uri("/internal/products/{productId}",productId)
                                 .retrieve()
@@ -53,6 +54,7 @@ public class ProductTriggerClient{
 
                     public Flux<org.example.triggerservice.dto.ActivePolicyForTriggerResponse> getActivePolicies(
                             Long productId,Long locationZoneId){
+                        log.debug("Get active policies [product trigger service]: productId={}, locationZoneId={}",productId,locationZoneId);
                         return webClient.get()
                                 .uri(uriBuilder->uriBuilder
                                         .path("/internal/policies/active-for-trigger")
@@ -64,6 +66,7 @@ public class ProductTriggerClient{
                     }
 
                     public Mono<Boolean> hasActivePoliciesForZone(Long zoneId){
+                        log.debug("Has active policies for zone [product trigger service]: zoneId={}",zoneId);
                         return webClient.get()
                                 .uri("/internal/policies/zone/{zoneId}/has-active",zoneId)
                                 .retrieve()
@@ -74,6 +77,7 @@ public class ProductTriggerClient{
                     public Flux<EligiblePolicyResponse> getEligiblePoliciesForEvent(
                             Long productId,Long locationZoneId,java.time.LocalDateTime eventStart,
                             java.time.LocalDateTime eventEnd,Long triggerEventId){
+                        log.debug("Get eligible policies for event [product trigger service]: productId={}, locationZoneId={}, triggerEventId={}",productId,locationZoneId,triggerEventId);
                         return webClient.get()
                                 .uri(uriBuilder->uriBuilder.path("/internal/policies/active-for-trigger")
                                         .queryParam("productId",productId)

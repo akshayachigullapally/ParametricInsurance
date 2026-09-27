@@ -30,6 +30,7 @@ public class ObservationValidationService{
     private final LocationZoneRepository locationZoneRepository;
 
     public Flux<ObservationResponse> getReceivedObservations(){
+        log.debug("Get received observations");
         return observationRepository.findAllByOrderByObservedAtDesc()
                 .filter(obs->obs.getStatus()==ObservationStatus.RECEIVED)
                 .flatMap(this::buildResponse);

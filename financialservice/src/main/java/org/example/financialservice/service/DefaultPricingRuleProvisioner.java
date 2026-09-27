@@ -59,6 +59,7 @@ public class DefaultPricingRuleProvisioner{
     }
 
     public Mono<Void> provisionMissingRules(){
+        log.info("Provision missing rules [default pricing rule provisioner]");
         return Mono.defer(()->{
             if(!running.compareAndSet(false,true)){
                 return Mono.empty();

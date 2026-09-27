@@ -113,6 +113,7 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> createForChannels(InternalNotificationRequest r) {
+        log.debug("Creating notification for channels");
         validateRequest(r);
         List<DeliveryChannel> channels = resolveChannels(r);
         int maxRetries = r.getMaxRetries() == null ? 3 : r.getMaxRetries();
@@ -163,6 +164,7 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> sendFromTemplate(SendFromTemplateRequest r) {
+        log.debug("Sending notification from template");
         boolean hasCode = r.getTemplateCode() != null && !r.getTemplateCode().isBlank();
         if (!hasCode && r.getNotificationType() == null) {
             return Flux.error(new ValidationException("templateCode or notificationType is required"));
@@ -203,6 +205,7 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> batch(List<InternalNotificationRequest> requests) {
+        log.debug("Creating notification batch");
         if (requests == null || requests.isEmpty()) {
             return Flux.error(new ValidationException("notifications must not be empty"));
         }
@@ -247,6 +250,7 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> mine(boolean unreadOnly) {
+        log.debug("Fetching my notifications: unreadOnly={}",unreadOnly);
         return unreadOnly ? mine(NotificationQuery.unreadOnly()) : mine(NotificationQuery.defaults());
     }
 
@@ -261,6 +265,7 @@ public class NotificationService {
      * therefore the correct - and only working - way to retrieve those notifications.
      */
     public Flux<NotificationResponse> mine(NotificationQuery q) {
+        log.debug("Fetching my notifications");
         return SecurityUtil.userId().flatMapMany(userId ->
                 SecurityUtil.role().flatMapMany(role -> {
                     Flux<Notification> filtered = visibleTo(userId, role, q.isUnreadOnly())
@@ -303,6 +308,7 @@ public class NotificationService {
         // See the comment on mine(NotificationQuery) - recipientCustomerId is matched
         // against the caller's own userId, since that is what producers actually set it to.
         public Flux<NotificationResponse> stream() {
+            log.debug("Opening notification stream");
         return SecurityUtil.userId().flatMapMany(userId ->
                 SecurityUtil.role().flatMapMany(role ->
                     stream.asFlux()
@@ -314,11 +320,13 @@ public class NotificationService {
         }
 
     public Mono<UnreadCountResponse> unreadCount() {
+        log.debug("Fetching unread notification count");
         return mine(true).count().map(UnreadCountResponse::new);
     }
 
     // Ensure publishes for createFromTemplate and createForChannels also notify sink
     public Flux<NotificationResponse> createForChannelsAndPublish(InternalNotificationRequest r) {
+        log.debug("Creating and publishing notification");
         return createForChannels(r).doOnNext(stream::publish);
     }
 
@@ -335,6 +343,7 @@ public class NotificationService {
 
     /** Marks everything unread in the user's inbox (the same set as mine(true) and unreadCount()). */
     public Mono<MessageResponse> markAllRead() {
+        log.debug("Marking all notifications read");
         return SecurityUtil.userId().flatMapMany(userId ->
                         SecurityUtil.role().flatMapMany(role -> visibleTo(userId, role, true)))
                 .flatMap(n -> {
@@ -355,6 +364,7 @@ public class NotificationService {
 
     /** Admin view of all notifications: mark any notification as read. */
     public Mono<NotificationResponse> adminMarkRead(Long id) {
+        log.debug("Admin marking notification read: id={}",id);
         return SecurityUtil.requireAdmin()
                 .then(Mono.defer(() -> repository.findById(id)))
                 .switchIfEmpty(Mono.error(new NotFoundException("Notification not found")))
@@ -382,11 +392,13 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> all() {
+        log.debug("Fetching all notifications");
         return SecurityUtil.requireAdmin().thenMany(repository.findAllByOrderByCreatedAtDesc())
                 .map(this::response);
     }
 
     public Flux<NotificationResponse> allPage(int page, int size) {
+        log.debug("Fetching notifications page: page={}, size={}",page,size);
         return SecurityUtil.requireAdmin().thenMany(repository.findAllByOrderByCreatedAtDesc())
                 .skip((long) page * size)
                 .take(size)
@@ -394,18 +406,21 @@ public class NotificationService {
     }
 
     public Flux<NotificationResponse> failed() {
+        log.debug("Fetching failed notifications");
         return SecurityUtil.requireAdmin()
                 .thenMany(repository.findAllByDeliveryStatusOrderByCreatedAtDesc(DeliveryStatus.FAILED))
                 .map(this::response);
     }
 
     public Flux<NotificationResponse> byType(NotificationType type) {
+        log.debug("Fetching notifications by type");
         return SecurityUtil.requireAdmin()
                 .thenMany(repository.findAllByTypeOrderByCreatedAtDesc(type))
                 .map(this::response);
     }
 
     public Flux<NotificationResponse> byTypePage(NotificationType type, int page, int size) {
+        log.debug("Fetching notifications by type page: page={}, size={}",page,size);
         return SecurityUtil.requireAdmin()
                 .thenMany(repository.findAllByTypeOrderByCreatedAtDesc(type))
                 .skip((long) page * size)

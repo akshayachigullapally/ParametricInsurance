@@ -37,6 +37,7 @@ public class DeliveryAttemptService {
     }
 
     public Flux<DeliveryAttemptResponse> getByNotificationId(Long notificationId) {
+        log.debug("Get by notification id [delivery attempt]: notificationId={}",notificationId);
         return repository.findByNotificationIdOrderByAttemptNumberDesc(notificationId)
                 .map(this::response);
     }

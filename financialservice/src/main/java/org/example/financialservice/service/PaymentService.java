@@ -154,6 +154,7 @@ public class PaymentService{
     }
 
     public Mono<PaymentResponse> findById(Long paymentId){
+        log.debug("Find by id [payment]: paymentId={}",paymentId);
         return SecurityUtil.requireCustomer()
                 .flatMap(customerId->paymentRepository
                         .findByIdAndCustomerId(
@@ -168,6 +169,7 @@ public class PaymentService{
     }
 
     public Flux<PaymentResponse> findMine(){
+        log.debug("Find mine [payment]");
         return SecurityUtil.requireCustomer()
                 .flatMapMany(customerId->paymentRepository
                         .findAllByCustomerIdOrderByCreatedAtDesc(
@@ -178,6 +180,7 @@ public class PaymentService{
     }
 
     public Flux<PaymentResponse> findAll(){
+        log.debug("Find all [payment]");
         return SecurityUtil.requireAdmin()
                 .thenMany(paymentRepository
                         .findAllByOrderByCreatedAtDesc()
@@ -381,6 +384,7 @@ public class PaymentService{
     }
 
     public Mono<PaymentStatusResult> policyStatus(Long policyId){
+        log.debug("Policy status [payment]: policyId={}",policyId);
         return paymentRepository
                 .findAllByPolicyIdOrderByCreatedAtDesc(policyId)
                 .next()

@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.financialservice.dto.InternalClaimResponse;
 import org.example.financialservice.exception.NotFoundException;
 import org.example.financialservice.util.GatewayHeaders;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class ClaimsServiceClient{
     private final WebClient webClient;
@@ -27,6 +29,7 @@ public class ClaimsServiceClient{
     }
 
     public Mono<InternalClaimResponse> findClaim(Long claimId){
+        log.debug("Find claim [claims service]: claimId={}",claimId);
         return webClient.get()
                 .uri("/internal/claims/{claimId}",claimId)
                 .retrieve()

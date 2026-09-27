@@ -59,12 +59,14 @@ public class NotificationTemplateService {
     }
 
     public Mono<NotificationTemplateResponse> get(Long id) {
+        log.debug("Fetching notification template: id={}",id);
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Template not found")))
                 .map(this::response);
     }
 
     public Flux<NotificationTemplateResponse> all() {
+        log.debug("Fetching all notification templates");
         return repository.findAll().map(this::response);
     }
 
@@ -93,10 +95,12 @@ public class NotificationTemplateService {
     }
 
     public Flux<NotificationTemplateResponse> defaults() {
+        log.debug("Fetching default notification templates");
         return dataRepository.findAll().map(this::response);
     }
 
     public Mono<NotificationTemplate> getDefaultTemplate(NotificationType type) {
+        log.debug("Fetching default notification template");
         return dataRepository.findByNotificationType(type)
                 .map(dt -> NotificationTemplate.builder()
                         .templateCode(dt.getNotificationType().name())
@@ -109,6 +113,7 @@ public class NotificationTemplateService {
     }
 
     public Mono<NotificationTemplate> findByCode(String templateCode) {
+        log.debug("Finding notification template by code");
         String code = templateCode.trim();
         Mono<NotificationTemplate> builtIn = Mono.defer(() -> {
             try {
@@ -122,6 +127,7 @@ public class NotificationTemplateService {
     }
 
     public Mono<NotificationTemplate> findByType(NotificationType type) {
+        log.debug("Finding notification template by type");
         return repository.findByNotificationTypeAndActiveTrue(type)
                 .next();
     }

@@ -67,10 +67,12 @@ public class MonitorRunService{
     }
 
     public Flux<MonitorRun> getAllRuns(){
+        log.debug("Get all runs [monitor run]");
         return monitorRunRepository.findAllByOrderByStartedAtDesc();
     }
 
     public Mono<MonitorRun> getRunById(Long runId){
+        log.debug("Get run by id [monitor run]: runId={}",runId);
         return monitorRunRepository.findById(runId)
                 .switchIfEmpty(Mono.error(
                         new org.example.triggerservice.exception.NotFoundException(

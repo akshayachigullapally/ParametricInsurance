@@ -35,11 +35,13 @@ public class ObservationService{
     private final LocationZoneRepository locationZoneRepository;
 
     public Flux<ObservationResponse> getAll(){
+        log.debug("Get all [observation]");
         return observationRepository.findAllByOrderByObservedAtDesc()
                 .flatMap(this::buildResponse);
     }
 
     public Mono<ObservationResponse> getById(Long observationId){
+        log.debug("Get by id [observation]: observationId={}",observationId);
         validateId(observationId,"Observation ID");
 
         return observationRepository.findById(observationId)
@@ -49,6 +51,7 @@ public class ObservationService{
     }
 
     public Flux<ObservationResponse> getByZoneId(Long zoneId){
+        log.debug("Get by zone id [observation]: zoneId={}",zoneId);
         validateId(zoneId,"Location zone ID");
 
         return findAvailableZone(zoneId)
@@ -58,6 +61,7 @@ public class ObservationService{
     }
 
     public Flux<ObservationResponse> getByMeasurementType(String value){
+        log.debug("Get by measurement type [observation]: value={}",value);
         MeasurementType measurementType=parseEnum(
                 value,
                 MeasurementType.class,

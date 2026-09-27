@@ -137,6 +137,7 @@ public class QuoteService{
      * without a quote, so every policy premium comes from pricing rules.
      */
     public Mono<InternalPricingResponse> priceInternal(InternalPricingRequest request){
+        log.debug("Price internal [quote]");
         if(request==null||request.getProductId()==null||request.getLocationZoneId()==null
                 ||request.getSumInsured()==null||request.getTermMonths()==null
                 ||request.getSumInsured().signum()<=0||request.getTermMonths()<=0){
@@ -163,6 +164,7 @@ public class QuoteService{
     }
 
     public Mono<QuoteResponse> findMine(Long quoteId){
+        log.debug("Find mine [quote]: quoteId={}",quoteId);
         return SecurityUtil.requireCustomer()
                 .flatMap(customerId->quoteRepository
                         .findByIdAndCustomerId(
@@ -180,6 +182,7 @@ public class QuoteService{
     }
 
     public Flux<QuoteResponse> findMine(){
+        log.debug("Find mine [quote]");
         return SecurityUtil.requireCustomer()
                 .flatMapMany(customerId->quoteRepository
                         .findAllByCustomerIdOrderByCreatedAtDesc(
@@ -300,6 +303,7 @@ public class QuoteService{
             Long quoteId,
             InternalQuoteValidateRequest request
     ){
+        log.debug("Validate internal [quote]: quoteId={}",quoteId);
         return quoteRepository.findById(quoteId)
                 .switchIfEmpty(
                         Mono.error(

@@ -37,12 +37,14 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyClaimSubmitted(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify claim submitted: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "CLAIM_SUBMITTED", "Claim Submitted",
                 "Your claim " + claimNumber + " has been submitted and is pending review.",
                 "CLAIM", claimId);
     }
 
     public Mono<Void> notifyManualClaimSubmitted(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify manual claim submitted: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "MANUAL_CLAIM_SUBMITTED", "Manual claim received",
                 "Your claim " + claimNumber + " was received and requires a Claims Officer " +
                         "investigation because no automatic trigger event was found.",
@@ -50,18 +52,21 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyClaimUnderReview(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify claim under review: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "CLAIM_UNDER_REVIEW", "Claim Under Review",
                 "Your claim " + claimNumber + " is now under review.",
                 "CLAIM", claimId);
     }
 
     public Mono<Void> notifyClaimApproved(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify claim approved: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "CLAIM_APPROVED", "Claim Approved",
                 "Your claim " + claimNumber + " has been approved.",
                 "CLAIM", claimId);
     }
 
     public Mono<Void> notifyClaimRejected(Long customerId, Long claimId, String claimNumber, String reason) {
+        log.debug("Notify claim rejected: customerId={}, claimId={}, claimNumber={}, reason={}",customerId,claimId,claimNumber,reason);
         return notify(customerId, "CLAIM_REJECTED", "Claim Rejected",
                 "Your claim " + claimNumber + " has been rejected." +
                         (reason != null && !reason.isBlank() ? " Reason: " + reason : ""),
@@ -69,18 +74,21 @@ public class NotificationService {
     }
 
     public Mono<Void> notifyClaimSettled(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify claim settled: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "CLAIM_SETTLED", "Claim Settled",
                 "Your claim " + claimNumber + " has been settled.",
                 "CLAIM", claimId);
     }
 
     public Mono<Void> notifyClaimCancelled(Long customerId, Long claimId, String claimNumber) {
+        log.debug("Notify claim cancelled: customerId={}, claimId={}, claimNumber={}",customerId,claimId,claimNumber);
         return notify(customerId, "CLAIM_CANCELLED", "Claim Cancelled",
                 "Your claim " + claimNumber + " has been cancelled.",
                 "CLAIM", claimId);
     }
 
     public Mono<Void> notifyClaimPendingReview(Long claimId, String claimNumber) {
+        log.debug("Notify claim pending review: claimId={}, claimNumber={}",claimId,claimNumber);
         String message = "Claim " + claimNumber + " was submitted and is awaiting Claims Officer review.";
         return notifyRole("ROLE_CLAIMS_OFFICER", "CLAIM_SUBMITTED", "Claim Pending Review",
                 message, "CLAIM", claimId)

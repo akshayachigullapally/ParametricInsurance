@@ -328,6 +328,7 @@ public class LocationZoneService{
     private final NotificationService notificationService;
 
     public Flux<LocationZoneResponse> getAll(String state){
+        log.debug("Get all [location zone]: state={}",state);
         if(StringUtils.hasText(state)){
             return locationZoneRepository
                     .findAllByStateIgnoreCaseAndStatusOrderByZoneNameAsc(
@@ -367,10 +368,12 @@ public class LocationZoneService{
     }
 
     public Mono<LocationZoneResponse> getById(Long zoneId){
+        log.debug("Get by id [location zone]: zoneId={}",zoneId);
         return findAvailableZone(zoneId).map(this::toResponse);
     }
 
     public Mono<InternalZoneResponse> getInternalById(Long zoneId){
+        log.debug("Get internal by id [location zone]: zoneId={}",zoneId);
         return locationZoneRepository.findById(zoneId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Location zone not found")
@@ -406,6 +409,7 @@ public class LocationZoneService{
     }
 
     public Mono<LocationZoneResponse> create(LocationZoneRequest request,Long userId){
+        log.info("Create [location zone]: userId={}",userId);
         normalize(request);
 
         return locationZoneRepository.existsByZoneCodeIgnoreCase(request.getZoneCode())
@@ -449,6 +453,7 @@ public class LocationZoneService{
             LocationZoneRequest request,
             Long userId
     ){
+        log.info("Update [location zone]: zoneId={}, userId={}",zoneId,userId);
         normalize(request);
 
         return findAvailableZone(zoneId)
@@ -493,6 +498,7 @@ public class LocationZoneService{
             String statusValue,
             Long userId
     ){
+        log.info("Update status [location zone]: zoneId={}, statusValue={}, userId={}",zoneId,statusValue,userId);
         LocationZoneStatus status=parseStatus(statusValue);
 
         if(status==LocationZoneStatus.ARCHIVED){
@@ -527,6 +533,7 @@ public class LocationZoneService{
     }
 
     public Mono<Void> archive(Long zoneId,Long userId){
+        log.info("Archive [location zone]: zoneId={}, userId={}",zoneId,userId);
         return findAvailableZone(zoneId)
                 .flatMap(zone->
                         productTriggerClient.hasActivePoliciesForZone(zoneId)

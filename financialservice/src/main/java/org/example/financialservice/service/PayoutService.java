@@ -104,6 +104,7 @@ public class PayoutService{
     }
 
     public Mono<PayoutResponse> findById(Long payoutId){
+        log.debug("Find by id [payout]: payoutId={}",payoutId);
         return SecurityUtil.requireCustomer()
                 .flatMap(customerId->payoutRepository
                         .findByIdAndCustomerId(
@@ -118,6 +119,7 @@ public class PayoutService{
     }
 
     public Flux<PayoutResponse> findMine(){
+        log.debug("Find mine [payout]");
         return SecurityUtil.requireCustomer()
                 .flatMapMany(customerId->payoutRepository
                         .findAllByCustomerIdOrderByCreatedAtDesc(
@@ -128,6 +130,7 @@ public class PayoutService{
     }
 
     public Flux<PayoutResponse> findAll(){
+        log.debug("Find all [payout]");
         return SecurityUtil.requireAdmin()
                 .thenMany(payoutRepository
                         .findAllByOrderByCreatedAtDesc()
@@ -136,6 +139,7 @@ public class PayoutService{
     }
 
     public Flux<PayoutResponse> findByClaim(Long claimId){
+        log.debug("Find by claim [payout]: claimId={}",claimId);
         return payoutRepository
                 .findAllByClaimIdOrderByCreatedAtDesc(claimId)
                 .map(this::response);

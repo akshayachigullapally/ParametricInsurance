@@ -31,6 +31,7 @@ public class TriggerServiceClient{
     private String internalKey;
 
     public Flux<InternalZoneResponse> getActiveZones(){
+        log.debug("Get active zones [trigger service]");
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/zones/active")
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)
@@ -40,10 +41,12 @@ public class TriggerServiceClient{
     }
 
     public Mono<List<InternalZoneResponse>> getActiveZonesList(){
+        log.debug("Get active zones list [trigger service]");
         return getActiveZones().collectList();
     }
 
         public Mono<org.example.productservice.dto.PolicyTriggerEligibilityResponse> getPolicyEligibility(Long policyId){
+            log.debug("Get policy eligibility [trigger service]: policyId={}",policyId);
                 return triggerServiceWebClient.get()
                                 .uri("/internal/triggers/policy/{policyId}/eligibility", policyId)
                                 .header(GatewayHeaders.GATEWAY_KEY, internalKey)
@@ -54,6 +57,7 @@ public class TriggerServiceClient{
         }
 
     public Mono<InternalZoneResponse> getZoneById(Long zoneId){
+        log.debug("Get zone by id [trigger service]: zoneId={}",zoneId);
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/zones/{zoneId}",zoneId)
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)
@@ -63,6 +67,7 @@ public class TriggerServiceClient{
     }
 
     public Flux<MeasurementCurrentResponse> getCurrentMeasurements(){
+        log.debug("Get current measurements [trigger service]");
         return triggerServiceWebClient.get()
                 .uri("/internal/triggers/measurements/current")
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)
@@ -78,6 +83,7 @@ public class TriggerServiceClient{
     }
 
     public Mono<Void> syncProductDefinition(ProductTriggerSyncRequest request){
+        log.debug("Sync product definition [trigger service]");
         if(request==null||request.getProductId()==null){
             return Mono.error(new DependentServiceException(
                     "Trigger synchronization payload is incomplete"
@@ -111,6 +117,7 @@ public class TriggerServiceClient{
     }
 
     public Mono<Void> evaluateProductWithOverride(Long productId, ProductTriggerSyncRequest request){
+        log.debug("Evaluate product with override [trigger service]: productId={}",productId);
         if(productId==null||request==null){
             return Mono.error(new org.example.productservice.exception.DependentServiceException(
                     "Trigger evaluation payload is incomplete"

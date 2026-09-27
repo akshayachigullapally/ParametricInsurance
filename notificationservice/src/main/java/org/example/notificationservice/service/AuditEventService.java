@@ -42,11 +42,13 @@ public class AuditEventService {
     }
 
     public Flux<AuditEventResponse> all() {
+        log.debug("All [audit event]");
         return all(null, null);
     }
 
     // Admin view of every user's history, optionally narrowed to one user and/or role.
     public Flux<AuditEventResponse> all(Long actorUserId, String actorRole) {
+        log.debug("All [audit event]: actorUserId={}, actorRole={}",actorUserId,actorRole);
         String role = normalizeRole(actorRole);
         Flux<AuditEvent> events = Flux.defer(() -> actorUserId != null
                 ? repository.findAllByActorUserIdOrderByCreatedAtDesc(actorUserId)
@@ -60,6 +62,7 @@ public class AuditEventService {
 
     // The signed-in user's own history, whatever their role.
     public Flux<AuditEventResponse> mine() {
+        log.debug("Mine [audit event]");
         return SecurityUtil.userId()
                 .flatMapMany(repository::findAllByActorUserIdOrderByCreatedAtDesc)
                 .map(this::response);

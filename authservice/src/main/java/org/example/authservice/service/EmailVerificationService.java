@@ -67,6 +67,7 @@ public class EmailVerificationService{
 
     @Transactional
     public Mono<MessageResponse> verify(String tokenValue){
+        log.info("Verify [email verification]");
         return tokenRepository.findByToken(tokenValue)
                 .switchIfEmpty(Mono.error(
                         new AuthenticationException("Invalid verification token")
@@ -100,6 +101,7 @@ public class EmailVerificationService{
 
     @Transactional
     public Mono<MessageResponse> resendVerification(String email){
+        log.info("Resend verification [email verification]: email={}",email);
         String normalizedEmail=email.trim().toLowerCase();
 
         return userRepository.findByEmailIgnoreCase(normalizedEmail)

@@ -202,6 +202,7 @@ public class PolicyService{
             Long customerId,
             CreateCustomPolicyRequest request
     ){
+        log.info("Create custom policy: customerId={}",customerId);
         validateCustomerId(customerId);
         validateCustomPolicyRequest(request);
 
@@ -294,6 +295,7 @@ public class PolicyService{
             Long customerId,
             String status
     ){
+        log.debug("Get my policies [policy]: customerId={}, status={}",customerId,status);
         validateCustomerId(customerId);
 
         if(status!=null&&!status.isBlank()){
@@ -313,6 +315,7 @@ public class PolicyService{
             Long customerId,
             Long policyId
     ){
+        log.debug("Get my policy: customerId={}, policyId={}",customerId,policyId);
         validateCustomerId(customerId);
         validatePolicyId(policyId);
 
@@ -328,6 +331,7 @@ public class PolicyService{
             Long customerId,
             Long policyId
     ){
+        log.info("Cancel policy: customerId={}, policyId={}",customerId,policyId);
         validateCustomerId(customerId);
         validatePolicyId(policyId);
 
@@ -373,6 +377,7 @@ public class PolicyService{
      * cancellations also leave PENDING but end in CANCELLED.
      */
     public Flux<PolicyReviewHistoryResponse> getReviewHistory(Long reviewerId){
+        log.debug("Get review history [policy]: reviewerId={}",reviewerId);
         validateReviewerId(reviewerId);
 
         return historyRepository
@@ -404,12 +409,14 @@ public class PolicyService{
     }
 
     public Flux<PolicyResponse> getPendingPolicies(){
+        log.debug("Get pending policies [policy]");
         return policyRepository
                 .findAllByStatus(PolicyStatus.PENDING.name())
                 .map(this::toResponse);
     }
 
     public Flux<PolicyResponse> getAllPolicies(String status,Long customerId){
+        log.debug("Get all policies [policy]: status={}, customerId={}",status,customerId);
         Flux<Policy> policies=(status!=null&&!status.isBlank())
                 ?policyRepository.findAllByStatus(validateStatus(status))
                 :policyRepository.findAll();
@@ -422,6 +429,7 @@ public class PolicyService{
     }
 
     public Mono<PolicyResponse> getPolicy(Long policyId){
+        log.debug("Get policy: policyId={}",policyId);
         validatePolicyId(policyId);
 
         return policyRepository.findById(policyId)
@@ -436,6 +444,7 @@ public class PolicyService{
             Long reviewerId,
             Long policyId
     ){
+        log.info("Approve policy: reviewerId={}, policyId={}",reviewerId,policyId);
         validateReviewerId(reviewerId);
         validatePolicyId(policyId);
 
@@ -497,6 +506,7 @@ public class PolicyService{
             Long policyId,
             PolicyDecisionRequest request
     ){
+        log.info("Reject policy: reviewerId={}, policyId={}",reviewerId,policyId);
         validateReviewerId(reviewerId);
         validatePolicyId(policyId);
 
@@ -558,6 +568,7 @@ public class PolicyService{
     }
 
     public Mono<InternalPolicyResponse> getInternalPolicy(Long policyId){
+        log.debug("Get internal policy: policyId={}",policyId);
         validatePolicyId(policyId);
 
         return policyRepository.findById(policyId)
@@ -600,6 +611,7 @@ public class PolicyService{
     }
 
     public Flux<PolicyStatusHistoryResponse> getPolicyHistory(Long policyId){
+        log.debug("Get policy history: policyId={}",policyId);
         validatePolicyId(policyId);
 
         return policyRepository.existsById(policyId)
@@ -614,6 +626,7 @@ public class PolicyService{
     }
 
     public Mono<PolicyTriggerSnapshotResponse> getPolicySnapshot(Long policyId){
+        log.debug("Get policy snapshot: policyId={}",policyId);
         validatePolicyId(policyId);
 
         return policyRepository.existsById(policyId)
@@ -907,6 +920,7 @@ public class PolicyService{
     /** Renew an ACTIVE policy in its last 30 days, or an EXPIRED one up to 30 days after it ended. */
     @Transactional
     public Mono<PolicyResponse> renewPolicy(Long customerId,Long policyId){
+        log.info("Renew policy: customerId={}, policyId={}",customerId,policyId);
         validateCustomerId(customerId);
         validatePolicyId(policyId);
 
@@ -917,11 +931,13 @@ public class PolicyService{
 
     /** Called by the auto-renew job; creates the renewal application for the customer. */
     public Mono<PolicyResponse> createAutomaticRenewal(Policy policy){
+        log.info("Create automatic renewal [policy]");
         return checkRenewable(policy).then(createRenewal(policy));
     }
 
     @Transactional
     public Mono<PolicyResponse> setAutoRenew(Long customerId,Long policyId,boolean enabled){
+        log.info("Set auto renew [policy]: customerId={}, policyId={}, enabled={}",customerId,policyId,enabled);
         validateCustomerId(customerId);
         validatePolicyId(policyId);
 
@@ -1136,6 +1152,7 @@ public class PolicyService{
     }
 
     public Mono<List<InternalZoneResponse>> getActiveZones(){
+        log.debug("Get active zones [policy]");
         return triggerServiceClient.getActiveZonesList()
                 .onErrorResume(error -> {
                     throw new ValidationException("Unable to fetch location zones: " + error.getMessage());

@@ -1,5 +1,6 @@
 package org.example.triggerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.dto.AuditEventRequest;
 import org.example.triggerservice.dto.NotificationRequest;
 import org.example.triggerservice.util.GatewayHeaders;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class NotificationServiceClient {
 
@@ -24,6 +26,7 @@ public class NotificationServiceClient {
     }
 
     public Mono<Void> sendNotification(NotificationRequest request) {
+        log.debug("Send notification");
         return webClient.post()
                 .uri("/internal/notifications")
                 .bodyValue(request)
@@ -33,6 +36,7 @@ public class NotificationServiceClient {
     }
 
     public Mono<Void> sendAuditEvent(AuditEventRequest request) {
+        log.debug("Send audit event");
         return webClient.post()
                 .uri("/internal/audit-events")
                 .bodyValue(request)

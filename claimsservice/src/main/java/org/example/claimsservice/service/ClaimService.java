@@ -58,6 +58,7 @@ public class ClaimService{
 
     @Transactional
     public Mono<ClaimResponse> createClaim(Long customerId,CreateClaimRequest request){
+        log.info("Create claim: customerId={}",customerId);
         return getPolicy(request.getPolicyId())
                 .flatMap(policy->{
                     validatePolicy(policy,customerId,request);
@@ -99,6 +100,7 @@ public class ClaimService{
     }
 
     public Flux<ClaimResponse> getMyClaims(Long customerId,String status){
+        log.debug("Get my claims: customerId={}, status={}",customerId,status);
         if(status!=null&&!status.isBlank()){
             return claimRepository.findAllByCustomerIdAndStatus(
                     customerId,
@@ -111,6 +113,7 @@ public class ClaimService{
     }
 
     public Mono<ClaimResponse> getMyClaim(Long customerId,Long claimId){
+        log.debug("Get my claim: customerId={}, claimId={}",customerId,claimId);
         return claimRepository.findByIdAndCustomerId(claimId,customerId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -120,6 +123,7 @@ public class ClaimService{
 
     @Transactional
     public Mono<MessageResponse> cancelClaim(Long customerId,Long claimId){
+        log.info("Cancel claim: customerId={}, claimId={}",customerId,claimId);
         return claimRepository.findByIdAndCustomerId(claimId,customerId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -163,6 +167,7 @@ public class ClaimService{
      * happens to equal the officer's user id.
      */
     public Flux<org.example.claimsservice.dto.ClaimReviewHistoryResponse> getReviewHistory(Long officerId){
+        log.debug("Get review history [claim]: officerId={}",officerId);
         return claimTimelineRepository
                 .findAllByActionByAndActionByRoleOrderByCreatedAtDesc(officerId,"CLAIMS_OFFICER")
                 .concatMap(entry->claimRepository.findById(entry.getClaimId())
@@ -185,17 +190,20 @@ public class ClaimService{
     }
 
     public Flux<ClaimResponse> getSubmittedClaims(){
+        log.debug("Get submitted claims");
         return claimRepository.findAllByStatus(
                 ClaimStatus.SUBMITTED.name()
         ).map(this::toResponse);
     }
 
     public Flux<ClaimResponse> getManualClaims(){
+        log.debug("Get manual claims");
         return claimRepository.findAllByManualReviewRequiredTrue()
                 .map(this::toResponse);
     }
 
     public Mono<ClaimResponse> getManualClaim(Long claimId){
+        log.debug("Get manual claim: claimId={}",claimId);
         return claimRepository.findByIdAndManualReviewRequiredTrue(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Manual claim not found")
@@ -204,6 +212,7 @@ public class ClaimService{
     }
 
     public Flux<ClaimResponse> getAllClaims(String status,Long customerId){
+        log.debug("Get all claims: status={}, customerId={}",status,customerId);
         Flux<Claim> claims=(status!=null&&!status.isBlank())
                 ?claimRepository.findAllByStatus(validateStatus(status))
                 :claimRepository.findAll();
@@ -216,6 +225,7 @@ public class ClaimService{
     }
 
     public Mono<ClaimResponse> getClaim(Long claimId){
+        log.debug("Get claim: claimId={}",claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -224,6 +234,7 @@ public class ClaimService{
     }
 
     public Mono<InternalClaimResponse> getInternalClaim(Long claimId){
+        log.debug("Get internal claim: claimId={}",claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -309,6 +320,7 @@ public class ClaimService{
     
         @Transactional
         public Mono<InternalClaimResponse> createInternalClaim(CreateClaimRequest request){
+            log.info("Create internal claim");
                 return getPolicy(request.getPolicyId())
                                 .flatMap(policy -> {
                                         if(policy.getId()==null){
@@ -343,6 +355,7 @@ public class ClaimService{
 
     @Transactional
     public Mono<ClaimResponse> startReview(Long reviewerId,Long claimId){
+        log.info("Start review [claim]: reviewerId={}, claimId={}",reviewerId,claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -389,6 +402,7 @@ public class ClaimService{
             Long claimId,
             ApproveClaimRequest request
     ){
+        log.info("Approve claim: reviewerId={}, claimId={}",reviewerId,claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -464,6 +478,7 @@ public class ClaimService{
             Long claimId,
             RejectClaimRequest request
     ){
+        log.info("Reject claim: reviewerId={}, claimId={}",reviewerId,claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -520,6 +535,7 @@ public class ClaimService{
             Long claimId,
             SettleClaimRequest request
     ){
+        log.info("Settle claim: officerId={}, claimId={}",officerId,claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -1064,6 +1080,7 @@ public class ClaimService{
     }
 
     public Flux<ClaimTimelineResponse> getClaimTimeline(Long customerId,Long claimId){
+        log.debug("Get claim timeline: customerId={}, claimId={}",customerId,claimId);
         return claimRepository.findByIdAndCustomerId(claimId,customerId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -1074,6 +1091,7 @@ public class ClaimService{
     }
 
     public Flux<ClaimTimelineResponse> getClaimTimelineAdmin(Long claimId){
+        log.debug("Get claim timeline admin: claimId={}",claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")

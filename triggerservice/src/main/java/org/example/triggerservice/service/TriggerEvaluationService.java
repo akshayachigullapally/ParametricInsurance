@@ -47,11 +47,13 @@ public class TriggerEvaluationService{
     private final LocationZoneRepository locationZoneRepository;
 
     public Flux<TriggerEvaluationResponse> getAll(){
+        log.debug("Get all [trigger evaluation]");
         return triggerEvaluationRepository.findAllByOrderByEvaluatedAtDesc()
                 .flatMap(this::buildResponse);
     }
 
     public Mono<TriggerEvaluationResponse> getById(Long evaluationId){
+        log.debug("Get by id [trigger evaluation]: evaluationId={}",evaluationId);
         validateId(evaluationId,"Trigger evaluation ID");
 
         return triggerEvaluationRepository.findById(evaluationId)
@@ -63,6 +65,7 @@ public class TriggerEvaluationService{
     public Flux<TriggerEvaluationResponse> getByDefinitionId(
             Long definitionId
     ){
+        log.debug("Get by definition id [trigger evaluation]: definitionId={}",definitionId);
         validateId(definitionId,"Trigger definition ID");
 
         return triggerDefinitionRepository.findById(definitionId)
@@ -79,6 +82,7 @@ public class TriggerEvaluationService{
             EvaluateTriggerRequest request,
             Long userId
     ){
+        log.info("Evaluate [trigger evaluation]: definitionId={}, userId={}",definitionId,userId);
         validateId(definitionId,"Trigger definition ID");
 
         LocalDateTime windowEnd=request!=null&&
@@ -106,6 +110,7 @@ public class TriggerEvaluationService{
                         ProductTriggerSyncRequest productPayload,
                         Long userId
         ){
+            log.info("Evaluate product override [trigger evaluation]: productId={}, userId={}",productId,userId);
                 if(productPayload==null||productId==null||productId<=0){
                         return Mono.error(new ValidationException("Invalid product evaluation request"));
                 }

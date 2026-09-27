@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.util.List;
 import org.example.financialservice.dto.MetricsResponse;
@@ -15,6 +16,7 @@ import org.example.financialservice.util.SecurityUtil;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class MetricsService{
     private final PricingRuleRepository pricingRuleRepository;
@@ -35,6 +37,7 @@ public class MetricsService{
     }
 
     public Mono<MetricsResponse> metrics(){
+        log.debug("Metrics");
         return SecurityUtil.requireAdmin()
                 .then(Mono.zip(
                         List.of(

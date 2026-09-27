@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import org.example.financialservice.repository.FinancialTransactionRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class FinancialTransactionService{
     private final FinancialTransactionRepository repository;
@@ -26,6 +28,7 @@ public class FinancialTransactionService{
             BigDecimal amount,
             String status
     ){
+        log.info("Record payment [financial transaction]: customerId={}, policyId={}, quoteId={}, paymentId={}, amount={}, status={}",customerId,policyId,quoteId,paymentId,amount,status);
         FinancialTransaction transaction=FinancialTransaction.builder()
                 .transactionReference(generateReference("TXN"))
                 .customerId(customerId)
@@ -48,6 +51,7 @@ public class FinancialTransactionService{
             Long paymentId,
             BigDecimal amount
     ){
+        log.info("Record refund [financial transaction]: customerId={}, policyId={}, paymentId={}, amount={}",customerId,policyId,paymentId,amount);
         FinancialTransaction transaction=FinancialTransaction.builder()
                 .transactionReference(generateReference("TXN"))
                 .customerId(customerId)
@@ -71,6 +75,7 @@ public class FinancialTransactionService{
             BigDecimal amount,
             String status
     ){
+        log.info("Record payout [financial transaction]: customerId={}, policyId={}, payoutId={}, claimId={}, amount={}, status={}",customerId,policyId,payoutId,claimId,amount,status);
         FinancialTransaction transaction=FinancialTransaction.builder()
                 .transactionReference(generateReference("TXN"))
                 .customerId(customerId)

@@ -1,5 +1,6 @@
 package org.example.financialservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.financialservice.dto.InternalPolicyResponse;
 import org.example.financialservice.dto.InternalProductResponse;
 import org.example.financialservice.exception.ConflictException;
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class ProductServiceClient{
     private final WebClient webClient;
@@ -30,6 +32,7 @@ public class ProductServiceClient{
     }
 
     public Mono<InternalProductResponse> findProduct(Long productId){
+        log.debug("Find product: productId={}",productId);
         return webClient.get()
                 .uri("/internal/products/{productId}",productId)
                 .retrieve()
@@ -44,6 +47,7 @@ public class ProductServiceClient{
     }
 
     public Flux<InternalProductResponse> findAllProducts(){
+        log.debug("Find all products");
         return webClient.get()
                 .uri("/internal/products")
                 .retrieve()
@@ -51,6 +55,7 @@ public class ProductServiceClient{
     }
 
     public Mono<Void> requireActiveProduct(Long productId){
+        log.debug("Require active product: productId={}",productId);
         return findProduct(productId)
                 .flatMap(product->"ACTIVE".equals(
                         product.getStatus()
@@ -63,6 +68,7 @@ public class ProductServiceClient{
     }
 
     public Mono<InternalPolicyResponse> findPolicy(Long policyId){
+        log.debug("Find policy [product service]: policyId={}",policyId);
         return webClient.get()
                 .uri("/internal/policies/{policyId}",policyId)
                 .retrieve()

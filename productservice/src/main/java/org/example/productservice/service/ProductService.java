@@ -42,6 +42,7 @@ public class ProductService{
     public Mono<ProductResponse> createProduct(
             Long adminId,
             ProductRequest request){
+        log.info("Create product: adminId={}",adminId);
 
         validateProductValues(request);
         validateTriggerConfiguration(request);
@@ -115,6 +116,7 @@ public class ProductService{
     public Mono<ProductResponse> createCustomerDefinedProduct(
             Long customerId,
             ProductRequest request){
+        log.info("Create customer defined product: customerId={}",customerId);
 
         validateProductValues(request);
         validateTriggerConfiguration(request);
@@ -176,6 +178,7 @@ public class ProductService{
     public Mono<ProductResponse> updateProduct(
             Long productId,
             ProductRequest request){
+        log.info("Update product: productId={}",productId);
 
         validateProductValues(request);
         String code=normalizeCode(request.getProductCode());
@@ -267,18 +270,21 @@ public class ProductService{
     }
 
     public Flux<ProductResponse> getActiveProducts(){
+        log.debug("Get active products");
         return productRepository.findAllByStatus(ProductStatus.ACTIVE.name())
                 .filter(product->!Boolean.TRUE.equals(product.getCustomerDefined()))
                 .concatMap(product->buildResponse(product,true));
     }
 
     public Mono<ProductResponse> getActiveProduct(Long productId){
+        log.debug("Get active product: productId={}",productId);
         return productRepository.findByIdAndStatus(productId,ProductStatus.ACTIVE.name())
                 .switchIfEmpty(Mono.error(new NotFoundException("Active product not found")))
                 .flatMap(product->buildResponse(product,true));
     }
 
     public Flux<ProductResponse> getProductsByCategory(String category){
+        log.debug("Get products by category: category={}",category);
         String validatedCategory=validateCategory(category);
 
         return productRepository.findAllByCategoryAndStatus(
@@ -290,6 +296,7 @@ public class ProductService{
     }
 
     public Flux<ProductResponse> getAllProducts(){
+        log.debug("Get all products");
         return productRepository.findAll()
                 .concatMap(product->buildResponse(product,false));
     }
@@ -300,6 +307,7 @@ public class ProductService{
             LocalDateTime eventStart,
             LocalDateTime eventEnd,
             Long triggerEventId){
+        log.debug("Get eligible policies for event [product]: productId={}, locationZoneId={}, triggerEventId={}",productId,locationZoneId,triggerEventId);
         return policyRepository.findAllByProductIdAndStatus(productId,"ACTIVE")
                 .filter(policy->locationZoneId.equals(policy.getLocationZoneId())
                         && policy.getStartDate()!=null
@@ -333,6 +341,7 @@ public class ProductService{
     }
 
     public Mono<Boolean> hasActivePoliciesForZone(Long locationZoneId){
+        log.debug("Has active policies for zone [product]: locationZoneId={}",locationZoneId);
         return Flux.merge(
                         policyRepository.findAllByLocationZoneIdAndStatus(locationZoneId, PolicyStatus.PENDING.name()),
                         policyRepository.findAllByLocationZoneIdAndStatus(locationZoneId, PolicyStatus.ACTIVE.name())
@@ -344,6 +353,7 @@ public class ProductService{
     public Mono<ProductResponse> updateStatus(
             Long productId,
             UpdateProductStatusRequest request){
+        log.info("Update status [product]: productId={}",productId);
 
         String status=validateStatus(request.getStatus());
 
@@ -387,6 +397,7 @@ public class ProductService{
 
     @Transactional
     public Mono<MessageResponse> deleteProduct(Long productId){
+        log.info("Delete product: productId={}",productId);
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Product not found")))
                 .flatMap(product->
@@ -421,6 +432,7 @@ public class ProductService{
             Long adminId,
             Long productId,
             ProductThresholdUpdateRequest request){
+        log.info("Update threshold [product]: adminId={}, productId={}",adminId,productId);
 
         if(productId==null||productId<=0){
             return Mono.error(new ValidationException(
@@ -508,6 +520,7 @@ public class ProductService{
 
     public Mono<VerifiedEventProcessingResponse> processVerifiedEvent(
             VerifiedEventRequest request){
+        log.info("Process verified event [product]");
         if(request==null||
                 request.getProductId()==null||
                 request.getEventId()==null){
@@ -533,10 +546,12 @@ public class ProductService{
     }
 
     public Flux<MeasurementStatusResponse> getMeasurementStatus(){
+        log.debug("Get measurement status [product]");
         return getMeasurementStatus(productRepository.findAll());
     }
 
     public Flux<MeasurementStatusResponse> getPublicMeasurementStatus(){
+        log.debug("Get public measurement status [product]");
         return getMeasurementStatus(
                 productRepository.findAllByStatus(ProductStatus.ACTIVE.name())
         );
@@ -676,6 +691,7 @@ public class ProductService{
     }
 
     public Flux<ProductThresholdHistoryResponse> getThresholdHistory(Long productId){
+        log.debug("Get threshold history [product]: productId={}",productId);
         if(productId==null||productId<=0){
             return Flux.error(new ValidationException(
                     "Product id must be greater than zero"
@@ -691,6 +707,7 @@ public class ProductService{
 
     @Transactional
     public Mono<ProductTriggerSyncResponse> syncTrigger(Long adminId,Long productId){
+        log.info("Sync trigger [product]: adminId={}, productId={}",adminId,productId);
         if(productId==null||productId<=0){
             return Mono.error(new ValidationException(
                     "Product id must be greater than zero"
@@ -1315,6 +1332,7 @@ public class ProductService{
     }
 
     public Mono<ProductResponse> getProduct(Long productId){
+        log.debug("Get product: productId={}",productId);
         if(productId==null||productId<=0){
             return Mono.error(new ValidationException("Product id must be positive"));
         }
@@ -1325,6 +1343,7 @@ public class ProductService{
     }
 
     public Mono<InternalProductResponse> getInternalProduct(Long productId){
+        log.debug("Get internal product: productId={}",productId);
         if(productId==null||productId<=0){
             return Mono.error(new ValidationException("Product id must be positive"));
         }
@@ -1335,11 +1354,13 @@ public class ProductService{
     }
 
     public Flux<InternalProductResponse> getAllInternalProducts(){
+        log.debug("Get all internal products");
         return productRepository.findAll()
                 .map(this::toInternalResponse);
     }
 
     public Mono<InternalProductResponse> getInternalProductByCode(String productCode){
+        log.debug("Get internal product by code");
         if(productCode==null||productCode.isBlank()){
             return Mono.error(new ValidationException("Product code is required"));
         }

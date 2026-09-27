@@ -52,6 +52,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify payment success: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "PAYMENT_SUCCESS",
@@ -67,6 +68,7 @@ public class NotificationService{
             String reference,
             String reason
     ){
+        log.debug("Notify payment failed: customerId={}, reference={}, reason={}",customerId,reference,reason);
         return notify(
                 customerId,
                 "PAYMENT_FAILED",
@@ -85,6 +87,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify payout processed: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "PAYOUT_PROCESSED",
@@ -100,6 +103,7 @@ public class NotificationService{
             String reference,
             String reason
     ){
+        log.debug("Notify payout failed: customerId={}, reference={}, reason={}",customerId,reference,reason);
         return notify(
                 customerId,
                 "PAYOUT_FAILED",
@@ -118,6 +122,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify payment pending: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "PAYMENT_PENDING",
@@ -135,6 +140,7 @@ public class NotificationService{
             BigDecimal amount,
             Integer attempt
     ){
+        log.debug("Notify payment retry: customerId={}, reference={}, amount={}, attempt={}",customerId,reference,amount,attempt);
         return notify(
                 customerId,
                 "PAYMENT_RETRY",
@@ -151,6 +157,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify payment refunded: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "PAYMENT_REFUNDED",
@@ -167,6 +174,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify payout pending: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "PAYOUT_PENDING",
@@ -184,6 +192,7 @@ public class NotificationService{
             BigDecimal amount,
             Integer retryCount
     ){
+        log.debug("Notify payout retry: customerId={}, reference={}, amount={}, retryCount={}",customerId,reference,amount,retryCount);
         return notify(
                 customerId,
                 "PAYOUT_RETRY",
@@ -201,6 +210,7 @@ public class NotificationService{
             BigDecimal premium,
             Long quoteId
     ){
+        log.debug("Notify quote created: customerId={}, reference={}, premium={}, quoteId={}",customerId,reference,premium,quoteId);
         return notify(
                 customerId,
                 "QUOTE_CREATED",
@@ -216,6 +226,7 @@ public class NotificationService{
             String reference,
             Long quoteId
     ){
+        log.debug("Notify quote expired: customerId={}, reference={}, quoteId={}",customerId,reference,quoteId);
         return notify(
                 customerId,
                 "QUOTE_EXPIRED",
@@ -232,6 +243,7 @@ public class NotificationService{
             String policyNumber,
             Long quoteId
     ){
+        log.debug("Notify quote consumed: customerId={}, reference={}, policyNumber={}, quoteId={}",customerId,reference,policyNumber,quoteId);
         return notify(
                 customerId,
                 "QUOTE_CONSUMED",
@@ -249,6 +261,7 @@ public class NotificationService{
             BigDecimal amount,
             LocalDate dueDate
     ){
+        log.debug("Notify premium due: customerId={}, policyNumber={}, amount={}, dueDate={}",customerId,policyNumber,amount,dueDate);
         return notify(
                 customerId,
                 "PREMIUM_DUE",
@@ -266,6 +279,7 @@ public class NotificationService{
             BigDecimal amount,
             LocalDate dueDate
     ){
+        log.debug("Notify premium overdue: customerId={}, policyNumber={}, amount={}, dueDate={}",customerId,policyNumber,amount,dueDate);
         return notify(
                 customerId,
                 "PREMIUM_OVERDUE",
@@ -282,6 +296,7 @@ public class NotificationService{
             String reference,
             BigDecimal amount
     ){
+        log.debug("Notify refund processed: customerId={}, reference={}, amount={}",customerId,reference,amount);
         return notify(
                 customerId,
                 "REFUND_PROCESSED",
@@ -299,6 +314,7 @@ public class NotificationService{
             BigDecimal amount,
             String reason
     ){
+        log.debug("Notify refund failed: customerId={}, reference={}, amount={}, reason={}",customerId,reference,amount,reason);
         return notify(
                 customerId,
                 "REFUND_FAILED",
@@ -314,6 +330,7 @@ public class NotificationService{
     }
 
     public Mono<Void> notifyReconciliationCompleted(String reference){
+        log.debug("Notify reconciliation completed: reference={}",reference);
         return notifyRole(
                 "ADMIN",
                 "RECONCILIATION_COMPLETED",
@@ -329,6 +346,7 @@ public class NotificationService{
             String reference,
             int discrepancyCount
     ){
+        log.debug("Notify reconciliation discrepancy: reference={}, discrepancyCount={}",reference,discrepancyCount);
         return notifyRole(
                 "ADMIN",
                 "RECONCILIATION_DISCREPANCY",
@@ -346,6 +364,7 @@ public class NotificationService{
             Long productId,
             Long ruleId
     ){
+        log.debug("Notify pricing rule created: actorId={}, productId={}, ruleId={}",actorId,productId,ruleId);
         return notify(
                 actorId,
                 "PRICING_RULE_CREATED",
@@ -361,6 +380,7 @@ public class NotificationService{
             Long productId,
             Long ruleId
     ){
+        log.debug("Notify pricing rule updated: actorId={}, productId={}, ruleId={}",actorId,productId,ruleId);
         return notify(
                 actorId,
                 "PRICING_RULE_UPDATED",

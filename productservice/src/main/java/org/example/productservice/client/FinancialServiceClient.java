@@ -29,6 +29,7 @@ public class FinancialServiceClient{
             Long quoteId,
             InternalQuoteValidateRequest request
     ){
+        log.debug("Validate quote [financial service]: quoteId={}",quoteId);
         return financialServiceWebClient.post()
                 .uri("/internal/financial/quotes/{quoteId}/validate",quoteId)
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)

@@ -28,6 +28,7 @@ public class UserProfileService{
 
     @Transactional
     public Mono<UserResponse> saveProfile(Long authUserId,UpdateProfileRequest request){
+        log.info("Save profile [user profile]: authUserId={}",authUserId);
         return userRepository.findById(authUserId)
                 .switchIfEmpty(Mono.error(new NotFoundException("User not found")))
                 .flatMap(user->{
@@ -54,6 +55,7 @@ public class UserProfileService{
     }
 
     public Mono<UserResponse> getMyProfile(Long authUserId){
+        log.debug("Get my profile [user profile]: authUserId={}",authUserId);
         return userRepository.findById(authUserId)
                 .switchIfEmpty(Mono.error(new NotFoundException("User not found")))
                 .flatMap(user->profileRepository.findByAuthUserId(authUserId)
@@ -85,6 +87,7 @@ public class UserProfileService{
     }
 
     public Flux<UserResponse> getAllUsers(String status,String segment){
+        log.debug("Get all users: status={}, segment={}",status,segment);
         String validatedStatus=isPresent(status)?validateStatus(status):null;
         String validatedSegment=isPresent(segment)?validateSegment(segment):null;
 
@@ -112,6 +115,7 @@ public class UserProfileService{
     }
 
     public Mono<UserResponse> getUser(Long authUserId){
+        log.debug("Get user: authUserId={}",authUserId);
         return userRepository.findById(authUserId)
                 .switchIfEmpty(Mono.error(new NotFoundException("User not found")))
                 .flatMap(user->profileRepository.findByAuthUserId(authUserId)
