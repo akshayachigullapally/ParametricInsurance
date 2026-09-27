@@ -118,13 +118,12 @@ public class NotificationTemplateService {
             }
         });
         return repository.findByTemplateCodeAndActiveTrue(code)
-                .flatMap(opt -> opt.isPresent() ? Mono.just(opt.get()) : Mono.<NotificationTemplate>empty())
                 .switchIfEmpty(builtIn);
     }
 
     public Mono<NotificationTemplate> findByType(NotificationType type) {
         return repository.findByNotificationTypeAndActiveTrue(type)
-                .flatMap(opt -> opt.isPresent() ? Mono.just(opt.get()) : Mono.empty());
+                .next();
     }
 
     private NotificationTemplateResponse response(DefaultTemplate t) {

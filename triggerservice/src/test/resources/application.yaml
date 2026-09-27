@@ -44,3 +44,8 @@ management:
     web:
       exposure:
         include: health,info
+
+# Demo seed data is loaded asynchronously and races with repository test cleanup.
+trigger:
+  seed-data:
+    enabled: false

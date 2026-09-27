@@ -78,7 +78,7 @@ public class StaffDataLoader implements ApplicationRunner{
                     }
 
                     log.info("Staff account already exists: {}",user.getEmail());
-                    return Mono.empty();
+                    return Mono.just(existing);
                 })
                 .switchIfEmpty(Mono.defer(()->{
                     user.setPassword(passwordEncoder.encode(user.getPassword()));

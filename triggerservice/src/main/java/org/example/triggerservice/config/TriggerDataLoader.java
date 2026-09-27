@@ -28,6 +28,8 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        name="trigger.seed-data.enabled",havingValue="true",matchIfMissing=true)
 public class TriggerDataLoader implements CommandLineRunner{
     private static final Long SYSTEM_USER_ID=1L;
 

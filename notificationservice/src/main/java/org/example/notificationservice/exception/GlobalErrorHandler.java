@@ -20,7 +20,7 @@ public GlobalErrorHandler(ObjectMapper mapper){this.mapper=mapper;}
 @Override public Mono<Void> handle(ServerWebExchange exchange,Throwable ex){
 HttpStatus status=ex instanceof NotFoundException ?HttpStatus.NOT_FOUND:ex instanceof ForbiddenException ?HttpStatus.FORBIDDEN:ex instanceof UnauthorizedException ?HttpStatus.UNAUTHORIZED:ex instanceof ValidationException ||ex instanceof WebExchangeBindException?HttpStatus.BAD_REQUEST:ex instanceof ResponseStatusException rse ? (HttpStatus) rse.getStatusCode():HttpStatus.INTERNAL_SERVER_ERROR;
 String message=ex instanceof WebExchangeBindException b?b.getFieldErrors().stream().map(e->e.getField()+" "+e.getDefaultMessage()).findFirst().orElse("Validation failed"):ex instanceof ResponseStatusException rse2 ? (rse2.getReason()!=null?rse2.getReason():status.getReasonPhrase()):ex.getMessage();
-if(status==HttpStatus.INTERNAL_SERVER_ERROR)message="Unexpected server error";
+if(status==HttpStatus.INTERNAL_SERVER_ERROR){org.slf4j.LoggerFactory.getLogger(GlobalErrorHandler.class).error("Unhandled error on {} {}",exchange.getRequest().getMethod(),exchange.getRequest().getPath().value(),ex);message="Unexpected server error";}
 ErrorResponse body= ErrorResponse.builder().status(status.value()).error(status.getReasonPhrase()).message(message).path(exchange.getRequest().getPath().value()).timestamp(LocalDateTime.now()).build();
 exchange.getResponse().setStatusCode(status);exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 try{return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(mapper.writeValueAsBytes(body))));}catch(Exception e){return exchange.getResponse().setComplete();}

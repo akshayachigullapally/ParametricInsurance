@@ -5,7 +5,7 @@ spring:
   application:
     name: AUTH-SERVICE
   r2dbc:
-    url: r2dbc:h2:file:///./data/authdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+    # The connection is built by AuthDatabaseConfig from auth.db.dir below.
     username: sa
     password:
   data:
@@ -23,6 +23,12 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
+
+auth:
+  db:
+    # Fixed location, independent of the folder the service is started from.
+    # Keep it outside OneDrive/Dropbox-synced folders.
+    dir: ${AUTH_DB_DIR:${user.home}/.cityshield/data}
 
 gateway:
   internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}

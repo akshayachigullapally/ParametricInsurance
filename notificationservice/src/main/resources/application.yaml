@@ -4,7 +4,7 @@ spring:
   application:
     name: NOTIFICATION-SERVICE
   r2dbc:
-    url: r2dbc:h2:file:///./data/notificationdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    # Connection built by PersistentDatabaseConfig from app.db.* below.
     username: sa
     password:
   sql:
@@ -24,3 +24,10 @@ management:
     web:
       exposure:
         include: health,info
+
+app:
+  db:
+    # Fixed location, independent of the folder the service is started from.
+    # Keep it outside OneDrive/Dropbox-synced folders.
+    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
+    name: notificationdb

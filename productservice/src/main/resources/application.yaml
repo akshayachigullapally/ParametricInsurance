@@ -5,7 +5,7 @@ spring:
   application:
     name: PRODUCT-SERVICE
   r2dbc:
-    url: r2dbc:h2:file:///./data/productdb;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    # Connection built by PersistentDatabaseConfig from app.db.* below.
     username: sa
     password:
   sql:
@@ -40,3 +40,10 @@ logging:
     org.springframework.r2dbc: DEBUG
     org.springframework.data.r2dbc: DEBUG
     io.r2dbc.h2: DEBUG
+
+app:
+  db:
+    # Fixed location, independent of the folder the service is started from.
+    # Keep it outside OneDrive/Dropbox-synced folders.
+    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
+    name: productdb
