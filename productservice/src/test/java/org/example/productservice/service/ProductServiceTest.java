@@ -1,5 +1,6 @@
 package org.example.productservice.service;
 
+import org.example.productservice.client.ClaimsServiceClient;
 import org.example.productservice.client.TriggerServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.*;
@@ -25,6 +26,9 @@ class ProductServiceTest{
     @Mock private NotificationService notificationService;
     @Mock private TriggerServiceClient triggerServiceClient;
     @Mock private ProductThresholdHistoryRepository thresholdHistoryRepository;
+    @Mock private ClaimsServiceClient claimsServiceClient;
+    @Mock private PolicyRepository policyRepository;
+    @Mock private PolicyTriggerSnapshotRepository snapshotRepository;
     @InjectMocks private ProductService productService;
 
     private Product product;
@@ -553,6 +557,9 @@ class ProductServiceTest{
     void deleteProduct_whenFound_shouldArchiveProduct(){
         when(productRepository.findById(10L))
                 .thenReturn(Mono.just(product));
+
+        when(policyRepository.findAllByProductIdAndStatus(eq(10L),anyString()))
+                .thenReturn(Flux.empty());
 
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));

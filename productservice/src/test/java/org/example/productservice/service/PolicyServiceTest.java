@@ -439,7 +439,7 @@ class PolicyServiceTest{
         when(policyRepository.findAllByStatus("ACTIVE"))
                 .thenReturn(Flux.just(pendingPolicy));
 
-        StepVerifier.create(policyService.getAllPolicies("active"))
+        StepVerifier.create(policyService.getAllPolicies("active",null))
                 .assertNext(response->
                         assertThat(response.getStatus()).isEqualTo("ACTIVE")
                 )
@@ -451,7 +451,7 @@ class PolicyServiceTest{
         when(policyRepository.findAll())
                 .thenReturn(Flux.just(pendingPolicy));
 
-        StepVerifier.create(policyService.getAllPolicies(null))
+        StepVerifier.create(policyService.getAllPolicies(null,null))
                 .expectNextCount(1)
                 .verifyComplete();
 
@@ -1039,7 +1039,7 @@ class PolicyServiceTest{
         when(policyRepository.findAll())
                 .thenReturn(Flux.just(pendingPolicy));
 
-        StepVerifier.create(policyService.getAllPolicies("  "))
+        StepVerifier.create(policyService.getAllPolicies("  ",null))
                 .expectNextCount(1)
                 .verifyComplete();
 
