@@ -16,6 +16,13 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 public class MeasurementHandler{
+    private static final Set<String> SNAPSHOT_VIEW_ROLES=Set.of(
+            "ROLE_ADMIN",
+            "ROLE_UNDERWRITER",
+            "ROLE_CLAIMS_OFFICER",
+            "ROLE_CUSTOMER"
+    );
+
     private static final Set<String> VIEW_ROLES=Set.of(
             "ROLE_ADMIN",
             "ROLE_UNDERWRITER",
@@ -55,7 +62,8 @@ public class MeasurementHandler{
     }
 
     public Mono<ServerResponse> getCurrentMeasurementSnapshots(ServerRequest request){
-        return requireAnyRole(VIEW_ROLES)
+        // Read-only weather readings: customers see them on the zone map.
+        return requireAnyRole(SNAPSHOT_VIEW_ROLES)
                 .thenMany(measurementService.getCurrentMeasurementSnapshots())
                 .collectList()
                 .flatMap(snapshots->ServerResponse.ok()
