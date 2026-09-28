@@ -3,7 +3,7 @@ spring:
     name: TRIGGER-SERVICE
 
   r2dbc:
-    # Connection built by PersistentDatabaseConfig from app.db.* below.
+    url: r2dbc:h2:file:///./data/triggerdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     username: sa
     password:
 
@@ -35,12 +35,6 @@ demo:
     interval-ms: ${DEMO_FEED_INTERVAL_MS:60000}
     backfill-hours: 24
 
-app:
-  db:
-    # Fixed location, independent of the folder the service is started from.
-    # Keep it outside OneDrive/Dropbox-synced folders.
-    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
-    name: triggerdb
 
 management:
   endpoints:

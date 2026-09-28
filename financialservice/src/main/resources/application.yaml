@@ -6,7 +6,7 @@ spring:
     name: FINANCIAL-SERVICE
 
   r2dbc:
-    # Connection built by PersistentDatabaseConfig from app.db.* below.
+    url: r2dbc:h2:file:///./data/financialdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     username: sa
     password:
 
@@ -32,12 +32,6 @@ financial:
   quote:
     expiry-days: 7
 
-app:
-  db:
-    # Fixed location, independent of the folder the service is started from.
-    # Keep it outside OneDrive/Dropbox-synced folders.
-    dir: ${CITYSHIELD_DB_DIR:${user.home}/.cityshield/data}
-    name: financialdb
 
 management:
   endpoints:
