@@ -34,3 +34,519 @@ Using generated security password: 64c02268-8cc7-4416-ba97-22ae3c91eaa8
 2026-09-28T10:18:57.153+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationserviceApplication     : Started NotificationserviceApplication in 20.626 seconds (process running for 22.684)
 2026-09-28T10:23:53.660+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
 2026-09-28T10:28:53.680+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:31:25.085+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] c.n.d.s.t.d.RedirectingEurekaHttpClient  : Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/} exception=I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+
+org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:779) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:624) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:572) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:747) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:924) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntityInternal(DefaultRestClient.java:870) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntity(DefaultRestClient.java:859) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getApplicationsInternal(RestClientEurekaHttpClient.java:201) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getDelta(RestClientEurekaHttpClient.java:142) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:90) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.getAndUpdateDelta(DiscoveryClient.java:1095) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.fetchRegistry(DiscoveryClient.java:978) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.refreshRegistry(DiscoveryClient.java:1489) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$CacheRefreshThread.run(DiscoveryClient.java:1457) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:219) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:547) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:192) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:138) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequestAndBody(AbstractBufferingClientHttpRequest.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:614) ~[spring-web-7.0.8.jar:7.0.8]
+	... 25 common frames omitted
+
+2026-09-28T10:31:25.256+05:30  WARN 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+2026-09-28T10:31:25.174+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] c.n.d.s.t.d.RedirectingEurekaHttpClient  : Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/} exception=I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+
+org.springframework.web.client.ResourceAccessException: I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:779) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:624) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:572) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:747) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:924) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntityInternal(DefaultRestClient.java:870) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntity(DefaultRestClient.java:859) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.sendHeartBeat(RestClientEurekaHttpClient.java:91) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:90) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.renew(DiscoveryClient.java:860) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$HeartbeatThread.run(DiscoveryClient.java:1418) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:219) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:547) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:192) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:138) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequestAndBody(AbstractBufferingClientHttpRequest.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:614) ~[spring-web-7.0.8.jar:7.0.8]
+	... 22 common frames omitted
+
+2026-09-28T10:31:25.484+05:30  WARN 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+2026-09-28T10:31:25.563+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] c.n.d.s.t.d.RedirectingEurekaHttpClient  : Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/}, exception=I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+
+org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:779) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:624) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:572) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:747) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:924) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntityInternal(DefaultRestClient.java:870) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntity(DefaultRestClient.java:859) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getApplicationsInternal(RestClientEurekaHttpClient.java:201) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getDelta(RestClientEurekaHttpClient.java:142) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.executeOnNewServer(RedirectingEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:79) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.getAndUpdateDelta(DiscoveryClient.java:1095) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.fetchRegistry(DiscoveryClient.java:978) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.refreshRegistry(DiscoveryClient.java:1489) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$CacheRefreshThread.run(DiscoveryClient.java:1457) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:219) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:547) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:192) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:138) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequestAndBody(AbstractBufferingClientHttpRequest.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:614) ~[spring-web-7.0.8.jar:7.0.8]
+	... 26 common frames omitted
+
+2026-09-28T10:31:25.567+05:30  WARN 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: I/O error on GET request for "http://localhost:8761/eureka/apps/delta": Connect to http://localhost:8761 failed: Connection refused: no further information
+2026-09-28T10:31:25.564+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] c.n.d.s.t.d.RedirectingEurekaHttpClient  : Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/}, exception=I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+
+org.springframework.web.client.ResourceAccessException: I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:779) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:624) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:572) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:747) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:924) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntityInternal(DefaultRestClient.java:870) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntity(DefaultRestClient.java:859) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.sendHeartBeat(RestClientEurekaHttpClient.java:91) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.executeOnNewServer(RedirectingEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:79) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.renew(DiscoveryClient.java:860) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$HeartbeatThread.run(DiscoveryClient.java:1418) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused: no further information
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:219) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:547) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:192) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:138) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183) ~[httpclient5-5.6.1.jar:5.6.1]
+	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequestAndBody(AbstractBufferingClientHttpRequest.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98) ~[spring-cloud-netflix-eureka-client-5.0.2.jar:5.0.2]
+	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80) ~[spring-web-7.0.8.jar:7.0.8]
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:614) ~[spring-web-7.0.8.jar:7.0.8]
+	... 23 common frames omitted
+
+2026-09-28T10:31:25.570+05:30  WARN 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: I/O error on PUT request for "http://localhost:8761/eureka/apps/NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085": Connect to http://localhost:8761 failed: Connection refused: no further information
+2026-09-28T10:31:25.571+05:30 ERROR 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - was unable to send heartbeat!
+
+com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$3.execute(EurekaHttpClientDecorator.java:92) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.sendHeartBeat(EurekaHttpClientDecorator.java:89) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.renew(DiscoveryClient.java:860) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$HeartbeatThread.run(DiscoveryClient.java:1418) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+
+2026-09-28T10:31:25.577+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - was unable to refresh its cache! This periodic background refresh will be retried in 30 seconds. status = Cannot execute request on any known server
+
+com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$7.execute(EurekaHttpClientDecorator.java:152) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getDelta(EurekaHttpClientDecorator.java:149) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.getAndUpdateDelta(DiscoveryClient.java:1095) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.fetchRegistry(DiscoveryClient.java:978) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient.refreshRegistry(DiscoveryClient.java:1489) ~[eureka-client-2.0.6.jar:2.0.6]
+	at com.netflix.discovery.DiscoveryClient$CacheRefreshThread.run(DiscoveryClient.java:1457) ~[eureka-client-2.0.6.jar:2.0.6]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:842) ~[na:na]
+
+2026-09-28T10:31:55.628+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - Re-registering apps/NOTIFICATION-SERVICE
+2026-09-28T10:31:55.628+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085: registering service...
+2026-09-28T10:31:55.652+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-HeartbeatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - registration status: 204
+2026-09-28T10:32:25.640+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Application version is -1: false
+2026-09-28T10:32:25.641+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-09-28T10:32:25.650+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-CacheRefreshExecutor-%d] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-09-28T10:33:53.689+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:38:53.692+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:43:53.702+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:07:08.223+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:12:08.229+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:17:08.260+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:22:08.262+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:23:35.507+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [reactor-http-nio-2] o.e.n.service.AuditEventService          : Creating audit event: type=USER_LOGIN, entityType=USER, entityId=1
+2026-09-28T11:23:36.569+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:23:36.571+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:23:36.571+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:23:36.676+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Opening notification stream
+2026-09-28T11:23:36.682+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:24:06.194+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:24:06.194+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:24:06.194+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:24:06.200+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:24:27.069+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-28T11:24:36.192+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:24:36.198+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:24:36.198+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:24:36.198+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:24:41.996+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-28T11:25:06.195+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:25:06.195+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:25:06.196+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:25:06.196+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:25:36.197+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:25:36.201+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:25:36.201+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:25:36.201+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:26:06.197+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:26:06.197+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:26:06.197+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:26:06.197+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:26:36.184+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:26:36.184+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:26:36.184+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:26:36.184+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:07.135+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:27:07.135+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:07.135+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:27:07.135+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:08.273+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:27:20.326+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:20.326+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:27:20.328+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:27:20.328+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:20.418+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Opening notification stream
+2026-09-28T11:27:21.228+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:27:21.228+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:27:21.228+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:21.230+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:21.244+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Opening notification stream
+2026-09-28T11:27:27.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-28T11:27:52.131+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:27:52.134+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:27:52.134+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:27:52.134+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:28:22.104+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:28:22.115+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:28:22.115+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:28:22.115+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:28:53.702+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [reactor-http-nio-2] o.e.n.service.AuditEventService          : Creating audit event: type=USER_LOGIN, entityType=USER, entityId=6
+2026-09-28T11:28:53.766+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Opening notification stream
+2026-09-28T11:28:53.773+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:28:53.777+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:28:53.777+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:28:53.777+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:14.696+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [reactor-http-nio-9] o.e.n.service.AuditEventService          : Creating audit event: type=PAYMENT_CREATED, entityType=PAYMENT, entityId=3
+2026-09-28T11:29:14.876+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [reactor-http-nio-10] o.e.n.service.NotificationService        : Creating notification: type=PAYMENT_PENDING, recipientUserId=null, recipientCustomerId=6, channel=IN_APP, idempotencyPresent=false
+2026-09-28T11:29:14.905+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [reactor-http-nio-10] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=1, channel=IN_APP, status=DELIVERED
+2026-09-28T11:29:23.765+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:29:23.765+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:29:23.765+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:23.765+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:32.959+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:32.963+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.s.NotificationPreferenceService    : Fetching my notification preferences
+2026-09-28T11:29:35.734+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Marking notification as read: id=1
+2026-09-28T11:29:35.758+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:29:35.758+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:29:35.758+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:53.760+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:29:53.760+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:29:53.760+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:29:53.760+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:30:23.775+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:30:23.775+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:30:23.778+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:30:23.778+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:30:53.761+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:30:53.761+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:30:53.761+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:30:53.761+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:31:24.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:31:24.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:31:24.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:31:24.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:31:54.119+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:31:54.126+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:31:54.126+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:31:54.126+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:32:08.295+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:33:22.131+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:33:22.131+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:33:22.142+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:33:22.142+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:34:22.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:34:22.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:34:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:34:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:22.119+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:35:22.119+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:22.119+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:35:22.119+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:35.674+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:35:35.674+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:35.674+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:35:35.676+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:54.123+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:35:54.123+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:35:54.123+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:35:54.123+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:36:24.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:36:24.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:36:24.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:36:24.125+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:37:08.302+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:37:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:37:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:37:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:37:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:38:22.122+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:38:22.122+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:38:22.122+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:38:22.124+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:39:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:39:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:39:22.127+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:39:22.129+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:40:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:40:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:40:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:40:22.130+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:41:22.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:41:22.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:41:22.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:41:22.121+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:42:08.314+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:42:22.129+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:42:22.129+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:42:22.129+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:42:22.129+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:43:22.142+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:43:22.143+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:43:22.143+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:43:22.143+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-1] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:44:22.241+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:44:22.243+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:44:22.243+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-3] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:44:22.243+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:45:22.164+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:45:22.164+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:45:22.164+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-5] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:45:22.196+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-6] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:46:22.171+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:46:22.171+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:46:22.171+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-7] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:46:22.171+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-8] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:47:08.362+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T11:47:22.167+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:47:22.169+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-10] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:47:22.169+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:47:22.169+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-9] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:48:22.178+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-28T11:48:22.178+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-12] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:48:22.178+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-28T11:48:22.178+05:30 DEBUG 10364 --- [NOTIFICATION-SERVICE] [parallel-11] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-28T11:50:11.672+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application NOTIFICATION-SERVICE with eureka with status DOWN
+2026-09-28T11:50:11.674+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1790576411674, current=DOWN, previous=UP]
+2026-09-28T11:50:11.675+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085: registering service...
+2026-09-28T11:50:11.705+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - registration status: 204
+2026-09-28T11:50:11.796+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] o.s.boot.reactor.netty.GracefulShutdown  : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28T11:50:11.809+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [netty-shutdown] o.s.boot.reactor.netty.GracefulShutdown  : Graceful shutdown complete
+2026-09-28T11:50:13.994+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...
+2026-09-28T11:50:17.038+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] com.netflix.discovery.DiscoveryClient    : Unregistering ...
+2026-09-28T11:50:17.055+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_NOTIFICATION-SERVICE/5CD6260W25.ad1.prod:NOTIFICATION-SERVICE:8085 - deregister  status: 200
+2026-09-28T11:50:17.056+05:30  INFO 10364 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient
+2026-09-28T11:50:52.319+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationserviceApplication     : Starting NotificationserviceApplication using Java 17.0.19 with PID 7064 (C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\notificationservice\target\classes started by AC13471 in C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\notificationservice)
+2026-09-28T11:50:52.329+05:30 DEBUG 7064 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationserviceApplication     : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-28T11:50:52.332+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationserviceApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T11:50:54.745+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-28T11:50:55.081+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 321 ms. Found 6 R2DBC repository interfaces.
+2026-09-28T11:50:55.993+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=382a5fda-b396-3443-9395-9ddf5a3b5166
+2026-09-28T11:51:00.239+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: d493ca43-617e-48b3-8014-c1b2bf51edcf
+
+2026-09-28T11:51:02.789+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 4 endpoints beneath base path '/actuator'
