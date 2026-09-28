@@ -48,3 +48,5 @@ Using generated security password: 88464edb-3a2d-4be2-8545-40ebdbb82c5e
 2026-09-28T10:14:57.478+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8080
 2026-09-28T10:14:59.456+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.e.apigateway.ApigatewayApplication     : Started ApigatewayApplication in 12.579 seconds (process running for 14.101)
 2026-09-28T10:19:55.942+05:30  INFO 30688 --- [API-GATEWAY] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:24:55.960+05:30  INFO 30688 --- [API-GATEWAY] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:29:55.996+05:30  INFO 30688 --- [API-GATEWAY] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration

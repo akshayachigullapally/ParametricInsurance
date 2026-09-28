@@ -876,3 +876,25 @@ INSERT INTO "trigger_definitions" ("definition_code", "definition_name", "DESCRI
 2026-09-28T10:20:09.236+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=645, status=COMPLETED, observations=0, events=0
 2026-09-28T10:21:09.419+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:21:09.419490200
 2026-09-28T10:21:09.425+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=646, status=COMPLETED, observations=0, events=0
+2026-09-28T10:22:09.630+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:22:09.630838800
+2026-09-28T10:22:09.637+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=647, status=COMPLETED, observations=0, events=0
+2026-09-28T10:23:02.959+05:30  INFO 36484 --- [TRIGGER-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:23:09.690+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:23:09.690614600
+2026-09-28T10:23:09.694+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=648, status=COMPLETED, observations=0, events=0
+2026-09-28T10:24:09.772+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:24:09.772270900
+2026-09-28T10:24:09.776+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=649, status=COMPLETED, observations=0, events=0
+2026-09-28T10:25:09.898+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:25:09.898946600
+2026-09-28T10:25:09.905+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=650, status=COMPLETED, observations=0, events=0
+2026-09-28T10:26:09.977+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:26:09.977708400
+2026-09-28T10:26:09.984+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=651, status=COMPLETED, observations=0, events=0
+2026-09-28T10:27:10.055+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:27:10.055016100
+2026-09-28T10:27:10.059+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=652, status=COMPLETED, observations=0, events=0
+2026-09-28T10:28:02.979+05:30  INFO 36484 --- [TRIGGER-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:28:10.134+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:28:10.134894500
+2026-09-28T10:28:10.139+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=653, status=COMPLETED, observations=0, events=0
+2026-09-28T10:29:10.185+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:29:10.185216200
+2026-09-28T10:29:10.188+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=654, status=COMPLETED, observations=0, events=0
+2026-09-28T10:30:10.253+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:30:10.253366300
+2026-09-28T10:30:10.258+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=655, status=COMPLETED, observations=0, events=0
+2026-09-28T10:31:10.306+05:30 DEBUG 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.config.DemoObservationGenerator    : Generated demo observations at 2026-09-28T10:31:10.306009500
+2026-09-28T10:31:10.310+05:30  INFO 36484 --- [TRIGGER-SERVICE] [scheduling-1] o.e.t.service.MonitorRunService          : Monitor scan completed: id=656, status=COMPLETED, observations=0, events=0

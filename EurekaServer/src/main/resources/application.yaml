@@ -39,7 +39,7 @@ logging:
     root: INFO
     org.example.eurekaserver: ${APP_LOG_LEVEL:DEBUG}
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/eureka-server.log
+    name: ./logs/eureka-server.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

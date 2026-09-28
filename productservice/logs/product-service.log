@@ -237,3 +237,85 @@ Using generated security password: 43b6cfe6-aaa7-469a-a430-49f99a41dee5
 2026-09-28T10:20:48.543+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-3] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@76dca7f0 columns: 27 rows: 9 pos: -1
 2026-09-28T10:20:48.552+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-3] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
 2026-09-28T10:20:48.552+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-3] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@6ad1e0a3 columns: 1 rows: 1 pos: -1
+2026-09-28T10:21:48.596+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:21:48.598+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:21:48.599+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@78a6e397 columns: 1 rows: 1 pos: -1
+2026-09-28T10:21:48.599+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:21:48.599+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:21:48.600+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@766112f3 columns: 27 rows: 9 pos: -1
+2026-09-28T10:21:48.607+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:21:48.608+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-4] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@725e88e7 columns: 1 rows: 1 pos: -1
+2026-09-28T10:22:48.660+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:22:48.662+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:22:48.662+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@67f6d656 columns: 1 rows: 1 pos: -1
+2026-09-28T10:22:48.663+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:22:48.663+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:22:48.663+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@693134d8 columns: 27 rows: 9 pos: -1
+2026-09-28T10:22:48.668+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:22:48.669+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-5] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@6d0ebd26 columns: 1 rows: 1 pos: -1
+2026-09-28T10:23:26.308+05:30  INFO 35060 --- [PRODUCT-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:23:48.703+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:23:48.705+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:23:48.706+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@ada9411 columns: 1 rows: 1 pos: -1
+2026-09-28T10:23:48.706+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:23:48.707+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:23:48.707+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-6] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@41d6b3a columns: 27 rows: 9 pos: -1
+2026-09-28T10:23:48.716+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:23:48.716+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@da643e1 columns: 1 rows: 1 pos: -1
+2026-09-28T10:24:48.777+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:24:48.779+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:24:48.779+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@2c0a798 columns: 1 rows: 1 pos: -1
+2026-09-28T10:24:48.780+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:24:48.780+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:24:48.780+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@c0749b0 columns: 27 rows: 9 pos: -1
+2026-09-28T10:24:48.785+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:24:48.785+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-7] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@838cce8 columns: 1 rows: 1 pos: -1
+2026-09-28T10:25:48.853+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:25:48.854+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:25:48.855+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@6222019f columns: 1 rows: 1 pos: -1
+2026-09-28T10:25:48.855+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:25:48.856+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:25:48.856+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@6ce5e3ab columns: 27 rows: 9 pos: -1
+2026-09-28T10:25:48.864+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:25:48.865+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-8] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@68da6aef columns: 1 rows: 1 pos: -1
+2026-09-28T10:26:48.923+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:26:48.926+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:26:48.926+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@726f33fa columns: 1 rows: 1 pos: -1
+2026-09-28T10:26:48.933+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:26:48.936+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:26:48.936+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-9] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@ce206a6 columns: 27 rows: 9 pos: -1
+2026-09-28T10:26:48.943+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:26:48.944+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@5c576c16 columns: 1 rows: 1 pos: -1
+2026-09-28T10:27:49.004+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:27:49.006+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:27:49.007+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@75e1ea00 columns: 1 rows: 1 pos: -1
+2026-09-28T10:27:49.007+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:27:49.008+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:27:49.008+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-10] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@7b260acc columns: 27 rows: 9 pos: -1
+2026-09-28T10:27:49.013+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:27:49.014+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@1ae57870 columns: 1 rows: 1 pos: -1
+2026-09-28T10:28:26.327+05:30  INFO 35060 --- [PRODUCT-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:28:49.065+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:28:49.067+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:28:49.067+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@3eac800d columns: 1 rows: 1 pos: -1
+2026-09-28T10:28:49.067+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:28:49.068+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:28:49.068+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@306b69a8 columns: 27 rows: 9 pos: -1
+2026-09-28T10:28:49.072+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:28:49.072+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-11] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@3454eb7d columns: 1 rows: 1 pos: -1
+2026-09-28T10:29:49.110+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:29:49.112+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:29:49.113+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@3cf077b7 columns: 1 rows: 1 pos: -1
+2026-09-28T10:29:49.114+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:29:49.114+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:29:49.114+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-12] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@32378e59 columns: 27 rows: 9 pos: -1
+2026-09-28T10:29:49.119+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:29:49.119+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@1db2460b columns: 1 rows: 1 pos: -1
+2026-09-28T10:30:49.186+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] o.e.p.service.ProductService             : Get all internal products
+2026-09-28T10:30:49.188+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:30:49.188+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@28b3e0a9 columns: 1 rows: 1 pos: -1
+2026-09-28T10:30:49.189+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT "products".* FROM "products"]
+2026-09-28T10:30:49.189+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] io.r2dbc.h2.client.SessionClient         : Request:  SELECT "products".* FROM "products"
+2026-09-28T10:30:49.189+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [parallel-1] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@26740bcf columns: 27 rows: 9 pos: -1
+2026-09-28T10:30:49.195+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Request:  SELECT CURRENT_TIMESTAMP
+2026-09-28T10:30:49.195+05:30 DEBUG 35060 --- [PRODUCT-SERVICE] [reactor-http-nio-2] io.r2dbc.h2.client.SessionClient         : Response: org.h2.result.LocalResult@2c258b35 columns: 1 rows: 1 pos: -1

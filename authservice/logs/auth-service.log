@@ -66,3 +66,5 @@ Using generated security password: c72a197f-89cc-4b99-969b-af86ce1f8c9c
 2026-09-28T10:13:51.071+05:30  INFO 32388 --- [AUTH-SERVICE] [restartedMain] o.e.authservice.config.StaffDataLoader   : Staff account already exists: pallavi@gmail.com
 2026-09-28T10:13:51.071+05:30  INFO 32388 --- [AUTH-SERVICE] [restartedMain] o.e.authservice.config.StaffDataLoader   : Staff data initialization completed
 2026-09-28T10:18:49.493+05:30  INFO 32388 --- [AUTH-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:23:49.510+05:30  INFO 32388 --- [AUTH-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:28:49.539+05:30  INFO 32388 --- [AUTH-SERVICE] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
