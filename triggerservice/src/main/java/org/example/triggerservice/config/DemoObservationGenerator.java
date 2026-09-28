@@ -58,15 +58,18 @@ public class DemoObservationGenerator implements CommandLineRunner{
     private final LocationZoneRepository locationZoneRepository;
     private final ObservationRepository observationRepository;
     private final int backfillHours;
+    private final int retentionDays;
 
     public DemoObservationGenerator(
             LocationZoneRepository locationZoneRepository,
             ObservationRepository observationRepository,
-            @Value("${demo.feed.backfill-hours:24}") int backfillHours
+            @Value("${demo.feed.backfill-hours:24}") int backfillHours,
+            @Value("${demo.feed.retention-days:3}") int retentionDays
     ){
         this.locationZoneRepository=locationZoneRepository;
         this.observationRepository=observationRepository;
         this.backfillHours=Math.max(backfillHours,0);
+        this.retentionDays=Math.max(retentionDays,1);
     }
 
     @Override
@@ -92,6 +95,22 @@ public class DemoObservationGenerator implements CommandLineRunner{
                         "Generated demo observations at {}",LocalDateTime.now()))
                 .doOnError(error->log.warn(
                         "Demo observation generation failed: {}",
+                        error.getMessage()))
+                .subscribe();
+    }
+
+    // The feed adds ~440k rows a day; without trimming, every observation query slows down.
+    @Scheduled(
+            initialDelayString="${demo.feed.retention-initial-delay-ms:120000}",
+            fixedDelayString="${demo.feed.retention-interval-ms:3600000}")
+    public void deleteOldReadings(){
+        observationRepository
+                .deleteMockObservedBefore(LocalDateTime.now().minusDays(retentionDays))
+                .doOnNext(deleted->log.info(
+                        "Deleted {} demo observation(s) older than {} day(s)",
+                        deleted,retentionDays))
+                .doOnError(error->log.warn(
+                        "Demo observation cleanup failed: {}",
                         error.getMessage()))
                 .subscribe();
     }

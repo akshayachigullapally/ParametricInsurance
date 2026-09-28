@@ -20,7 +20,6 @@ import org.example.triggerservice.model.LocationZone;
 import org.example.triggerservice.model.MeasurementType;
 import org.example.triggerservice.model.MeasurementUnit;
 import org.example.triggerservice.model.Observation;
-import org.example.triggerservice.model.ObservationStatus;
 import org.example.triggerservice.repository.LocationZoneRepository;
 import org.example.triggerservice.repository.ObservationRepository;
 import org.example.triggerservice.repository.CurrentMeasurementRepository;
@@ -312,11 +311,7 @@ public class MeasurementService{
     private Mono<Observation> latestValidatedFor(
             MeasurementType measurementType
     ){
-        return observationRepository
-                .findAllByMeasurementTypeAndStatusOrderByObservedAtDesc(
-                        measurementType,
-                        ObservationStatus.VALIDATED)
-                .next();
+        return observationRepository.findLatestValidated(measurementType.name());
     }
 
     private MeasurementCurrentResponse toResponse(

@@ -34,6 +34,7 @@ demo:
     enabled: ${DEMO_FEED_ENABLED:true}
     interval-ms: ${DEMO_FEED_INTERVAL_MS:60000}
     backfill-hours: 24
+    retention-days: ${DEMO_FEED_RETENTION_DAYS:3}
 
 
 management:

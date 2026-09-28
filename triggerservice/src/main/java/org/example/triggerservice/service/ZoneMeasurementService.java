@@ -17,19 +17,24 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class ZoneMeasurementService{
+    // Group first, then look up the one matching row per group: joining the grouped
+    // table back to observations made H2 re-run the grouping per row (~20 s at 150k rows).
     private static final String LATEST_PER_ZONE_SQL=
-            "SELECT o.location_zone_id, z.zone_code, z.zone_name, "
-                    +"o.measurement_type, o.measurement_unit, o.observed_value, o.observed_at "
-                    +"FROM observations o "
-                    +"JOIN (SELECT location_zone_id, measurement_type, MAX(observed_at) AS latest "
+            "SELECT g.location_zone_id, z.zone_code, z.zone_name, g.measurement_type, "
+                    +"(SELECT o.measurement_unit FROM observations o "
+                    +"  WHERE o.status='VALIDATED' AND o.location_zone_id=g.location_zone_id "
+                    +"    AND o.measurement_type=g.measurement_type AND o.observed_at=g.latest "
+                    +"  LIMIT 1) AS measurement_unit, "
+                    +"(SELECT o.observed_value FROM observations o "
+                    +"  WHERE o.status='VALIDATED' AND o.location_zone_id=g.location_zone_id "
+                    +"    AND o.measurement_type=g.measurement_type AND o.observed_at=g.latest "
+                    +"  LIMIT 1) AS observed_value, "
+                    +"g.latest AS observed_at "
+                    +"FROM (SELECT location_zone_id, measurement_type, MAX(observed_at) AS latest "
                     +"      FROM observations WHERE status='VALIDATED' "
-                    +"      GROUP BY location_zone_id, measurement_type) l "
-                    +"  ON l.location_zone_id=o.location_zone_id "
-                    +" AND l.measurement_type=o.measurement_type "
-                    +" AND l.latest=o.observed_at "
-                    +"LEFT JOIN location_zones z ON z.id=o.location_zone_id "
-                    +"WHERE o.status='VALIDATED' "
-                    +"ORDER BY o.location_zone_id, o.measurement_type";
+                    +"      GROUP BY location_zone_id, measurement_type) g "
+                    +"LEFT JOIN location_zones z ON z.id=g.location_zone_id "
+                    +"ORDER BY g.location_zone_id, g.measurement_type";
 
     private final DatabaseClient databaseClient;
 
@@ -49,8 +54,6 @@ public class ZoneMeasurementService{
                         .currentValue(row.get("observed_value",BigDecimal.class))
                         .observedAt(row.get("observed_at",LocalDateTime.class))
                         .build())
-                .all()
-                // two readings can share the latest timestamp: keep one per zone and type
-                .distinct(reading->reading.getLocationZoneId()+"|"+reading.getMeasurementType());
+                .all();
     }
 }

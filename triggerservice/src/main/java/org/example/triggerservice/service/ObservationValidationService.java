@@ -31,8 +31,8 @@ public class ObservationValidationService{
 
     public Flux<ObservationResponse> getReceivedObservations(){
         log.debug("Get received observations");
-        return observationRepository.findAllByOrderByObservedAtDesc()
-                .filter(obs->obs.getStatus()==ObservationStatus.RECEIVED)
+        return observationRepository
+                .findAllByStatusOrderByObservedAtDesc(ObservationStatus.RECEIVED)
                 .flatMap(this::buildResponse);
     }
 
@@ -70,8 +70,8 @@ public class ObservationValidationService{
     }
 
     public Mono<Long> validateAllReceived(Long userId){
-        return observationRepository.findAllByOrderByObservedAtDesc()
-                .filter(obs->obs.getStatus()==ObservationStatus.RECEIVED)
+        return observationRepository
+                .findAllByStatusOrderByObservedAtDesc(ObservationStatus.RECEIVED)
                 .collectList()
                 .flatMapMany(observations->{
                     if(observations.isEmpty()){

@@ -517,6 +517,15 @@ CREATE INDEX IF NOT EXISTS idx_observations_observed_at
 CREATE INDEX IF NOT EXISTS idx_observations_evaluation
     ON observations(location_zone_id,measurement_type,status,observed_at);
 
+CREATE INDEX IF NOT EXISTS idx_observations_latest_by_type
+    ON observations(measurement_type,status,observed_at);
+
+CREATE INDEX IF NOT EXISTS idx_observations_latest_by_zone
+    ON observations(status,location_zone_id,measurement_type,observed_at);
+
+CREATE INDEX IF NOT EXISTS idx_observations_source_observed_at
+    ON observations(source,observed_at);
+
 CREATE INDEX IF NOT EXISTS idx_trigger_evaluations_definition
     ON trigger_evaluations(trigger_definition_id);
 
