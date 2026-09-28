@@ -270,6 +270,7 @@ public class ClaimService{
                                     .triggerEventId(request.getTriggerEventId())
                                     .triggerEventReference(request.getTriggerEventReference())
                                     .locationZoneId(request.getLocationZoneId())
+                                    .triggerDefinitionId(request.getTriggerDefinitionId())
                                     .perilId(request.getPerilId())
                                     .incidentType(request.getMeasurementType())
                                     .incidentDate(LocalDate.now()).incidentLocation("AUTO")

@@ -25,6 +25,9 @@ import org.example.triggerservice.repository.LocationZoneRepository;
 import org.example.triggerservice.repository.ObservationRepository;
 import org.example.triggerservice.repository.CurrentMeasurementRepository;
 import org.example.triggerservice.repository.TriggerEventRepository;
+import org.example.triggerservice.repository.TriggerDefinitionRepository;
+import org.example.triggerservice.repository.PerilRepository;
+import org.example.triggerservice.model.TriggerDefinitionStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +46,8 @@ public class MeasurementService{
     private final IdempotencyService idempotencyService;
     private final TriggerEventRepository triggerEventRepository;
     private final NotificationService notificationService;
+    private final TriggerDefinitionRepository triggerDefinitionRepository;
+    private final PerilRepository perilRepository;
 
     public Flux<MeasurementTypeInfo> getMeasurementTypes(){
         log.debug("Get measurement types");
@@ -163,9 +168,10 @@ public class MeasurementService{
             .filter(policy->policy.getTriggerSnapshot()!=null)
             .filter(policy->compare(request.getCurrentValue(),policy.getTriggerSnapshot().getThresholdValue(),policy.getTriggerSnapshot().getComparisonOperator()))
             .toList();
-        return triggerEventRepository.save(event).flatMap(saved->
+        return linkDefinitionAndPeril(event,product).then(triggerEventRepository.save(event)).flatMap(saved->
             claimsServiceClient.createClaimsFromTriggerEvent(ClaimCreationRequest.builder()
                 .triggerEventId(saved.getId()).triggerEventReference(saved.getEventReference())
+                .triggerDefinitionId(saved.getTriggerDefinitionId()).perilId(saved.getPerilId())
                 .productId(product.getProductId()).locationZoneId(request.getLocationZoneId())
                 .measurementType(product.getMeasurementType()).measurementUnit(product.getMeasurementUnit())
                 .measuredValue(request.getCurrentValue()).thresholdValue(product.getThresholdValue())
@@ -185,6 +191,38 @@ public class MeasurementService{
                         return triggerEventRepository.save(saved).thenReturn(base);
                 }));
         }
+
+    /**
+     * Records which trigger definition and peril the event belongs to, so the claims it
+     * opens can show them. Uses the product's definition for this zone and measurement;
+     * when none exists (e.g. a product without synced definitions) only the peril is
+     * looked up by the product's peril code.
+     */
+    private Mono<Void> linkDefinitionAndPeril(TriggerEvent event,InternalProductConfig product){
+        Mono<Void> byDefinition=triggerDefinitionRepository
+                .findByProductIdAndMeasurementTypeAndLocationZoneIdAndStatusNot(
+                        event.getProductId(),event.getMeasurementType(),
+                        event.getLocationZoneId(),TriggerDefinitionStatus.ARCHIVED)
+                .doOnNext(definition->{
+                    event.setTriggerDefinitionId(definition.getId());
+                    event.setPerilId(definition.getPerilId());
+                })
+                .then();
+
+        Mono<Void> byPerilCode=Mono.defer(()->event.getPerilId()!=null||product.getPerilCode()==null
+                ?Mono.<Void>empty()
+                :perilRepository.findByPerilCodeIgnoreCase(product.getPerilCode())
+                        .doOnNext(peril->event.setPerilId(peril.getId()))
+                        .then());
+
+        // Missing links must never block the claims themselves.
+        return byDefinition.then(byPerilCode)
+                .onErrorResume(error->{
+                    log.warn("Could not link trigger definition/peril for product {}: {}",
+                            event.getProductId(),error.getMessage());
+                    return Mono.empty();
+                });
+    }
 
         private CurrentMeasurementResult resultFromEvent(TriggerEvent event){
         return CurrentMeasurementResult.builder().matched(true).productId(event.getProductId())
