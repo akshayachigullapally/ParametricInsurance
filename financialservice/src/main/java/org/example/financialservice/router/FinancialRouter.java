@@ -105,22 +105,8 @@ public class FinancialRouter{
                         paymentHandler::findAll
                 )
                 .PUT(
-                        "/api/financial/payments/{paymentId}/success",
-                        accept(APPLICATION_JSON),
-                        paymentHandler::success
-                )
-                .PUT(
-                        "/api/financial/payments/{paymentId}/fail",
-                        accept(APPLICATION_JSON),
-                        paymentHandler::fail
-                )
-                .PUT(
                         "/api/financial/payments/{paymentId}/refund",
                         paymentHandler::refund
-                )
-                .PUT(
-                        "/api/financial/payments/{paymentId}/retry",
-                        paymentHandler::retry
                 )
                 .GET(
                         "/internal/financial/payments/policy/{policyId}/status",

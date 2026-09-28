@@ -41,9 +41,6 @@ class PaymentHandlerTest{
                 .GET("/api/financial/payments/me",handler::findMine)
                 .GET("/api/financial/payments/{paymentId}",handler::findById)
                 .GET("/api/financial/payments/admin/all",handler::findAll)
-                .PUT("/api/financial/payments/{paymentId}/success",
-                        handler::success)
-                .PUT("/api/financial/payments/{paymentId}/fail",handler::fail)
                 .PUT("/api/financial/payments/{paymentId}/refund",
                         handler::refund)
                 .GET("/internal/financial/payments/policy/{policyId}/status",
@@ -120,44 +117,6 @@ class PaymentHandlerTest{
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(PaymentResponse.class).hasSize(1);
-    }
-
-    @Test
-    void successReturnsSuccessfulPayment(){
-        PaymentResponse successful=samplePayment(1L);
-        successful.setStatus(PaymentStatus.SUCCESS);
-
-        when(paymentService.success(anyLong(),any()))
-                .thenReturn(Mono.just(successful));
-
-        webClient.put()
-                .uri("/api/financial/payments/1/success")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"externalReference\":\"PSP-1\"}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("SUCCESS");
-    }
-
-    @Test
-    void failReturnsFailedPayment(){
-        PaymentResponse failed=samplePayment(1L);
-        failed.setStatus(PaymentStatus.FAILED);
-        failed.setFailureReason("Declined");
-
-        when(paymentService.fail(anyLong(),any()))
-                .thenReturn(Mono.just(failed));
-
-        webClient.put()
-                .uri("/api/financial/payments/1/fail")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"failureReason\":\"Declined\"}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("FAILED")
-                .jsonPath("$.failureReason").isEqualTo("Declined");
     }
 
     @Test

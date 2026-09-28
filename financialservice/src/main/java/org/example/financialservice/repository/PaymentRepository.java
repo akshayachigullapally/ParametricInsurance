@@ -22,10 +22,6 @@ public interface PaymentRepository extends ReactiveCrudRepository<Payment,Long>{
     Flux<Payment> findAllByPolicyIdOrderByCreatedAtDesc(Long policyId);
     Flux<Payment> findAllByStatus(PaymentStatus status);
     Flux<Payment> findAllByStatusIn(List<PaymentStatus> statuses);
-    Flux<Payment> findAllByStatusAndAttemptNumberLessThan(
-            PaymentStatus status,
-            int maxAttempts
-    );
 
     @Query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='SUCCESS'")
     Mono<BigDecimal> sumSuccessfulAmount();

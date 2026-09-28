@@ -1,6 +1,5 @@
 package org.example.financialservice.handler;
 
-import org.example.financialservice.dto.PaymentActionRequest;
 import org.example.financialservice.dto.PaymentRequest;
 import org.example.financialservice.exception.ValidationException;
 import org.example.financialservice.service.PaymentService;
@@ -51,43 +50,8 @@ public class PaymentHandler{
                 .body(service.findAll(),Object.class);
     }
 
-    public Mono<ServerResponse> success(ServerRequest request){
-        return request.bodyToMono(PaymentActionRequest.class)
-                .defaultIfEmpty(
-                        PaymentActionRequest.builder().build()
-                )
-                .flatMap(body->service.success(
-                        paymentId(request),
-                        body
-                ))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
-    public Mono<ServerResponse> fail(ServerRequest request){
-        return request.bodyToMono(PaymentActionRequest.class)
-                .defaultIfEmpty(
-                        PaymentActionRequest.builder().build()
-                )
-                .flatMap(body->service.fail(
-                        paymentId(request),
-                        body
-                ))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
     public Mono<ServerResponse> refund(ServerRequest request){
         return service.refund(paymentId(request))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
-    public Mono<ServerResponse> retry(ServerRequest request){
-        return service.retry(paymentId(request))
                 .flatMap(response->
                         ServerResponse.ok().bodyValue(response)
                 );

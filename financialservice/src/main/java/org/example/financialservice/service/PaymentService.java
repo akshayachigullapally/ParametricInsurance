@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.example.financialservice.dto.InternalPolicyResponse;
-import org.example.financialservice.dto.PaymentActionRequest;
 import org.example.financialservice.dto.PaymentRequest;
 import org.example.financialservice.dto.PaymentResponse;
 import org.example.financialservice.dto.PaymentStatusResult;
@@ -86,68 +85,73 @@ public class PaymentService{
                                             )
                                                     :Mono.empty()
                                             )
-                                            .then(paymentRepository
-                                                    .countByPolicyId(
+                                            // Reuse an unfinished payment left over from
+                                            // before checkout settled instantly.
+                                            .then(Mono.defer(()->paymentRepository
+                                                    .findAllByPolicyIdOrderByCreatedAtDesc(
                                                             policy.getId()
                                                     )
+                                                    .filter(existing->existing.getStatus()==
+                                                            PaymentStatus.PENDING)
+                                                    .next())
+                                                    .switchIfEmpty(Mono.defer(()->paymentRepository
+                                                            .countByPolicyId(policy.getId())
+                                                            .map(count->Payment.builder()
+                                                                    .paymentReference(generateReference())
+                                                                    .customerId(customerId)
+                                                                    .policyId(policy.getId())
+                                                                    .policyNumber(policy.getPolicyNumber())
+                                                                    .quoteId(quoteId.orElse(null))
+                                                                    .amount(policy.getPremiumAmount())
+                                                                    .attemptNumber(count.intValue()+1)
+                                                                    .createdAt(LocalDateTime.now())
+                                                                    .build())
+                                                    ))
                                             )
-                                            .flatMap(count->{
-                                                Payment payment=
-                                                        Payment.builder()
-                                                                .paymentReference(
-                                                                        generateReference()
-                                                                )
-                                                                .customerId(
-                                                                        customerId
-                                                                )
-                                                                .policyId(
-                                                                        policy.getId()
-                                                                )
-                                                                .policyNumber(
-                                                                        policy.getPolicyNumber()
-                                                                )
-                                                                .quoteId(
-                                                                        quoteId.orElse(null)
-                                                                )
-                                                                .amount(
-                                                                        policy.getPremiumAmount()
-                                                                )
-                                                                .method(
-                                                                        request.getMethod()
-                                                                )
-                                                                .status(
-                                                                        PaymentStatus.PENDING
-                                                                )
-                                                                .attemptNumber(
-                                                                        count.intValue()+1
-                                                                )
-                                                                .createdAt(
-                                                                        LocalDateTime.now()
-                                                                )
-                                                                .build();
+                                            .flatMap(payment->{
+                                                // Checkout is simulated: the customer's pay
+                                                // click settles the premium immediately.
+                                                LocalDateTime now=LocalDateTime.now();
+                                                payment.setMethod(request.getMethod());
+                                                payment.setStatus(PaymentStatus.SUCCESS);
+                                                payment.setExternalReference(generateTransactionId());
+                                                payment.setFailureReason(null);
+                                                payment.setCompletedAt(now);
+                                                payment.setUpdatedAt(now);
 
-                                                log.info("Creating payment for policyId={} amount={} attempt={}",
-                                                        policy.getId(),policy.getPremiumAmount(),count+1);
+                                                log.info("Payment {} paid for policyId={} amount={}",
+                                                        payment.getPaymentReference(),
+                                                        policy.getId(),payment.getAmount());
 
-                                                return paymentRepository
-                                                        .save(payment);
+                                                return paymentRepository.save(payment);
                                             })
                                     );
                         })
                 )
                 .flatMap(saved->notifications.audit(
-                        "PAYMENT_CREATED",
+                        "PAYMENT_SUCCESS",
                         "PAYMENT",
                         saved.getId(),
                         saved.getCustomerId(),
                         "paymentReference="+
-                                saved.getPaymentReference()
+                                saved.getPaymentReference()+
+                                ",transaction="+saved.getExternalReference()
                 ).thenReturn(saved))
                 .flatMap(saved->notifications
-                        .notifyPaymentPending(
+                        .notifyPaymentSuccess(
                                 saved.getCustomerId(),
                                 saved.getPaymentReference(),
                                 saved.getAmount()
+                        )
+                        .thenReturn(saved))
+                .flatMap(saved->financialTransactions
+                        .recordPayment(
+                                saved.getCustomerId(),
+                                saved.getPolicyId(),
+                                saved.getQuoteId(),
+                                saved.getId(),
+                                saved.getAmount(),
+                                "SUCCESS"
                         )
                         .thenReturn(saved))
                 .map(this::response);
@@ -185,109 +189,6 @@ public class PaymentService{
                 .thenMany(paymentRepository
                         .findAllByOrderByCreatedAtDesc()
                 )
-                .map(this::response);
-    }
-
-    public Mono<PaymentResponse> success(
-            Long paymentId,
-            PaymentActionRequest request
-    ){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(paymentId))
-                .flatMap(payment->{
-                    if(payment.getStatus()!=PaymentStatus.PENDING){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only pending payments can succeed"
-                                )
-                        );
-                    }
-
-                    log.info("Payment {} succeeded",payment.getPaymentReference());
-                    payment.setStatus(PaymentStatus.SUCCESS);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setUpdatedAt(LocalDateTime.now());
-
-                    if(request.getExternalReference()!=null){
-                        payment.setExternalReference(
-                                request.getExternalReference()
-                        );
-                    }
-
-                    return paymentRepository.save(payment);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYMENT_SUCCESS",
-                        "PAYMENT",
-                        saved.getId(),
-                        null,
-                        "paymentReference="+
-                                saved.getPaymentReference()
-                ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPaymentSuccess(
-                                saved.getCustomerId(),
-                                saved.getPaymentReference(),
-                                saved.getAmount()
-                        )
-                        .thenReturn(saved))
-                .flatMap(saved->financialTransactions
-                        .recordPayment(
-                                saved.getCustomerId(),
-                                saved.getPolicyId(),
-                                saved.getQuoteId(),
-                                saved.getId(),
-                                saved.getAmount(),
-                                "SUCCESS"
-                        )
-                        .thenReturn(saved))
-                .map(this::response);
-    }
-
-    public Mono<PaymentResponse> fail(
-            Long paymentId,
-            PaymentActionRequest request
-    ){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(paymentId))
-                .flatMap(payment->{
-                    if(payment.getStatus()!=PaymentStatus.PENDING){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only pending payments can fail"
-                                )
-                        );
-                    }
-
-                    log.info("Payment {} failed",payment.getPaymentReference());
-                    payment.setStatus(PaymentStatus.FAILED);
-                    payment.setCompletedAt(LocalDateTime.now());
-                    payment.setUpdatedAt(LocalDateTime.now());
-
-                    if(request.getFailureReason()!=null){
-                        payment.setFailureReason(
-                                request.getFailureReason()
-                        );
-                    }
-
-                    return paymentRepository.save(payment);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYMENT_FAILED",
-                        "PAYMENT",
-                        saved.getId(),
-                        null,
-                        "paymentReference="+
-                                saved.getPaymentReference()+
-                                ",reason="+saved.getFailureReason()
-                ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPaymentFailed(
-                                saved.getCustomerId(),
-                                saved.getPaymentReference(),
-                                saved.getFailureReason()
-                        )
-                        .thenReturn(saved))
                 .map(this::response);
     }
 
@@ -337,47 +238,6 @@ public class PaymentService{
                                 saved.getPolicyId(),
                                 saved.getId(),
                                 saved.getAmount()
-                        )
-                        .thenReturn(saved))
-                .map(this::response);
-    }
-
-    public Mono<PaymentResponse> retry(Long paymentId){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(paymentId))
-                .flatMap(payment->{
-                    if(payment.getStatus()!=PaymentStatus.FAILED){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only failed payments can be retried"
-                                )
-                        );
-                    }
-
-                    log.info("Retrying payment {} (attempt {})",
-                            payment.getPaymentReference(),payment.getAttemptNumber()+1);
-                    payment.setStatus(PaymentStatus.PENDING);
-                    payment.setAttemptNumber(payment.getAttemptNumber()+1);
-                    payment.setFailureReason(null);
-                    payment.setUpdatedAt(LocalDateTime.now());
-
-                    return paymentRepository.save(payment);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYMENT_RETRY",
-                        "PAYMENT",
-                        saved.getId(),
-                        null,
-                        "paymentReference="+
-                                saved.getPaymentReference()+
-                                ",attempt="+saved.getAttemptNumber()
-                ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPaymentRetry(
-                                saved.getCustomerId(),
-                                saved.getPaymentReference(),
-                                saved.getAmount(),
-                                saved.getAttemptNumber()
                         )
                         .thenReturn(saved))
                 .map(this::response);
@@ -443,6 +303,15 @@ public class PaymentService{
                         .toString()
                         .replace("-","")
                         .substring(0,16)
+                        .toUpperCase();
+    }
+
+    private String generateTransactionId(){
+        return "TXN-"+
+                UUID.randomUUID()
+                        .toString()
+                        .replace("-","")
+                        .substring(0,20)
                         .toUpperCase();
     }
 

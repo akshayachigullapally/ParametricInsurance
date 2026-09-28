@@ -63,25 +63,6 @@ public class NotificationService{
         );
     }
 
-    public Mono<Void> notifyPaymentFailed(
-            Long customerId,
-            String reference,
-            String reason
-    ){
-        log.debug("Notify payment failed: customerId={}, reference={}, reason={}",customerId,reference,reason);
-        return notify(
-                customerId,
-                "PAYMENT_FAILED",
-                "Payment failed",
-                "Payment "+reference+" failed"+
-                        (reason!=null&&!reason.isBlank()
-                                ?": "+reason
-                                :""),
-                "PAYMENT",
-                null
-        );
-    }
-
     public Mono<Void> notifyPayoutProcessed(
             Long customerId,
             String reference,
@@ -113,41 +94,6 @@ public class NotificationService{
                                 ?": "+reason
                                 :""),
                 "PAYOUT",
-                null
-        );
-    }
-
-    public Mono<Void> notifyPaymentPending(
-            Long customerId,
-            String reference,
-            BigDecimal amount
-    ){
-        log.debug("Notify payment pending: customerId={}, reference={}, amount={}",customerId,reference,amount);
-        return notify(
-                customerId,
-                "PAYMENT_PENDING",
-                "Payment pending",
-                "Payment "+reference+" of "+amount+
-                        " is pending confirmation",
-                "PAYMENT",
-                null
-        );
-    }
-
-    public Mono<Void> notifyPaymentRetry(
-            Long customerId,
-            String reference,
-            BigDecimal amount,
-            Integer attempt
-    ){
-        log.debug("Notify payment retry: customerId={}, reference={}, amount={}, attempt={}",customerId,reference,amount,attempt);
-        return notify(
-                customerId,
-                "PAYMENT_RETRY",
-                "Payment retry initiated",
-                "Retrying payment "+reference+" of "+amount+
-                        " (attempt "+(attempt!=null?attempt:1)+")",
-                "PAYMENT",
                 null
         );
     }

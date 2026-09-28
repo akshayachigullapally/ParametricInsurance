@@ -8,13 +8,16 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.example.financialservice.TestAuth;
-import org.example.financialservice.dto.PaymentActionRequest;
+import org.example.financialservice.dto.InternalPolicyResponse;
+import org.example.financialservice.dto.PaymentRequest;
 import org.example.financialservice.model.Payment;
 import org.example.financialservice.model.PaymentMethod;
 import org.example.financialservice.model.PaymentStatus;
+import org.example.financialservice.model.QuoteStatus;
 import org.example.financialservice.repository.PaymentRepository;
 import org.example.financialservice.repository.QuoteRepository;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -45,8 +48,20 @@ class NotificationResilienceTest{
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(paymentRepository.findById(1L))
-                .thenReturn(Mono.just(payment));
+        when(productServiceClient.findPolicy(7L))
+                .thenReturn(Mono.just(InternalPolicyResponse.builder()
+                        .id(7L)
+                        .policyNumber("POL-7")
+                        .customerId(5L)
+                        .status("ACTIVE")
+                        .premiumAmount(new BigDecimal("10000.00"))
+                        .build()));
+        when(quoteRepository.findByPolicyIdAndStatus(7L,QuoteStatus.CONSUMED))
+                .thenReturn(Mono.empty());
+        when(paymentRepository.existsByPolicyIdAndStatus(7L,PaymentStatus.SUCCESS))
+                .thenReturn(Mono.just(false));
+        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+                .thenReturn(Flux.just(payment));
 
         // Every audit/notification attempt fails
         when(notificationClient.sendAuditEvent(any()))
@@ -75,21 +90,20 @@ class NotificationResilienceTest{
                 financialTransactions
         );
 
-        StepVerifier.create(TestAuth.admin(
-                service.success(
-                        1L,
-                        PaymentActionRequest.builder()
-                                .externalReference("PSP-1")
-                                .build()
-                ),
-                1L
+        StepVerifier.create(TestAuth.customer(
+                service.create(PaymentRequest.builder()
+                        .policyId(7L)
+                        .method(PaymentMethod.MOCK_CARD)
+                        .build()),
+                5L,
+                5L
         ))
                 .assertNext(response->{
                     // Financial state change is preserved
                     assertThat(response.getStatus())
                             .isEqualTo(PaymentStatus.SUCCESS);
                     assertThat(response.getExternalReference())
-                            .isEqualTo("PSP-1");
+                            .startsWith("TXN-");
                 })
                 .verifyComplete();
     }

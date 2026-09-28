@@ -58,18 +58,6 @@ class NotificationServiceTest{
     }
 
     @Test
-    void notifyPaymentFailedSendsNotification(){
-        when(client.sendNotification(any(NotificationRequest.class)))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(service.notifyPaymentFailed(
-                5L,"PAY-002","Insufficient funds"))
-                .verifyComplete();
-
-        verify(client).sendNotification(any(NotificationRequest.class));
-    }
-
-    @Test
     void notifyPayoutProcessedSendsNotification(){
         when(client.sendNotification(any(NotificationRequest.class)))
                 .thenReturn(Mono.empty());
@@ -113,18 +101,6 @@ class NotificationServiceTest{
                 .verifyComplete();
 
         verify(client).sendAuditEvent(any(AuditEventRequest.class));
-    }
-
-    @Test
-    void notifyPaymentFailedWithNullReason(){
-        when(client.sendNotification(any(NotificationRequest.class)))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(service.notifyPaymentFailed(
-                5L,"PAY-004",null))
-                .verifyComplete();
-
-        verify(client).sendNotification(any(NotificationRequest.class));
     }
 
     @Test

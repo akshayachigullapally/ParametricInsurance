@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.example.financialservice.TestAuth;
-import org.example.financialservice.dto.PaymentActionRequest;
 import org.example.financialservice.dto.PaymentRequest;
 import org.example.financialservice.dto.InternalPolicyResponse;
 import org.example.financialservice.exception.ConflictException;
@@ -82,11 +81,8 @@ class PaymentServiceTest{
         when(financialTransactions.recordRefund(
                 any(),any(),any(),any()
         )).thenReturn(Mono.empty());
-        when(notifications.notifyPaymentPending(
+        when(notifications.notifyPaymentSuccess(
                 anyLong(),any(),any()
-        )).thenReturn(Mono.empty());
-        when(notifications.notifyPaymentRetry(
-                anyLong(),any(),any(),any()
         )).thenReturn(Mono.empty());
         when(notifications.notifyPaymentRefunded(
                 anyLong(),any(),any()
@@ -115,6 +111,8 @@ class PaymentServiceTest{
                 7L,
                 PaymentStatus.SUCCESS
         )).thenReturn(Mono.just(false));
+        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+                .thenReturn(Flux.empty());
     }
 
     @Test
@@ -153,6 +151,8 @@ class PaymentServiceTest{
                 7L,
                 PaymentStatus.SUCCESS
         )).thenReturn(Mono.just(false));
+        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+                .thenReturn(Flux.empty());
         when(paymentRepository.countByPolicyId(7L))
                 .thenReturn(Mono.just(0L));
         when(paymentRepository.save(any(Payment.class)))
@@ -263,7 +263,39 @@ class PaymentServiceTest{
                     assertThat(response.getAttemptNumber())
                             .isEqualTo(3);
                     assertThat(response.getStatus())
-                            .isEqualTo(PaymentStatus.PENDING);
+                            .isEqualTo(PaymentStatus.SUCCESS);
+                    assertThat(response.getMethod())
+                            .isEqualTo(PaymentMethod.MOCK_UPI);
+                    assertThat(response.getExternalReference())
+                            .startsWith("TXN-");
+                    assertThat(response.getCompletedAt()).isNotNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void createSettlesAnExistingPendingPayment(){
+        stubPolicyFlow();
+        Payment leftover=pendingPayment(4L);
+        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+                .thenReturn(Flux.just(leftover));
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
+
+        StepVerifier.create(TestAuth.customer(
+                service.create(PaymentRequest.builder()
+                        .policyId(7L)
+                        .method(PaymentMethod.MOCK_BANK_TRANSFER)
+                        .build()),
+                5L,
+                5L
+        ))
+                .assertNext(response->{
+                    assertThat(response.getId()).isEqualTo(4L);
+                    assertThat(response.getPaymentReference())
+                            .isEqualTo("PAY-1");
+                    assertThat(response.getStatus())
+                            .isEqualTo(PaymentStatus.SUCCESS);
                 })
                 .verifyComplete();
     }
@@ -282,84 +314,6 @@ class PaymentServiceTest{
                 .attemptNumber(1)
                 .createdAt(LocalDateTime.now())
                 .build();
-    }
-
-    @Test
-    void successTransition(){
-        Payment payment=pendingPayment(1L);
-        when(paymentRepository.findById(1L))
-                .thenReturn(Mono.just(payment));
-        when(paymentRepository.save(any(Payment.class)))
-                .thenAnswer(inv->{
-                    Payment saved=inv.getArgument(0);
-                    return Mono.just(saved);
-                });
-        when(notifications.notifyPaymentSuccess(
-                anyLong(),
-                any(),
-                any()
-        )).thenReturn(Mono.empty());
-
-        StepVerifier.create(TestAuth.admin(
-                service.success(
-                        1L,
-                        PaymentActionRequest.builder()
-                                .externalReference("PSP-1")
-                                .build()
-                ),
-                1L
-        ))
-                .assertNext(response->assertThat(response.getStatus())
-                        .isEqualTo(PaymentStatus.SUCCESS))
-                .verifyComplete();
-    }
-
-    @Test
-    void successOnFailedPaymentRejected(){
-        Payment payment=pendingPayment(1L);
-        payment.setStatus(PaymentStatus.FAILED);
-        payment.setCompletedAt(LocalDateTime.now());
-
-        when(paymentRepository.findById(1L))
-                .thenReturn(Mono.just(payment));
-
-        StepVerifier.create(TestAuth.admin(
-                service.success(1L,new PaymentActionRequest()),
-                1L
-        ))
-                .expectError(ConflictException.class)
-                .verify();
-    }
-
-    @Test
-    void failTransition(){
-        Payment payment=pendingPayment(1L);
-        when(paymentRepository.findById(1L))
-                .thenReturn(Mono.just(payment));
-        when(paymentRepository.save(any(Payment.class)))
-                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
-        when(notifications.notifyPaymentFailed(
-                anyLong(),
-                any(),
-                any()
-        )).thenReturn(Mono.empty());
-
-        StepVerifier.create(TestAuth.admin(
-                service.fail(
-                        1L,
-                        PaymentActionRequest.builder()
-                                .failureReason("Insufficient funds")
-                                .build()
-                ),
-                1L
-        ))
-                .assertNext(response->{
-                    assertThat(response.getStatus())
-                            .isEqualTo(PaymentStatus.FAILED);
-                    assertThat(response.getFailureReason())
-                            .isEqualTo("Insufficient funds");
-                })
-                .verifyComplete();
     }
 
     @Test

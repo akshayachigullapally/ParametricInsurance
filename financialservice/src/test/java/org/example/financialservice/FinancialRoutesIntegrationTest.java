@@ -13,6 +13,7 @@ import org.example.financialservice.dto.PricingRuleResponse;
 import org.example.financialservice.dto.InternalProductResponse;
 import org.example.financialservice.dto.QuoteResponse;
 import org.example.financialservice.model.PricingRuleStatus;
+import org.example.financialservice.model.PaymentStatus;
 import org.example.financialservice.model.QuoteStatus;
 import org.example.financialservice.service.ClaimsServiceClient;
 import org.example.financialservice.service.NotificationServiceClient;
@@ -567,17 +568,9 @@ class FinancialRoutesIntegrationTest{
                 .expectBody()
                 .jsonPath("$.policyNumber").isEqualTo("POL-7");
 
-        // Admin success
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payments/"+
-                        payment.getId()+"/success")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"externalReference\":\"PSP-1\"}"))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("SUCCESS");
+        // Checkout settles immediately: no admin approval step
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(payment.getExternalReference()).startsWith("TXN-");
 
         // Internal policy status
         webClient.get()
@@ -615,7 +608,7 @@ class FinancialRoutesIntegrationTest{
     }
 
     @Test
-    void paymentFailThenNewAttempt(){
+    void paymentIsPaidWithoutAdminApproval(){
         consumeQuote(302L,2L,8L,"POL-8");
 
         when(productServiceClient.findPolicy(8L))
@@ -628,31 +621,7 @@ class FinancialRoutesIntegrationTest{
                         .premiumAmount(new BigDecimal("10000.00"))
                         .build()));
 
-        PaymentResponse first=customerHeaders(webClient.post()
-                .uri("/api/financial/payments")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"policyId\":8,"+
-                        "\"method\":\"MOCK_BANK_TRANSFER\"}"))
-                .exchange()
-                .expectStatus().isCreated()
-                .returnResult(PaymentResponse.class)
-                .getResponseBody()
-                .blockFirst();
-
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payments/"+
-                        first.getId()+"/fail")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"failureReason\":\"Declined\"}"))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("FAILED");
-
-        // Second attempt allowed after failure
-        PaymentResponse second=customerHeaders(webClient.post()
+        customerHeaders(webClient.post()
                 .uri("/api/financial/payments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -660,11 +629,18 @@ class FinancialRoutesIntegrationTest{
                         "\"method\":\"MOCK_UPI\"}"))
                 .exchange()
                 .expectStatus().isCreated()
-                .returnResult(PaymentResponse.class)
-                .getResponseBody()
-                .blockFirst();
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SUCCESS")
+                .jsonPath("$.method").isEqualTo("MOCK_UPI")
+                .jsonPath("$.completedAt").isNotEmpty();
 
-        assertThat(second.getAttemptNumber()).isEqualTo(2);
+        webClient.get()
+                .uri("/internal/financial/payments/policy/8/status")
+                .header("X-Gateway-Key",KEY)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.successful").isEqualTo(true);
     }
 
     // ---- Payouts (Phase E) ----
