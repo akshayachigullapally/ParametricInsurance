@@ -1,0 +1,36 @@
+2026-09-28T10:19:03.200+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.e.f.FinancialserviceApplication        : Starting FinancialserviceApplication using Java 17.0.19 with PID 24656 (C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\financialservice\target\classes started by AC13471 in C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\financialservice)
+2026-09-28T10:19:03.206+05:30 DEBUG 24656 --- [FINANCIAL-SERVICE] [main] o.e.f.FinancialserviceApplication        : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-28T10:19:03.208+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.e.f.FinancialserviceApplication        : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T10:19:05.129+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-28T10:19:05.685+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 540 ms. Found 6 R2DBC repository interfaces.
+2026-09-28T10:19:06.515+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=362a7297-ebda-371d-b4e0-8241fb87c3b4
+2026-09-28T10:19:15.866+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-28T10:19:19.097+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-28T10:19:19.301+05:30  WARN 24656 --- [FINANCIAL-SERVICE] [main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-28T10:19:19.510+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-09-28T10:19:19.610+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-09-28T10:19:19.623+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:19:19.659+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-09-28T10:19:19.659+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-09-28T10:19:19.659+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-09-28T10:19:19.660+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-09-28T10:19:19.660+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-09-28T10:19:19.664+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-09-28T10:19:19.664+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-09-28T10:19:21.423+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-09-28T10:19:21.430+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-09-28T10:19:21.435+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-09-28T10:19:21.438+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1790570961437 with initial instances count: 6
+2026-09-28T10:19:21.446+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application FINANCIAL-SERVICE with eureka with status UP
+2026-09-28T10:19:21.448+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1790570961448, current=UP, previous=STARTING]
+2026-09-28T10:19:21.453+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_FINANCIAL-SERVICE/5CD6260W25.ad1.prod:FINANCIAL-SERVICE:8088: registering service...
+2026-09-28T10:19:21.548+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_FINANCIAL-SERVICE/5CD6260W25.ad1.prod:FINANCIAL-SERVICE:8088 - registration status: 204
+2026-09-28T10:19:22.815+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.s.boot.reactor.netty.NettyWebServer    : Netty started on port 8088 (http)
+2026-09-28T10:19:22.820+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8088
+2026-09-28T10:19:26.957+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [main] o.e.f.FinancialserviceApplication        : Started FinancialserviceApplication in 25.523 seconds (process running for 27.338)
+2026-09-28T10:19:46.960+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.s.DefaultPricingRuleProvisioner    : Provision missing rules [default pricing rule provisioner]
+2026-09-28T10:19:46.960+05:30 DEBUG 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.service.ProductServiceClient       : Find all products
+2026-09-28T10:20:00.022+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.scheduler.PayoutRetryScheduler     : Payout retry scheduler retried 0 payouts
+2026-09-28T10:20:00.032+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.scheduler.PaymentRetryScheduler    : Payment retry scheduler retried 0 payments
+2026-09-28T10:20:48.533+05:30  INFO 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.s.DefaultPricingRuleProvisioner    : Provision missing rules [default pricing rule provisioner]
+2026-09-28T10:20:48.533+05:30 DEBUG 24656 --- [FINANCIAL-SERVICE] [scheduling-1] o.e.f.service.ProductServiceClient       : Find all products

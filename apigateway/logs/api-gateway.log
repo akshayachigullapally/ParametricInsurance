@@ -1,0 +1,50 @@
+2026-09-28T10:14:47.957+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.e.apigateway.ApigatewayApplication     : Starting ApigatewayApplication using Java 17.0.19 with PID 30688 (C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\apigateway\target\classes started by AC13471 in C:\Users\AC13471\OneDrive - The Hartford\Documents\ParametricInsurance\apigateway)
+2026-09-28T10:14:47.963+05:30 DEBUG 30688 --- [API-GATEWAY] [restartedMain] o.e.apigateway.ApigatewayApplication     : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-28T10:14:47.964+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.e.apigateway.ApigatewayApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T10:14:48.035+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28T10:14:49.887+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=25a52c2d-3a74-3342-8023-c193018a2bc3
+2026-09-28T10:14:51.014+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 88464edb-3a2d-4be2-8545-40ebdbb82c5e
+
+2026-09-28T10:14:53.093+05:30  WARN 30688 --- [API-GATEWAY] [restartedMain] o.h.v.i.m.a.CascadingMetaDataBuilder     : HV000271: Using `@Valid` on a container (java.util.List) is deprecated. You should apply the annotation on the type argument(s). Affected element: routes
+2026-09-28T10:14:53.321+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [After]
+2026-09-28T10:14:53.322+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Before]
+2026-09-28T10:14:53.322+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Between]
+2026-09-28T10:14:53.323+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Cookie]
+2026-09-28T10:14:53.323+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Header]
+2026-09-28T10:14:53.324+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Host]
+2026-09-28T10:14:53.324+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Method]
+2026-09-28T10:14:53.325+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Path]
+2026-09-28T10:14:53.325+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Query]
+2026-09-28T10:14:53.326+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [ReadBody]
+2026-09-28T10:14:53.326+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [RemoteAddr]
+2026-09-28T10:14:53.327+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Version]
+2026-09-28T10:14:53.327+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [XForwardedRemoteAddr]
+2026-09-28T10:14:53.327+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Weight]
+2026-09-28T10:14:53.328+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [CloudFoundryRouteService]
+2026-09-28T10:14:55.233+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-28T10:14:55.666+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-28T10:14:55.738+05:30  WARN 30688 --- [API-GATEWAY] [restartedMain] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-28T10:14:55.839+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-09-28T10:14:55.896+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-09-28T10:14:55.903+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-09-28T10:14:55.926+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-09-28T10:14:55.927+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-09-28T10:14:55.927+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-09-28T10:14:55.927+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-09-28T10:14:55.928+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-09-28T10:14:55.928+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-09-28T10:14:55.928+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-09-28T10:14:56.835+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-09-28T10:14:56.839+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-09-28T10:14:56.843+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-09-28T10:14:56.847+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1790570696844 with initial instances count: 7
+2026-09-28T10:14:56.853+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application API-GATEWAY with eureka with status UP
+2026-09-28T10:14:56.853+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1790570696853, current=UP, previous=STARTING]
+2026-09-28T10:14:56.857+05:30  INFO 30688 --- [API-GATEWAY] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_API-GATEWAY/5CD6260W25.ad1.prod:API-GATEWAY:8080: registering service...
+2026-09-28T10:14:56.922+05:30  INFO 30688 --- [API-GATEWAY] [DiscoveryClient-InstanceInfoReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_API-GATEWAY/5CD6260W25.ad1.prod:API-GATEWAY:8080 - registration status: 204
+2026-09-28T10:14:57.476+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.s.boot.reactor.netty.NettyWebServer    : Netty started on port 8080 (http)
+2026-09-28T10:14:57.478+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8080
+2026-09-28T10:14:59.456+05:30  INFO 30688 --- [API-GATEWAY] [restartedMain] o.e.apigateway.ApigatewayApplication     : Started ApigatewayApplication in 12.579 seconds (process running for 14.101)
+2026-09-28T10:19:55.942+05:30  INFO 30688 --- [API-GATEWAY] [AsyncResolver-bootstrap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration

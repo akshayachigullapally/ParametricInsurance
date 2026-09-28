@@ -56,7 +56,7 @@ logging:
     org.springframework.r2dbc: INFO
     org.springframework.security: INFO
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/claims-service.log
+    name: ./logs/claims-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

@@ -53,7 +53,7 @@ logging:
     org.springframework.data.r2dbc: DEBUG
     io.r2dbc.h2: DEBUG
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/product-service.log
+    name: ./logs/product-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

@@ -47,7 +47,7 @@ logging:
     root: INFO
     org.example.notificationservice: ${APP_LOG_LEVEL:DEBUG}
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/notification-service.log
+    name: ./logs/notification-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

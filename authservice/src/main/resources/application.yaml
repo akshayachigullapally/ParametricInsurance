@@ -67,7 +67,7 @@ logging:
     org.springframework.r2dbc: DEBUG
     org.springframework.data.r2dbc: DEBUG
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/auth-service.log
+    name: ./logs/auth-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

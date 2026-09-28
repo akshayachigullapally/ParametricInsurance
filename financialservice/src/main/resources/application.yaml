@@ -56,7 +56,7 @@ logging:
     root: INFO
     org.example.financialservice: ${APP_LOG_LEVEL:DEBUG}
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/financial-service.log
+    name: ./logs/financial-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

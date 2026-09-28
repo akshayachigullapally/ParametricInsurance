@@ -59,7 +59,7 @@ logging:
     root: INFO
     org.example.triggerservice: ${APP_LOG_LEVEL:DEBUG}
   file:
-    name: ${LOG_DIR:${user.home}/.cityshield/logs}/trigger-service.log
+    name: ./logs/trigger-service.log
   logback:
     rollingpolicy:
       max-file-size: 10MB
