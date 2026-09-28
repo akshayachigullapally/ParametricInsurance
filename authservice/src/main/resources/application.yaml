@@ -32,12 +32,6 @@ jwt:
   access-expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
-email:
-  verification-token-expiration-hours: 24
-
-password:
-  reset-token-expiration-hours: 1
-
 eureka:
   client:
     register-with-eureka: true

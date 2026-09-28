@@ -125,7 +125,6 @@ class AuthServiceTest{
         assertThat(userCaptor.getValue().getPassword())
                 .isEqualTo("encoded-password");
         assertThat(userCaptor.getValue().getEnabled()).isTrue();
-        assertThat(userCaptor.getValue().getEmailVerified()).isFalse();
 
         verify(roleRepository).findByName("ROLE_CUSTOMER");
         verify(userRoleRepository).save(any(UserRole.class));
@@ -473,7 +472,6 @@ class AuthServiceTest{
                             .isEqualTo("user@test.com");
                     assertThat(response.getRole())
                             .isEqualTo("ROLE_CUSTOMER");
-                    assertThat(response.getEmailVerified()).isFalse();
                     assertThat(response.getPhoneNumber())
                             .isEqualTo("9876543210");
                     assertThat(response.getCustomerSegment())
@@ -627,7 +625,7 @@ class AuthServiceTest{
                 .id(1L).email("user@test.com")
                 .password("encoded-password")
                 .fullName("Test User").role("ROLE_CUSTOMER")
-                .enabled(enabled).emailVerified(false)
+                .enabled(enabled)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now()).build();
     }

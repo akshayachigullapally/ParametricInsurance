@@ -29,9 +29,6 @@ public class UserCredential{
     @Column("enabled")
     private Boolean enabled;
 
-    @Column("email_verified")
-    private Boolean emailVerified;
-
     @Column("created_at")
     private LocalDateTime createdAt;
 

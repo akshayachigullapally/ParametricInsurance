@@ -19,8 +19,6 @@ public abstract class BaseRepositoryTest {
         StepVerifier.create(
                 delete("addresses")
                         .then(delete("sessions"))
-                        .then(delete("email_verification_tokens"))
-                        .then(delete("password_reset_tokens"))
                         .then(delete("refresh_tokens"))
                         .then(delete("user_profiles"))
                         .then(delete("user_roles"))
@@ -31,9 +29,9 @@ public abstract class BaseRepositoryTest {
     protected Mono<Void> insertUser(Long id,String email) {
         return databaseClient.sql("""
                 INSERT INTO users_credentials
-                (id,email,password,full_name,role,enabled,email_verified,created_at,updated_at)
+                (id,email,password,full_name,role,enabled,created_at,updated_at)
                 VALUES
-                (:id,:email,'encoded-password','Test User','ROLE_CUSTOMER',TRUE,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+                (:id,:email,'encoded-password','Test User','ROLE_CUSTOMER',TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
                 """)
                 .bind("id",id)
                 .bind("email",email)

@@ -215,7 +215,6 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role.getName())
                 .enabled(true)
-                .emailVerified(false)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -338,7 +337,6 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .email(user.getEmail())
                 .role(user.getRole())
                 .enabled(user.getEnabled())
-                .emailVerified(user.getEmailVerified())
                 .phoneNumber(profile.getPhoneNumber())
                 .dateOfBirth(profile.getDateOfBirth())
                 .customerSegment(profile.getCustomerSegment())
@@ -357,7 +355,6 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .email(user.getEmail())
                 .role(user.getRole())
                 .enabled(user.getEnabled())
-                .emailVerified(user.getEmailVerified())
                 .build();
     }
 

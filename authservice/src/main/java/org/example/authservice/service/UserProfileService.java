@@ -247,7 +247,6 @@ public class UserProfileService{
                         .email(user.getEmail())
                         .role(user.getRole())
                         .enabled(user.getEnabled())
-                        .emailVerified(user.getEmailVerified())
                         .phoneNumber(profile.getPhoneNumber())
                         .dateOfBirth(profile.getDateOfBirth())
                         .customerSegment(profile.getCustomerSegment())

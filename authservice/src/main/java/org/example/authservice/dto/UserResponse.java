@@ -14,7 +14,6 @@ public class UserResponse{
     private String email;
     private String role;
     private Boolean enabled;
-    private Boolean emailVerified;
     private String phoneNumber;
     private LocalDate dateOfBirth;
     private String customerSegment;

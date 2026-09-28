@@ -597,7 +597,6 @@ class UserHandlerTest {
                 .email("test@test.com")
                 .role("ROLE_CUSTOMER")
                 .enabled(true)
-                .emailVerified(false)
                 .phoneNumber("9000000000")
                 .dateOfBirth(LocalDate.of(2000, 1, 1))
                 .customerSegment("INDIVIDUAL")

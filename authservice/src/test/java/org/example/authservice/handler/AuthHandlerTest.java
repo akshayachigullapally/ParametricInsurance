@@ -764,7 +764,7 @@ class AuthHandlerTest {
     private UserResponse userResponse() {
         return UserResponse.builder()
                 .id(1L).fullName("Test User").email("test@test.com")
-                .role("ROLE_CUSTOMER").enabled(true).emailVerified(false)
+                .role("ROLE_CUSTOMER").enabled(true)
                 .build();
     }
 }

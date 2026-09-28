@@ -251,7 +251,6 @@ class UserProfileServiceTest {
                     assertThat(response.getEmail()).isEqualTo("user@test.com");
                     assertThat(response.getRole()).isEqualTo("ROLE_CUSTOMER");
                     assertThat(response.getEnabled()).isTrue();
-                    assertThat(response.getEmailVerified()).isFalse();
                     assertThat(response.getPhoneNumber()).isEqualTo("9000000000");
                     assertThat(response.getDateOfBirth())
                             .isEqualTo(LocalDate.of(2000,1,1));
@@ -451,7 +450,6 @@ class UserProfileServiceTest {
                 .password("encoded-password")
                 .role("ROLE_CUSTOMER")
                 .enabled(true)
-                .emailVerified(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -768,7 +766,6 @@ class UserProfileServiceTest {
                 .password("encoded-password")
                 .role(role)
                 .enabled(true)
-                .emailVerified(false)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

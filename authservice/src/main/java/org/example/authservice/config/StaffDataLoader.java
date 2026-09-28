@@ -102,7 +102,6 @@ public class StaffDataLoader implements ApplicationRunner{
                 .password(password)
                 .role(role)
                 .enabled(true)
-                .emailVerified(true)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

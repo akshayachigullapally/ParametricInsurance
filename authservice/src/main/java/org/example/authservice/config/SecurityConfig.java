@@ -34,15 +34,10 @@ public class SecurityConfig{
                         .pathMatchers(HttpMethod.POST,
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/api/auth/verify-email",
-                                "/api/auth/verify-email/resend-by-email",
-                                "/api/auth/forgot-password",
-                                "/api/auth/reset-password"
+                                "/api/auth/refresh"
                         ).permitAll()
                         .pathMatchers(HttpMethod.POST,
-                                "/api/auth/logout",
-                                "/api/auth/verify-email/resend"
+                                "/api/auth/logout"
                         ).authenticated()
                         .pathMatchers(HttpMethod.GET,
                                 "/api/auth/me",

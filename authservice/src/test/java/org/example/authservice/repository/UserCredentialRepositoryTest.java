@@ -48,6 +48,6 @@ class UserCredentialRepositoryTest extends BaseRepositoryTest {
 
     private UserCredential user(String email) {
         LocalDateTime now=LocalDateTime.now();
-        return UserCredential.builder().email(email).password("encoded-password").fullName("Test User").role("ROLE_CUSTOMER").enabled(true).emailVerified(false).createdAt(now).updatedAt(now).build();
+        return UserCredential.builder().email(email).password("encoded-password").fullName("Test User").role("ROLE_CUSTOMER").enabled(true).createdAt(now).updatedAt(now).build();
     }
 }
