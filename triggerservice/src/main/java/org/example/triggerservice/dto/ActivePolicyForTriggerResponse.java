@@ -15,6 +15,7 @@ public class ActivePolicyForTriggerResponse{
     private Long locationZoneId;
     private BigDecimal sumInsured;
     private String status;
+    private Boolean premiumPaid;
     private TriggerSnapshot triggerSnapshot;
 
     @Data

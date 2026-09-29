@@ -220,6 +220,9 @@ public class PayoutService{
                                 saved.getAmount()
                         )
                         .thenReturn(saved))
+                .flatMap(saved->claimsServiceClient
+                        .settleClaim(saved.getClaimId(),saved.getPayoutReference())
+                        .thenReturn(saved))
                 .flatMap(saved->{
                     if(saved.getTriggerEventId()!=null){
                         return triggerServiceClient

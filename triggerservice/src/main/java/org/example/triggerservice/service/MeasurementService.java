@@ -126,47 +126,53 @@ public class MeasurementService{
                                                     .then(productTriggerClient.getActivePolicies(
                                                         request.getProductId(),request.getLocationZoneId())
                                                         .collectList())
-                                                    .flatMap(policies->{
-                                                        long matched=policies.stream()
-                                                                .filter(policy->policy.getTriggerSnapshot()!=null)
-                                                                .filter(policy->compare(request.getCurrentValue(),
-                                                                        policy.getTriggerSnapshot().getThresholdValue(),
-                                                                        policy.getTriggerSnapshot().getComparisonOperator()))
-                                                                .count();
-                                                        return buildProcessingResult(product,request,recordedBy,policies,matched);
-                                                    });
+                                                    .flatMap(policies->buildProcessingResult(
+                                                            product,request,recordedBy,policies));
                                             });
                                 })));
     }
 
         private Mono<CurrentMeasurementResult> buildProcessingResult(
             InternalProductConfig product,CurrentMeasurementRequest request,Long recordedBy,
-            java.util.List<ActivePolicyForTriggerResponse> policies,long matched){
+            java.util.List<ActivePolicyForTriggerResponse> policies){
+        java.util.List<ActivePolicyForTriggerResponse> thresholdMatched=policies.stream()
+            .filter(policy->policy.getTriggerSnapshot()!=null)
+            .filter(policy->compare(request.getCurrentValue(),policy.getTriggerSnapshot().getThresholdValue(),policy.getTriggerSnapshot().getComparisonOperator()))
+            .toList();
+        // Only policies with a paid premium are covered; the rest are reported, not claimed.
+        java.util.List<ActivePolicyForTriggerResponse> matchedPolicies=thresholdMatched.stream()
+            .filter(policy->Boolean.TRUE.equals(policy.getPremiumPaid()))
+            .toList();
+        long matched=matchedPolicies.size();
+        int unpaid=thresholdMatched.size()-matchedPolicies.size();
+        String unpaidNote=unpaid==0?"":" "+unpaid+" policy(ies) crossed the threshold but were skipped because the premium is unpaid.";
         CurrentMeasurementResult base=CurrentMeasurementResult.builder()
             .matched(matched>0).productId(product.getProductId()).productCode(product.getProductCode())
             .productName(product.getProductName()).locationZoneId(request.getLocationZoneId())
             .measurementType(product.getMeasurementType()).measurementUnit(product.getMeasurementUnit())
             .currentValue(request.getCurrentValue()).currentProductThresholdValue(product.getThresholdValue())
             .comparisonOperator(product.getComparisonOperator()).activePolicyCount(policies.size())
-            .matchedPolicyCount((int)matched).build();
+            .matchedPolicyCount((int)matched).unpaidPolicyCount(unpaid).build();
         if(matched==0){
-            base.setMessage("The current measurement did not match any active policy trigger.");
+            base.setMessage(unpaid==0
+                ?"The current measurement did not match any active policy trigger."
+                :"No automatic claim was created."+unpaidNote);
             return Mono.just(base);
         }
         LocalDateTime now=LocalDateTime.now();
+        int windowHours=product.getObservationWindowHours()!=null&&product.getObservationWindowHours()>0
+            ?product.getObservationWindowHours():24;
+        LocalDateTime windowStart=now.minusHours(windowHours);
         MeasurementType resolvedType=resolveMeasurementType(product.getMeasurementType());
         TriggerEvent event=TriggerEvent.builder().eventReference("TEV-"+UUID.randomUUID())
             .productId(product.getProductId()).locationZoneId(request.getLocationZoneId())
             .measurementType(resolvedType)
             .measurementUnit(unitFor(resolvedType))
             .aggregatedValue(request.getCurrentValue()).thresholdValue(product.getThresholdValue())
+            .windowStart(windowStart).windowEnd(now)
             .status(TriggerEventStatus.VERIFIED).detectedAt(now).recordedBy(recordedBy)
             .matchedPolicyCount((int)matched).claimsCreatedCount(0).notificationsCreatedCount(0)
             .idempotencyKey(request.getIdempotencyKey()).build();
-        java.util.List<ActivePolicyForTriggerResponse> matchedPolicies=policies.stream()
-            .filter(policy->policy.getTriggerSnapshot()!=null)
-            .filter(policy->compare(request.getCurrentValue(),policy.getTriggerSnapshot().getThresholdValue(),policy.getTriggerSnapshot().getComparisonOperator()))
-            .toList();
         return linkDefinitionAndPeril(event,product).then(triggerEventRepository.save(event)).flatMap(saved->
             claimsServiceClient.createClaimsFromTriggerEvent(ClaimCreationRequest.builder()
                 .triggerEventId(saved.getId()).triggerEventReference(saved.getEventReference())
@@ -175,6 +181,7 @@ public class MeasurementService{
                 .measurementType(product.getMeasurementType()).measurementUnit(product.getMeasurementUnit())
                 .measuredValue(request.getCurrentValue()).thresholdValue(product.getThresholdValue())
                 .comparisonOperator(product.getComparisonOperator())
+                .eventWindowStart(windowStart).eventWindowEnd(now)
                 .eligiblePolicies(matchedPolicies.stream().map(policy->ClaimCreationRequest.EligiblePolicyInfo.builder()
                     .policyId(policy.getPolicyId()).policyNumber(policy.getPolicyNumber()).customerId(policy.getCustomerId()).sumInsured(policy.getSumInsured()).build()).toList())
                 .build()).flatMap(response->{
@@ -186,7 +193,7 @@ public class MeasurementService{
                         base.setTriggerEventStatus(saved.getStatus().name());
                         base.setClaimsCreatedCount(response.getClaimsCreated());
                         base.setNotificationsCreatedCount(response.getClaimsCreated());
-                        base.setMessage("The current measurement matched "+matched+" active policy snapshot(s) and automatic claims were created.");
+                        base.setMessage("The current measurement matched "+matched+" active policy snapshot(s) and automatic claims were created."+unpaidNote);
                         return triggerEventRepository.save(saved).thenReturn(base);
                 }));
         }

@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -99,6 +100,8 @@ class ClaimServiceTest {
                 .thenReturn(Mono.empty());
         when(notificationService.audit(any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
+        when(financialServiceClient.isPremiumPaid(anyLong()))
+                .thenReturn(Mono.just(true));
 
         ReflectionTestUtils.setField(
                 claimService,
@@ -241,6 +244,30 @@ class ClaimServiceTest {
                             .isInstanceOf(NotFoundException.class);
                     assertThat(error.getMessage())
                             .isEqualTo("Policy not found");
+                })
+                .verify();
+
+        verifyNoInteractions(
+                claimRepository,
+                triggerEligibilityClient
+        );
+    }
+
+    @Test
+    void createClaim_whenPremiumIsUnpaid_shouldReturnValidationException() {
+        CreateClaimRequest request=createRequest();
+        mockPolicyResponse(policy());
+
+        when(financialServiceClient.isPremiumPaid(100L))
+                .thenReturn(Mono.just(false));
+
+        StepVerifier.create(claimService.createClaim(1L,request))
+                .expectErrorSatisfies(error->{
+                    assertThat(error)
+                            .isInstanceOf(ValidationException.class);
+                    assertThat(error.getMessage()).isEqualTo(
+                            "Premium for this policy has not been paid; pay it before filing a claim"
+                    );
                 })
                 .verify();
 
@@ -2031,6 +2058,42 @@ class ClaimServiceTest {
 
         verify(claimRepository).save(claim);
         verify(claimTimelineRepository).save(any(ClaimTimeline.class));
+    }
+
+    @Test
+    void settleFromPayout_whenClaimIsApproved_shouldSettleAsFinancialService() {
+        Claim claim=claim(1L,ClaimStatus.APPROVED);
+
+        when(claimRepository.findById(1L))
+                .thenReturn(Mono.just(claim));
+        when(claimRepository.save(claim))
+                .thenReturn(Mono.just(claim));
+        when(claimTimelineRepository.save(any(ClaimTimeline.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(claimService.settleFromPayout(1L,"PO-1"))
+                .assertNext(response->assertThat(response.getStatus())
+                        .isEqualTo("SETTLED"))
+                .verifyComplete();
+
+        verify(claimTimelineRepository).save(argThat(timeline->
+                "FINANCIAL_SERVICE".equals(timeline.getActionByRole())&&
+                        timeline.getNotes().contains("PO-1")));
+    }
+
+    @Test
+    void settleFromPayout_whenClaimIsAlreadySettled_shouldReturnItUnchanged() {
+        Claim claim=claim(1L,ClaimStatus.SETTLED);
+
+        when(claimRepository.findById(1L))
+                .thenReturn(Mono.just(claim));
+
+        StepVerifier.create(claimService.settleFromPayout(1L,"PO-1"))
+                .assertNext(response->assertThat(response.getStatus())
+                        .isEqualTo("SETTLED"))
+                .verifyComplete();
+
+        verify(claimRepository,never()).save(any());
     }
 
     @Test

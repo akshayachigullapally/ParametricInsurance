@@ -74,6 +74,9 @@ public class SecurityConfig{
                                 "/internal/claims",
                                 "/internal/claims/from-trigger-event"
                         ).permitAll()
+                        .pathMatchers(HttpMethod.PUT,
+                                "/internal/claims/{claimId:[0-9]+}/settle"
+                        ).permitAll()
                         .anyExchange().denyAll()
                 )
                 .addFilterAt(

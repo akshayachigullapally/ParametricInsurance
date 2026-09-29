@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -66,6 +67,8 @@ class PayoutServiceTest{
         when(notifications.notifyPayoutRetry(
                 any(),any(),any(),any()
         )).thenReturn(Mono.empty());
+        when(claimsServiceClient.settleClaim(any(),any()))
+                .thenReturn(Mono.empty());
         when(triggerServiceClient.markEventProcessed(
                 any()
         )).thenReturn(Mono.empty());
@@ -238,6 +241,9 @@ class PayoutServiceTest{
                             .isEqualTo("BANK-1");
                 })
                 .verifyComplete();
+
+        verify(claimsServiceClient).settleClaim(
+                payout.getClaimId(),payout.getPayoutReference());
     }
 
     @Test

@@ -301,6 +301,8 @@ public class DemoObservationService{
                         event.getWindowStart(),
                         event.getWindowEnd(),
                         event.getId())
+                // Only policies with a paid premium are covered.
+                .filter(policy->Boolean.TRUE.equals(policy.getPremiumPaid()))
                 .collectList()
                 .<DemoObservationResponse>flatMap(eligiblePolicies->{
                     if(request.isCreateAutomaticClaims()&&!eligiblePolicies.isEmpty()){

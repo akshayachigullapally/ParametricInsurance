@@ -170,6 +170,13 @@ public class ClaimHandler{
                 .flatMap(response->ServerResponse.ok().bodyValue(response));
     }
 
+    public Mono<ServerResponse> settleInternal(ServerRequest request){
+        String payoutReference=request.queryParam("payoutReference").orElse("");
+        return parseClaimId(request)
+                .flatMap(claimId->claimService.settleFromPayout(claimId,payoutReference))
+                .flatMap(response->ServerResponse.ok().bodyValue(response));
+    }
+
     public Mono<ServerResponse> getMyClaimTimeline(ServerRequest request){
         return parseClaimId(request)
                 .flatMap(claimId->SecurityUtil.getUserId(request)

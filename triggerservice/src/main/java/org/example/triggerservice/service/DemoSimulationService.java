@@ -139,33 +139,21 @@ public class DemoSimulationService{
         return observationRepository.save(observation);
     }
 
-    private BigDecimal valuePerReading(
+    BigDecimal valuePerReading(
             TriggerDefinition definition,
             int count
     ){
         boolean lessMode=isLessMode(definition.getComparisonOperator());
-        AggregationType aggregation=definition.getAggregationType();
-
-        if(!lessMode&&(aggregation==AggregationType.SUM||
-                aggregation==AggregationType.AVERAGE)){
-            return definition.getThresholdValue()
-                    .multiply(CROSS_MARGIN)
-                    .divide(BigDecimal.valueOf(count),
-                            4,
-                            RoundingMode.HALF_UP);
-        }
-
-        if(lessMode&&(aggregation==AggregationType.SUM||
-                aggregation==AggregationType.AVERAGE)){
-            return definition.getThresholdValue()
-                    .multiply(BELOW_MARGIN)
-                    .divide(BigDecimal.valueOf(count),
-                            4,
-                            RoundingMode.HALF_UP);
-        }
-
-        return definition.getThresholdValue()
+        BigDecimal target=definition.getThresholdValue()
                 .multiply(lessMode?BELOW_MARGIN:CROSS_MARGIN);
+
+        // Only a SUM spreads the target across readings; AVERAGE, MIN, MAX and
+        // LATEST all need every reading to sit at the target itself.
+        if(definition.getAggregationType()==AggregationType.SUM){
+            return target.divide(BigDecimal.valueOf(count),4,RoundingMode.HALF_UP);
+        }
+
+        return target;
     }
 
     private boolean isLessMode(ComparisonOperator operator){

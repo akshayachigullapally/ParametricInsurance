@@ -23,6 +23,8 @@ public class CurrentMeasurementResult{
     private String triggerEventStatus;
     private int activePolicyCount;
     private int matchedPolicyCount;
+    /** Policies whose threshold was crossed but got no claim because the premium is unpaid. */
+    private int unpaidPolicyCount;
     private int claimsCreatedCount;
     private int existingClaimsCount;
     private int notificationsCreatedCount;

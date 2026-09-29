@@ -42,4 +42,26 @@ public class ClaimsServiceClient{
                 )
                 .bodyToMono(InternalClaimResponse.class);
     }
+
+    /**
+     * Moves the claim to SETTLED once its payout succeeded. A failure is logged,
+     * never propagated: the money has already been paid.
+     */
+    public Mono<Void> settleClaim(Long claimId,String payoutReference){
+        return webClient.put()
+                .uri(uriBuilder->uriBuilder
+                        .path("/internal/claims/{claimId}/settle")
+                        .queryParam("payoutReference",payoutReference)
+                        .build(claimId))
+                .retrieve()
+                .toBodilessEntity()
+                .doOnSuccess(ignored->log.info(
+                        "Claim {} settled after payout {}",claimId,payoutReference))
+                .onErrorResume(error->{
+                    log.warn("Could not settle claim {} after payout {}: {}",
+                            claimId,payoutReference,error.getMessage());
+                    return Mono.empty();
+                })
+                .then();
+    }
 }

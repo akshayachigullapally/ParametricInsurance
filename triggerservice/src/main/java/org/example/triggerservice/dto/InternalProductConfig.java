@@ -17,5 +17,6 @@ public class InternalProductConfig{
     private String measurementUnit;
     private BigDecimal thresholdValue;
     private String comparisonOperator;
+    private Integer observationWindowHours;
     private String triggerDescription;
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.client.TriggerServiceClient;
 import org.example.productservice.client.ClaimsServiceClient;
+import org.example.productservice.client.FinancialServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.ConflictException;
 import org.example.productservice.exception.NotFoundException;
@@ -34,6 +35,7 @@ public class ProductService{
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
     private final ClaimsServiceClient claimsServiceClient;
+    private final FinancialServiceClient financialServiceClient;
     private final PolicyRepository policyRepository;
         private final PolicyTriggerSnapshotRepository snapshotRepository;
     private final ProductThresholdHistoryRepository thresholdHistoryRepository;
@@ -314,9 +316,13 @@ public class ProductService{
                         && policy.getEndDate()!=null
                         && !policy.getStartDate().isAfter(eventEnd.toLocalDate())
                         && !policy.getEndDate().isBefore(eventStart.toLocalDate()))
-                .flatMap(policy->snapshotRepository.findByPolicyId(policy.getId())
-                        .defaultIfEmpty(new PolicyTriggerSnapshot())
-                        .map(snapshot->EligiblePolicyResponse.builder()
+                .flatMap(policy->Mono.zip(
+                                snapshotRepository.findByPolicyId(policy.getId())
+                                        .defaultIfEmpty(new PolicyTriggerSnapshot()),
+                                financialServiceClient.isPremiumPaid(policy.getId()))
+                        .map(tuple->{
+                                PolicyTriggerSnapshot snapshot=tuple.getT1();
+                                return EligiblePolicyResponse.builder()
                                 .policyId(policy.getId())
                                 .policyNumber(policy.getPolicyNumber())
                                 .customerId(policy.getCustomerId())
@@ -328,6 +334,7 @@ public class ProductService{
                                 .startDate(policy.getStartDate().atStartOfDay())
                                 .endDate(policy.getEndDate().plusDays(1).atStartOfDay())
                                 .status(policy.getStatus())
+                                .premiumPaid(tuple.getT2())
                                 .triggerSnapshot(EligiblePolicyResponse.TriggerSnapshotResponse.builder()
                                         .measurementType(snapshot.getMeasurementType())
                                         .measurementUnit(snapshot.getMeasurementUnit())
@@ -337,7 +344,8 @@ public class ProductService{
                                         .observationWindowHours(snapshot.getObservationWindowHours())
                                         .minimumObservationCount(snapshot.getMinimumObservationCount())
                                         .build())
-                                .build()));
+                                .build();
+                        }));
     }
 
     public Mono<Boolean> hasActivePoliciesForZone(Long locationZoneId){

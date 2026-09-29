@@ -60,9 +60,13 @@ public class ClaimService{
     public Mono<ClaimResponse> createClaim(Long customerId,CreateClaimRequest request){
         log.info("Create claim: customerId={}",customerId);
         return getPolicy(request.getPolicyId())
+                .doOnNext(policy->validatePolicy(policy,customerId,request))
+                .flatMap(policy->financialServiceClient.isPremiumPaid(policy.getId())
+                        .flatMap(paid->paid
+                                ?Mono.just(policy)
+                                :Mono.error(new ValidationException(
+                                        "Premium for this policy has not been paid; pay it before filing a claim"))))
                 .flatMap(policy->{
-                    validatePolicy(policy,customerId,request);
-
                     if(isManualException(request)){
                         return createManualExceptionClaim(
                                 customerId,request,policy
@@ -536,7 +540,35 @@ public class ClaimService{
             Long claimId,
             SettleClaimRequest request
     ){
-        log.info("Settle claim: officerId={}, claimId={}",officerId,claimId);
+        return settle(officerId,"CLAIMS_OFFICER",claimId,request);
+    }
+
+    /**
+     * Called by the financial service once the claim's payout succeeds. Idempotent:
+     * an already settled claim is returned unchanged.
+     */
+    @Transactional
+    public Mono<ClaimResponse> settleFromPayout(Long claimId,String payoutReference){
+        return claimRepository.findById(claimId)
+                .switchIfEmpty(Mono.error(
+                        new NotFoundException("Claim not found")
+                ))
+                .flatMap(claim->ClaimStatus.SETTLED.name().equals(claim.getStatus())
+                        ?Mono.just(toResponse(claim))
+                        :settle(null,"FINANCIAL_SERVICE",claimId,
+                                SettleClaimRequest.builder()
+                                        .notes("Settled automatically after payout "
+                                                +payoutReference+" succeeded")
+                                        .build()));
+    }
+
+    private Mono<ClaimResponse> settle(
+            Long officerId,
+            String actorRole,
+            Long claimId,
+            SettleClaimRequest request
+    ){
+        log.info("Settle claim: by={} ({}), claimId={}",officerId,actorRole,claimId);
         return claimRepository.findById(claimId)
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Claim not found")
@@ -565,7 +597,7 @@ public class ClaimService{
                                     ClaimStatus.SETTLED.name(),
                                     "CLAIM_SETTLED",
                                     officerId,
-                                    "CLAIMS_OFFICER",
+                                    actorRole,
                                     notes
                             )                            .thenReturn(saved));
                 })

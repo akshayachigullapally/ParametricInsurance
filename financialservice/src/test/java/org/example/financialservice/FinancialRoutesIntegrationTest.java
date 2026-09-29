@@ -77,6 +77,8 @@ class FinancialRoutesIntegrationTest{
                 .thenReturn(Mono.empty());
         when(triggerServiceClient.markEventProcessed(anyLong()))
                 .thenReturn(Mono.empty());
+        when(claimsServiceClient.settleClaim(any(),any()))
+                .thenReturn(Mono.empty());
         when(claimsServiceClient.findClaim(anyLong()))
                 .thenReturn(Mono.just(InternalClaimResponse.builder()
                         .claimId(10L)

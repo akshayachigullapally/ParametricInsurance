@@ -24,6 +24,8 @@ public class EligiblePolicyResponse {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String status;
+    /** True when the policy's latest premium payment succeeded; unpaid policies must not be paid out. */
+    private Boolean premiumPaid;
     private TriggerSnapshotResponse triggerSnapshot;
 
     @Data

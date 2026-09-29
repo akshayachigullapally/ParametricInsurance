@@ -136,4 +136,24 @@ public class FinancialServiceClient{
                     return Mono.empty();
                 });
     }
+
+    /**
+     * Whether the policy's latest premium payment succeeded. Any failure to
+     * reach the financial service counts as unpaid, so an unverified policy
+     * is never paid out.
+     */
+    public Mono<Boolean> isPremiumPaid(Long policyId){
+        return financialServiceWebClient.get()
+                .uri("/internal/financial/payments/policy/{policyId}/status",policyId)
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .retrieve()
+                .bodyToMono(java.util.Map.class)
+                .map(body->Boolean.TRUE.equals(body.get("successful")))
+                .defaultIfEmpty(false)
+                .onErrorResume(error->{
+                    log.warn("Payment status unavailable for policy {}: {}",
+                            policyId,error.getMessage());
+                    return Mono.just(false);
+                });
+    }
 }

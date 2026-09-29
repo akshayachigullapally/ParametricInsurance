@@ -24,6 +24,7 @@ public class EligiblePolicyResponse {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String status;
+    private Boolean premiumPaid;
     private TriggerSnapshotResponse triggerSnapshot;
 
     @Data

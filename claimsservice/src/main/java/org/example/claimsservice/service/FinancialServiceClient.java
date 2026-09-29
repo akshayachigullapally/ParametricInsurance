@@ -37,4 +37,21 @@ public class FinancialServiceClient{
                 ))
                 .onErrorResume(error->Mono.empty());
     }
+
+    /** Whether the policy's latest premium payment succeeded; unreachable counts as unpaid. */
+    public Mono<Boolean> isPremiumPaid(Long policyId){
+        return loadBalancedWebClientBuilder.build()
+                .get()
+                .uri("http://FINANCIAL-SERVICE/internal/financial/payments/policy/{policyId}/status",policyId)
+                .header(GatewayHeaders.GATEWAY_KEY,internalKey)
+                .retrieve()
+                .bodyToMono(java.util.Map.class)
+                .map(body->Boolean.TRUE.equals(body.get("successful")))
+                .defaultIfEmpty(false)
+                .onErrorResume(error->{
+                    log.warn("Payment status unavailable for policy {}: {}",
+                            policyId,error.getMessage());
+                    return Mono.just(false);
+                });
+    }
 }
