@@ -300,6 +300,9 @@
 package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.triggerservice.dto.ZoneAlertRequest;
+import org.example.triggerservice.util.AuditDiff;
+import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.InternalZoneResponse;
@@ -471,6 +474,8 @@ public class LocationZoneService{
                                         );
                                     }
 
+                                    java.util.Map<String,Object> before=auditFields(zone);
+
                                     zone.setZoneCode(request.getZoneCode());
                                     zone.setZoneName(request.getZoneName());
                                     zone.setCountry(request.getCountry());
@@ -483,13 +488,17 @@ public class LocationZoneService{
                                     zone.setUpdatedBy(userId);
                                     zone.setUpdatedAt(LocalDateTime.now());
 
-                                    return locationZoneRepository.save(zone);
+                                    return locationZoneRepository.save(zone)
+                                            .flatMap(saved->{
+                                                AuditDiff diff=AuditDiff.of(before,auditFields(saved));
+                                                return notificationService.auditChange(
+                                                        "ZONE_UPDATED","LOCATION_ZONE",saved.getId(),userId,
+                                                        "Updated location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")",
+                                                        diff.before(),diff.after()
+                                                ).thenReturn(saved);
+                                            });
                                 })
                 )
-                .flatMap(saved->notificationService.audit(
-                        "ZONE_UPDATED","LOCATION_ZONE",saved.getId(),userId,
-                        "Updated location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")"
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -519,16 +528,19 @@ public class LocationZoneService{
                         );
                     }
 
+                    LocationZoneStatus oldStatus=zone.getStatus();
                     zone.setStatus(status);
                     zone.setUpdatedBy(userId);
                     zone.setUpdatedAt(LocalDateTime.now());
 
-                    return locationZoneRepository.save(zone);
+                    return locationZoneRepository.save(zone)
+                            .flatMap(saved->notificationService.auditChange(
+                                    "ZONE_STATUS_CHANGED","LOCATION_ZONE",saved.getId(),userId,
+                                    "Changed status of location zone "+saved.getZoneCode()+" to "+saved.getStatus(),
+                                    "Status: "+oldStatus,
+                                    "Status: "+saved.getStatus()
+                            ).thenReturn(saved));
                 })
-                .flatMap(saved->notificationService.audit(
-                        "ZONE_STATUS_CHANGED","LOCATION_ZONE",saved.getId(),userId,
-                        "Changed status of location zone "+saved.getZoneCode()+" to "+saved.getStatus()
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -639,6 +651,10 @@ public class LocationZoneService{
                 .createdAt(zone.getCreatedAt())
                 .updatedBy(zone.getUpdatedBy())
                 .updatedAt(zone.getUpdatedAt())
+                .weatherAlert(Boolean.TRUE.equals(zone.getWeatherAlert()))
+                .alertMessage(zone.getAlertMessage())
+                .alertRaisedAt(zone.getAlertRaisedAt())
+                .maxExposure(zone.getMaxExposure())
                 .build();
     }
 
@@ -655,6 +671,92 @@ public class LocationZoneService{
                 .longitude(zone.getLongitude())
                 .radiusKm(zone.getRadiusKm())
                 .status(zone.getStatus().name())
+                .weatherAlert(Boolean.TRUE.equals(zone.getWeatherAlert()))
+                .alertMessage(zone.getAlertMessage())
+                .alertRaisedAt(zone.getAlertRaisedAt())
+                .maxExposure(zone.getMaxExposure())
                 .build();
+    }
+
+    /** Raises or clears the zone's weather alert; while raised no new policies can be sold there. */
+    public Mono<LocationZoneResponse> updateAlert(Long zoneId,ZoneAlertRequest request,Long userId){
+        log.info("Update alert [location zone]: zoneId={}, active={}, userId={}",zoneId,request.getActive(),userId);
+        boolean raise=Boolean.TRUE.equals(request.getActive());
+        String message=StringUtils.hasText(request.getMessage())
+                ?request.getMessage().trim()
+                :"Weather alert in effect";
+
+        return findAvailableZone(zoneId)
+                .flatMap(zone->{
+                    boolean wasRaised=Boolean.TRUE.equals(zone.getWeatherAlert());
+                    if(!raise&&!wasRaised){
+                        return Mono.error(new ConflictException("Location zone has no active weather alert"));
+                    }
+                    String before=alertText(zone);
+                    LocalDateTime now=LocalDateTime.now();
+                    zone.setWeatherAlert(raise);
+                    zone.setAlertMessage(raise?message:null);
+                    zone.setAlertRaisedAt(raise?(wasRaised?zone.getAlertRaisedAt():now):null);
+                    zone.setUpdatedBy(userId);
+                    zone.setUpdatedAt(now);
+                    return locationZoneRepository.save(zone)
+                            .flatMap(saved->notificationService.auditChange(
+                                    raise?"ZONE_ALERT_RAISED":"ZONE_ALERT_CLEARED",
+                                    "LOCATION_ZONE",saved.getId(),userId,
+                                    (raise?"Raised weather alert for ":"Cleared weather alert for ")
+                                            +saved.getZoneName()+" ("+saved.getZoneCode()+")",
+                                    before,
+                                    alertText(saved)
+                            ).thenReturn(saved));
+                })
+                .map(this::toResponse);
+    }
+
+    /** Sets (or with null removes) the maximum total sum insured the zone may carry. */
+    public Mono<LocationZoneResponse> updateExposureCap(Long zoneId,BigDecimal maxExposure,Long userId){
+        log.info("Update exposure cap [location zone]: zoneId={}, maxExposure={}, userId={}",zoneId,maxExposure,userId);
+        if(maxExposure!=null&&maxExposure.signum()<=0){
+            return Mono.error(new ValidationException("Exposure cap must be greater than zero"));
+        }
+
+        return findAvailableZone(zoneId)
+                .flatMap(zone->{
+                    BigDecimal previous=zone.getMaxExposure();
+                    zone.setMaxExposure(maxExposure);
+                    zone.setUpdatedBy(userId);
+                    zone.setUpdatedAt(LocalDateTime.now());
+                    return locationZoneRepository.save(zone)
+                            .flatMap(saved->notificationService.auditChange(
+                                    "ZONE_EXPOSURE_CAP_CHANGED","LOCATION_ZONE",saved.getId(),userId,
+                                    "Changed exposure cap of "+saved.getZoneName()+" ("+saved.getZoneCode()+")",
+                                    "Exposure cap: "+capText(previous),
+                                    "Exposure cap: "+capText(maxExposure)
+                            ).thenReturn(saved));
+                })
+                .map(this::toResponse);
+    }
+
+    private static String alertText(LocationZone zone){
+        return Boolean.TRUE.equals(zone.getWeatherAlert())
+                ?"Weather alert: ON ("+zone.getAlertMessage()+")"
+                :"Weather alert: OFF";
+    }
+
+    private static String capText(BigDecimal cap){
+        return cap==null?"No cap":"₹"+cap.stripTrailingZeros().toPlainString();
+    }
+
+    private java.util.Map<String,Object> auditFields(LocationZone zone){
+        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
+        fields.put("Code",zone.getZoneCode());
+        fields.put("Name",zone.getZoneName());
+        fields.put("Country",zone.getCountry());
+        fields.put("State",zone.getState());
+        fields.put("District",zone.getDistrict());
+        fields.put("Postal code",zone.getPostalCode());
+        fields.put("Latitude",zone.getLatitude());
+        fields.put("Longitude",zone.getLongitude());
+        fields.put("Radius (km)",zone.getRadiusKm());
+        return fields;
     }
 }

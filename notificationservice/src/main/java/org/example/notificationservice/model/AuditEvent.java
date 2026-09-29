@@ -21,5 +21,7 @@ public class AuditEvent{
 @Column("entity_id") private Long entityId;
 private String description;
 @Column("correlation_id") private String correlationId;
+@Column("old_value") private String oldValue;
+@Column("new_value") private String newValue;
 @Column("created_at") private LocalDateTime createdAt;
 }

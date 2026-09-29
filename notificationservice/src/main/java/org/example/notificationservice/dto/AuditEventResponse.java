@@ -12,4 +12,4 @@ public class AuditEventResponse{
     private Long id;
     private String eventReference;
     private String eventType;
-    private Long actorUserId; private String actorRole; private String entityType; private Long entityId; private String description; private String correlationId; private LocalDateTime createdAt;}
+    private Long actorUserId; private String actorRole; private String entityType; private Long entityId; private String description; private String correlationId; private String oldValue; private String newValue; private LocalDateTime createdAt;}

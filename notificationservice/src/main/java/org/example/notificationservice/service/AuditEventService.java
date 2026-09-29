@@ -36,6 +36,8 @@ public class AuditEventService {
                 .entityId(r.getEntityId())
                 .description(r.getDescription().trim())
                 .correlationId(r.getCorrelationId())
+                .oldValue(trimToNull(r.getOldValue()))
+                .newValue(trimToNull(r.getNewValue()))
                 .createdAt(LocalDateTime.now())
                 .build();
         return repository.save(e).map(this::response);
@@ -87,7 +89,13 @@ public class AuditEventService {
                 .entityId(e.getEntityId())
                 .description(e.getDescription())
                 .correlationId(e.getCorrelationId())
+                .oldValue(e.getOldValue())
+                .newValue(e.getNewValue())
                 .createdAt(e.getCreatedAt())
                 .build();
+    }
+
+    private static String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

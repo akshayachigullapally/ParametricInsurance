@@ -62,4 +62,16 @@ public class LocationZone{
 
     @Column("updated_at")
     private LocalDateTime updatedAt;
+
+    @Column("weather_alert")
+    private Boolean weatherAlert;
+
+    @Column("alert_message")
+    private String alertMessage;
+
+    @Column("alert_raised_at")
+    private LocalDateTime alertRaisedAt;
+
+    @Column("max_exposure")
+    private BigDecimal maxExposure;
 }

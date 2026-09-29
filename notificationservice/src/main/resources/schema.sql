@@ -79,6 +79,9 @@ CREATE TABLE IF NOT EXISTS audit_events(
     correlation_id VARCHAR(100),
     created_at TIMESTAMP NOT NULL
 );
+-- Before/after values of the audited change, e.g. "Threshold: 150 mm" -> "Threshold: 200 mm".
+ALTER TABLE audit_events ADD COLUMN IF NOT EXISTS old_value VARCHAR(1000);
+ALTER TABLE audit_events ADD COLUMN IF NOT EXISTS new_value VARCHAR(1000);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(entity_type,entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_events(actor_user_id,created_at);

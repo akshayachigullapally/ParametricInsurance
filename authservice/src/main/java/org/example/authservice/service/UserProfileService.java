@@ -139,20 +139,23 @@ public class UserProfileService{
                                 "User profile not found"
                         )))
                         .flatMap(profile->{
+                            String oldStatus=profile.getStatus();
                             log.info("User status changed userId={} {} -> {}",
-                                    authUserId,profile.getStatus(),status);
+                                    authUserId,oldStatus,status);
                             profile.setStatus(status);
                             profile.setUpdatedAt(LocalDateTime.now());
 
                             return profileRepository.save(profile)
                                     .flatMap(savedProfile->
                                             buildUserResponse(user,savedProfile)
-                                    );
-                        }))
-                .flatMap(response->notificationServiceClient.audit(
-                        "USER_STATUS_CHANGED","USER",authUserId,null,null,
-                        "Changed status of user "+response.getEmail()+" to "+status
-                ).thenReturn(response));
+                                    )
+                                    .flatMap(response->notificationServiceClient.auditChange(
+                                            "USER_STATUS_CHANGED","USER",authUserId,null,null,
+                                            "Changed status of user "+response.getEmail()+" to "+status,
+                                            "Status: "+oldStatus,
+                                            "Status: "+status
+                                    ).thenReturn(response));
+                        }));
     }
 
     private Mono<UserProfile> saveOrUpdateProfile(

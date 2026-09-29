@@ -11,6 +11,7 @@ import org.example.productservice.exception.NotFoundException;
 import org.example.productservice.exception.ValidationException;
 import org.example.productservice.model.*;
 import org.example.productservice.repository.*;
+import org.example.productservice.util.AuditDiff;
 import org.example.productservice.util.TriggerDescriptionGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -202,6 +203,8 @@ public class ProductService{
                                         );
                                     }
 
+                                    java.util.Map<String,Object> fieldsBefore=auditFields(product);
+
                                     product.setProductCode(code);
                                     product.setName(request.getName().trim());
                                     product.setDescription(
@@ -262,11 +265,15 @@ public class ProductService{
                                             .flatMap(resp -> notificationService.notifyProductUpdated(
                                                     resp.getId(), resp.getName()
                                             ).thenReturn(resp))
-                                            .flatMap(resp -> notificationService.audit(
-                                                    "PRODUCT_UPDATED", "PRODUCT", resp.getId(), null,
-                                                    "Updated product " + resp.getName() +
-                                                            " (" + resp.getProductCode() + ")"
-                                            ).thenReturn(resp));
+                                            .flatMap(resp -> {
+                                                AuditDiff diff=AuditDiff.of(fieldsBefore,auditFields(product));
+                                                return notificationService.auditChange(
+                                                        "PRODUCT_UPDATED", "PRODUCT", resp.getId(), null,
+                                                        "Updated product " + resp.getName() +
+                                                                " (" + resp.getProductCode() + ")",
+                                                        diff.before(), diff.after()
+                                                ).thenReturn(resp);
+                                            });
                                 })
                 );
     }
@@ -377,17 +384,20 @@ public class ProductService{
                             ?requireNoOpenPolicies(productId)
                             :Mono.empty();
 
+                    String oldStatus=product.getStatus();
                     return archiveCheck.then(Mono.defer(()->{
                         product.setStatus(status);
                         product.setUpdatedAt(LocalDateTime.now());
                         return productRepository.save(product);
-                    }));
+                    }))
+                    .flatMap(saved->notificationService.auditChange(
+                            "PRODUCT_STATUS_CHANGED", "PRODUCT", saved.getId(), null,
+                            "Changed status of product " + saved.getProductCode() +
+                                    " to " + status,
+                            "Status: " + oldStatus,
+                            "Status: " + status
+                    ).thenReturn(saved));
                 })
-                .flatMap(product->notificationService.audit(
-                        "PRODUCT_STATUS_CHANGED", "PRODUCT", product.getId(), null,
-                        "Changed status of product " + product.getProductCode() +
-                                " to " + status
-                ).thenReturn(product))
                 .flatMap(product->buildResponse(product,false));
     }
 
@@ -468,12 +478,18 @@ public class ProductService{
                                     request.getChangeReason()
                             )
                             .then(productRepository.save(product))
-                            .flatMap(saved->notificationService.audit(
-                                    "PRODUCT_THRESHOLD_UPDATED", "PRODUCT", saved.getId(), adminId,
-                                    "Changed trigger threshold of product " + saved.getProductCode() +
-                                            " from " + previous.thresholdValue() +
-                                            " to " + saved.getThresholdValue()
-                            ).thenReturn(saved))
+                            .flatMap(saved->{
+                                AuditDiff diff=AuditDiff.of(
+                                        triggerAuditFields(previous),
+                                        triggerAuditFields(snapshotOf(saved)));
+                                return notificationService.auditChange(
+                                        "PRODUCT_THRESHOLD_UPDATED", "PRODUCT", saved.getId(), adminId,
+                                        "Changed trigger threshold of product " + saved.getProductCode() +
+                                                " from " + previous.thresholdValue() +
+                                                " to " + saved.getThresholdValue(),
+                                        diff.before(), diff.after()
+                                ).thenReturn(saved);
+                            })
                             .map(saved->ProductThresholdUpdateResponse.builder()
                                     .productId(saved.getId())
                                     .productCode(saved.getProductCode())
@@ -1189,6 +1205,35 @@ public class ProductService{
                 StringUtils.hasText(product.getAggregationType())&&
                 product.getObservationWindowHours()!=null&&
                 product.getMinimumObservationCount()!=null;
+    }
+
+    /** Product fields shown in the audit log as before/after values. */
+    private java.util.Map<String,Object> auditFields(Product product){
+        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
+        fields.put("Code",product.getProductCode());
+        fields.put("Name",product.getName());
+        fields.put("Category",product.getCategory());
+        fields.put("Min sum insured",product.getMinimumSumInsured());
+        fields.put("Max sum insured",product.getMaximumSumInsured());
+        fields.put("Min term (months)",product.getMinimumTermMonths());
+        fields.put("Max term (months)",product.getMaximumTermMonths());
+        fields.putAll(triggerAuditFields(snapshotOf(product)));
+        return fields;
+    }
+
+    private java.util.Map<String,Object> triggerAuditFields(TriggerSnapshotValues values){
+        String unit=values.measurementUnit()==null?"":" "+values.measurementUnit();
+        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
+        fields.put("Peril",values.perilCode());
+        fields.put("Measurement",values.measurementType());
+        fields.put("Threshold",values.thresholdValue()==null
+                ?null
+                :values.thresholdValue().stripTrailingZeros().toPlainString()+unit);
+        fields.put("Operator",values.comparisonOperator());
+        fields.put("Aggregation",values.aggregationType());
+        fields.put("Window (hours)",values.observationWindowHours());
+        fields.put("Min observations",values.minimumObservationCount());
+        return fields;
     }
 
     private TriggerSnapshotValues snapshotOf(Product product){

@@ -93,6 +93,46 @@ class AuditEventServiceTest {
     }
 
     @Test
+    void create_withBeforeAndAfterValues_storesAndReturnsThem() {
+        InternalAuditEventRequest request = InternalAuditEventRequest.builder()
+                .eventType("PRODUCT_THRESHOLD_UPDATED")
+                .entityType("PRODUCT")
+                .entityId(1L)
+                .description("Changed trigger threshold of product WEATHER-001 from 150 to 200")
+                .oldValue(" Threshold: 150 mm ")
+                .newValue("Threshold: 200 mm")
+                .build();
+
+        when(repository.save(any(AuditEvent.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(service.create(request))
+                .assertNext(response -> {
+                    assertThat(response.getOldValue()).isEqualTo("Threshold: 150 mm");
+                    assertThat(response.getNewValue()).isEqualTo("Threshold: 200 mm");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void create_withoutChangeValues_leavesThemEmpty() {
+        InternalAuditEventRequest request = InternalAuditEventRequest.builder()
+                .eventType("POLICY_CREATED")
+                .entityType("POLICY")
+                .description("Policy was created")
+                .oldValue("  ")
+                .build();
+
+        when(repository.save(any(AuditEvent.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(service.create(request))
+                .assertNext(response -> {
+                    assertThat(response.getOldValue()).isNull();
+                    assertThat(response.getNewValue()).isNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
     void create_titleAndMessageTrimmed() {
         InternalAuditEventRequest request = InternalAuditEventRequest.builder()
                 .eventType("  POLICY_CREATED  ")

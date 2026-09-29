@@ -1,5 +1,7 @@
 package org.example.financialservice.service;
 
+import org.example.financialservice.util.AuditDiff;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -140,6 +142,8 @@ public class PricingRuleService{
                                 );
                             }
 
+                            java.util.Map<String,Object> before=auditFields(rule);
+
                             rule.setProductId(request.getProductId());
                             rule.setBaseAnnualRate(
                                     request.getBaseAnnualRate()
@@ -163,16 +167,21 @@ public class PricingRuleService{
                             rule.setUpdatedBy(actor);
                             rule.setUpdatedAt(LocalDateTime.now());
 
-                            return repository.save(rule);
+                            return repository.save(rule)
+                                    .flatMap(saved->{
+                                        AuditDiff diff=AuditDiff.of(before,auditFields(saved));
+                                        return notifications.auditChange(
+                                                "PRICING_RULE_UPDATED",
+                                                "PRICING_RULE",
+                                                saved.getId(),
+                                                saved.getUpdatedBy(),
+                                                pricingDetails(saved),
+                                                diff.before(),
+                                                diff.after()
+                                        ).thenReturn(saved);
+                                    });
                         })
                 )
-                .flatMap(saved->notifications.audit(
-                        "PRICING_RULE_UPDATED",
-                        "PRICING_RULE",
-                        saved.getId(),
-                        saved.getUpdatedBy(),
-                        pricingDetails(saved)
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyPricingRuleUpdated(
                                 saved.getUpdatedBy(),
@@ -188,6 +197,8 @@ public class PricingRuleService{
             UpdatePricingRuleStatusRequest request
     ){
         log.info("Update status [pricing rule]: ruleId={}",ruleId);
+        java.util.concurrent.atomic.AtomicReference<PricingRuleStatus> oldStatus=
+                new java.util.concurrent.atomic.AtomicReference<>();
         return SecurityUtil.requireAdmin()
                 .then(findEntity(ruleId))
                 .flatMap(rule->validateTransition(
@@ -200,6 +211,7 @@ public class PricingRuleService{
                         :Mono.just(rule))
                 .flatMap(rule->SecurityUtil.userId()
                         .flatMap(userId->{
+                            oldStatus.set(rule.getStatus());
                             rule.setStatus(request.getStatus());
                             rule.setUpdatedBy(userId);
                             rule.setUpdatedAt(LocalDateTime.now());
@@ -210,12 +222,14 @@ public class PricingRuleService{
                 .flatMap(saved->saved.getStatus()==PricingRuleStatus.ACTIVE
                         ?supersedeCurrentRules(saved).thenReturn(saved)
                         :Mono.just(saved))
-                .flatMap(saved->notifications.audit(
+                .flatMap(saved->notifications.auditChange(
                         "PRICING_RULE_STATUS_CHANGED",
                         "PRICING_RULE",
                         saved.getId(),
                         saved.getUpdatedBy(),
-                        "status="+saved.getStatus()
+                        "status="+saved.getStatus(),
+                        "Status: "+oldStatus.get(),
+                        "Status: "+saved.getStatus()
                 ).thenReturn(saved))
                 .map(this::response);
     }
@@ -448,5 +462,19 @@ public class PricingRuleService{
                 .updatedBy(rule.getUpdatedBy())
                 .updatedAt(rule.getUpdatedAt())
                 .build();
+    }
+
+    /** Rule fields shown in the audit log as before/after values. */
+    private java.util.Map<String,Object> auditFields(PricingRule rule){
+        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
+        fields.put("Product",rule.getProductId());
+        fields.put("Zone",rule.getLocationZoneId()==null?"All zones":rule.getLocationZoneId());
+        fields.put("Annual rate",rule.getBaseAnnualRate());
+        fields.put("Minimum premium",rule.getMinimumPremium());
+        fields.put("Term factor",rule.getTermFactor());
+        fields.put("Location factor",rule.getLocationFactor());
+        fields.put("Effective from",rule.getEffectiveFrom());
+        fields.put("Effective to",rule.getEffectiveTo());
+        return fields;
     }
 }

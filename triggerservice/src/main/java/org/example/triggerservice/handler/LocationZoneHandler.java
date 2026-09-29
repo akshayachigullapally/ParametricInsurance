@@ -113,6 +113,35 @@ public class LocationZoneHandler{
                                 .build()));
     }
 
+    public Mono<ServerResponse> updateAlert(ServerRequest request){
+        return requireAdmin()
+                .then(SecurityUtil.getUserId())
+                .switchIfEmpty(Mono.error(new ForbiddenException("Authenticated user ID is unavailable")))
+                .zipWith(parseId(request,"zoneId"))
+                .flatMap(tuple->request.bodyToMono(org.example.triggerservice.dto.ZoneAlertRequest.class)
+                        .switchIfEmpty(Mono.error(new ValidationException("Request body is required")))
+                        .flatMap(validationUtil::validate)
+                        .flatMap(body->locationZoneService.updateAlert(tuple.getT2(),body,tuple.getT1())))
+                .flatMap(response->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response));
+    }
+
+    public Mono<ServerResponse> updateExposureCap(ServerRequest request){
+        return requireAdmin()
+                .then(SecurityUtil.getUserId())
+                .switchIfEmpty(Mono.error(new ForbiddenException("Authenticated user ID is unavailable")))
+                .zipWith(parseId(request,"zoneId"))
+                .flatMap(tuple->request.bodyToMono(org.example.triggerservice.dto.ZoneExposureCapRequest.class)
+                        .switchIfEmpty(Mono.error(new ValidationException("Request body is required")))
+                        .flatMap(validationUtil::validate)
+                        .flatMap(body->locationZoneService.updateExposureCap(
+                                tuple.getT2(),body.getMaxExposure(),tuple.getT1())))
+                .flatMap(response->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response));
+    }
+
     private Mono<Void> requireAdmin(){
         return requireAnyRole(Set.of("ROLE_ADMIN"));
     }

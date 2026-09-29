@@ -26,6 +26,7 @@ class PolicyServiceTest{
     @Mock private NotificationService notificationService;
     @Mock private TriggerServiceClient triggerServiceClient;
     @Mock private org.example.productservice.client.FinancialServiceClient financialServiceClient;
+    @Mock private ZoneUnderwritingService zoneUnderwritingService;
     @InjectMocks private PolicyService policyService;
 
     private Product product;
@@ -76,6 +77,10 @@ class PolicyServiceTest{
         lenient().when(notificationService.notifyPolicyRejected(any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
         lenient().when(notificationService.notifyPolicyCancelled(any(),any(),any()))
+                .thenReturn(Mono.empty());
+        lenient().when(zoneUnderwritingService.checkCanSell(any(),any(),any()))
+                .thenReturn(Mono.empty());
+        lenient().when(notificationService.auditChange(any(),any(),any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
         lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());

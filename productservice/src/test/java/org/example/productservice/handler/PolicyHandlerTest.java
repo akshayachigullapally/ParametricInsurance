@@ -29,6 +29,7 @@ import static org.mockito.Mockito.*;
 class PolicyHandlerTest{
     @Autowired private WebTestClient webTestClient;
     @MockitoBean private PolicyService policyService;
+    @MockitoBean private org.example.productservice.service.ZoneUnderwritingService zoneUnderwritingService;
 
     private WebTestClient authClient(String role,String id){
         return webTestClient.mutate()

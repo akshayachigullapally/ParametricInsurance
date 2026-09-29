@@ -43,6 +43,7 @@ public class PolicyService{
     private final TriggerServiceClient triggerServiceClient;
     private final FinancialServiceClient financialServiceClient;
     private final ProductService productService;
+    private final ZoneUnderwritingService zoneUnderwritingService;
 
     @Transactional
     public Mono<PolicyResponse> createPolicy(
@@ -80,7 +81,13 @@ public class PolicyService{
                     validateSumInsured(product,request.getSumInsured());
                     validatePolicyTerm(product,request.getTermMonths());
 
-                    return policyRepository
+                    return zoneUnderwritingService.checkCanSell(
+                                    request.getLocationZoneId(),
+                                    request.getSumInsured(),
+                                    renewedFromPolicyId==null
+                                            ?java.util.List.of()
+                                            :java.util.List.of(renewedFromPolicyId))
+                            .then(policyRepository
                             .existsByCustomerIdAndProductIdAndStatus(
                                     customerId,
                                     product.getId(),
@@ -101,7 +108,7 @@ public class PolicyService{
                                                 premium,
                                                 renewedFromPolicyId
                                         ));
-                            });
+                            }));
                 }))
                 .map(this::toResponse)
                 .flatMap(resp -> notificationService.notifyPolicySubmitted(
@@ -466,7 +473,14 @@ public class PolicyService{
                         ));
                     }
 
-                    return renewalStartDate(policy).flatMap(startDate->{
+                    // Re-checked at approval: an alert may have been raised, or other
+                    // applications approved, since this one was submitted.
+                    java.util.List<Long> excluded=policy.getRenewedFromPolicyId()==null
+                            ?java.util.List.of(policy.getId())
+                            :java.util.List.of(policy.getId(),policy.getRenewedFromPolicyId());
+                    return zoneUnderwritingService.checkCanSell(
+                                    policy.getLocationZoneId(),policy.getSumInsured(),excluded)
+                            .then(renewalStartDate(policy)).flatMap(startDate->{
                     LocalDateTime now=LocalDateTime.now();
                     String oldStatus=policy.getStatus();
 

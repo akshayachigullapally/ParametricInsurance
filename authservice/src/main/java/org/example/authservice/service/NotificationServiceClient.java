@@ -41,12 +41,30 @@ public class NotificationServiceClient{
             String actorRole,
             String description
     ){
-        Mono<AuditEventRequest> request=actorUserId!=null
+        return auditChange(eventType,entityType,entityId,actorUserId,actorRole,description,null,null);
+    }
+
+    /** Audit entry that also records the value before and after the change. */
+    public Mono<Void> auditChange(
+            String eventType,
+            String entityType,
+            Long entityId,
+            Long actorUserId,
+            String actorRole,
+            String description,
+            String oldValue,
+            String newValue
+    ){
+        Mono<AuditEventRequest> request=(actorUserId!=null
                 ?Mono.just(build(eventType,entityType,entityId,actorUserId,actorRole,description))
                 :currentAuthentication()
                 .map(auth->build(eventType,entityType,entityId,
                         Long.valueOf(auth.getName()),roleOf(auth),description))
-                .defaultIfEmpty(build(eventType,entityType,entityId,null,"SYSTEM",description));
+                .defaultIfEmpty(build(eventType,entityType,entityId,null,"SYSTEM",description)))
+                .doOnNext(body->{
+                    body.setOldValue(oldValue);
+                    body.setNewValue(newValue);
+                });
 
         return request
                 .flatMap(body->webClient.post()

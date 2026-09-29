@@ -2,6 +2,7 @@ package org.example.triggerservice.dto;
 
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -19,4 +20,8 @@ public class InternalZoneResponse{
     private BigDecimal longitude;
     private BigDecimal radiusKm;
     private String status;
+    private Boolean weatherAlert;
+    private String alertMessage;
+    private LocalDateTime alertRaisedAt;
+    private BigDecimal maxExposure;
 }

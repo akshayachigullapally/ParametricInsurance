@@ -23,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PolicyHandler{
     private final PolicyService policyService;
+    private final org.example.productservice.service.ZoneUnderwritingService zoneUnderwritingService;
     private final Validator validator;
 
     public Mono<ServerResponse> createPolicy(ServerRequest request){
@@ -56,6 +57,13 @@ public class PolicyHandler{
                 .flatMap(zones -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(zones));
+    }
+
+    public Mono<ServerResponse> getZoneExposure(ServerRequest request){
+        return zoneUnderwritingService.exposureReport()
+                .flatMap(report -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(report));
     }
 
     public Mono<ServerResponse> getMyPolicies(ServerRequest request){

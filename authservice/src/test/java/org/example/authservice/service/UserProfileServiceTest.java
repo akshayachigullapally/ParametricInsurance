@@ -54,6 +54,8 @@ class UserProfileServiceTest {
                 addressRepository,
                 notificationServiceClient
         );
+        lenient().when(notificationServiceClient.auditChange(any(),any(),any(),any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
         lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
                 .thenReturn(reactor.core.publisher.Mono.empty());
     }

@@ -27,6 +27,19 @@ public class NotificationService{
             Long actorId,
             String details
     ){
+        return auditChange(eventType,entityType,entityId,actorId,details,null,null);
+    }
+
+    /** Audit entry that also records the value before and after the change. */
+    public Mono<Void> auditChange(
+            String eventType,
+            String entityType,
+            Long entityId,
+            Long actorId,
+            String details,
+            String oldValue,
+            String newValue
+    ){
         return currentActor()
                 .defaultIfEmpty(new AuditActor(actorId, actorId == null ? "SYSTEM" : null))
                 .flatMap(actor -> client.sendAuditEvent(AuditEventRequest.builder()
@@ -36,6 +49,8 @@ public class NotificationService{
                         .actorUserId(actor.userId())
                         .actorRole(actor.role())
                         .description(details)
+                        .oldValue(oldValue)
+                        .newValue(newValue)
                         .build()))
                 .onErrorResume(exception->{
                     log.warn(

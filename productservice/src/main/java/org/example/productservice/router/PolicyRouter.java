@@ -24,6 +24,10 @@ public class PolicyRouter{
                         handler::getAllPolicies
                 )
                 .GET(
+                        "/api/policies/admin/zone-exposure",
+                        handler::getZoneExposure
+                )
+                .GET(
                         "/api/policies/admin/{policyId}",
                         handler::getPolicy
                 )

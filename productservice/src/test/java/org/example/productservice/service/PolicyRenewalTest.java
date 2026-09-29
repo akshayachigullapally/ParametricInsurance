@@ -41,6 +41,7 @@ class PolicyRenewalTest{
     @Mock private NotificationService notificationService;
     @Mock private TriggerServiceClient triggerServiceClient;
     @Mock private FinancialServiceClient financialServiceClient;
+    @Mock private ZoneUnderwritingService zoneUnderwritingService;
     @InjectMocks private PolicyService policyService;
 
     @BeforeEach
@@ -66,6 +67,10 @@ class PolicyRenewalTest{
         lenient().when(notificationService.notifyPolicySubmitted(any(),any(),any())).thenReturn(Mono.empty());
         lenient().when(notificationService.notifyPolicyPendingReview(any(),any())).thenReturn(Mono.empty());
         lenient().when(notificationService.notifyPolicyApproved(any(),any(),any())).thenReturn(Mono.empty());
+        lenient().when(zoneUnderwritingService.checkCanSell(any(),any(),any()))
+                .thenReturn(Mono.empty());
+        lenient().when(notificationService.auditChange(any(),any(),any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
         lenient().when(notificationService.audit(any(),any(),any(),any(),any())).thenReturn(Mono.empty());
         lenient().when(financialServiceClient.calculatePremium(any(),any(),any(),any()))
                 .thenReturn(Mono.just(new BigDecimal("1875.00")));

@@ -28,4 +28,8 @@ public class LocationZoneResponse{
     private LocalDateTime createdAt;
     private Long updatedBy;
     private LocalDateTime updatedAt;
+    private Boolean weatherAlert;
+    private String alertMessage;
+    private LocalDateTime alertRaisedAt;
+    private BigDecimal maxExposure;
 }

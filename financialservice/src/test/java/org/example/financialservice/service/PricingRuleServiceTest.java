@@ -38,6 +38,9 @@ class PricingRuleServiceTest{
         triggerServiceClient=mock(TriggerServiceClient.class);
         notifications=mock(NotificationService.class);
 
+        when(notifications.auditChange(
+                anyString(),anyString(),any(),any(),anyString(),any(),any()
+        )).thenReturn(Mono.empty());
         when(notifications.audit(
                 anyString(),
                 anyString(),

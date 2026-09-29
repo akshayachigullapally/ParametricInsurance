@@ -550,3 +550,587 @@ com.netflix.discovery.shared.transport.TransportException: Cannot execute reques
 Using generated security password: d493ca43-617e-48b3-8014-c1b2bf51edcf
 
 2026-09-28T11:51:02.789+05:30  INFO 7064 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 4 endpoints beneath base path '/actuator'
+2026-09-29T15:49:17.863Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Starting NotificationRepositoryTest using Java 21.0.10 with PID 1607 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:49:17.870Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:49:17.881Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : The following 1 profile is active: "test"
+2026-09-29T15:49:19.850Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:49:20.903Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 995 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:49:25.224Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Started NotificationRepositoryTest in 9.38 seconds (process running for 21.511)
+2026-09-29T15:49:26.770Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.repository.AuditEventRepositoryTest]: AuditEventRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:26.806Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.repository.AuditEventRepositoryTest
+2026-09-29T15:49:26.807Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.repository.AuditEventRepositoryTest]: AuditEventRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:26.818Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.repository.AuditEventRepositoryTest
+2026-09-29T15:49:29.462Z ERROR 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.exception.GlobalErrorHandler       : Unhandled error on GET /api/notifications/me
+
+java.lang.RuntimeException: Something went wrong
+	at org.example.notificationservice.exception.GlobalErrorHandlerTest.handle_unexpectedException_returns500(GlobalErrorHandlerTest.java:92) ~[test-classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:701) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:502) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.support.MethodReflectionUtils.invoke(MethodReflectionUtils.java:45) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:61) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:124) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:163) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:148) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:123) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:105) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:99) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:66) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:47) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:39) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:104) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:98) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invokeVoid(InterceptingExecutableInvoker.java:71) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$0(TestMethodTestDescriptor.java:219) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:215) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:157) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125) ~[surefire-api-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.5.6.jar:3.5.6]
+
+2026-09-29T15:49:30.425Z ERROR 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.exception.GlobalErrorHandler       : Unhandled error on GET /api/notifications/me
+
+java.lang.RuntimeException: Internal DB password leaked
+	at org.example.notificationservice.exception.GlobalErrorHandlerTest.handle_unexpectedException_messageIsSanitized(GlobalErrorHandlerTest.java:105) ~[test-classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:701) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:502) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.support.MethodReflectionUtils.invoke(MethodReflectionUtils.java:45) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:61) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:124) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:163) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:148) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:123) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:105) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:99) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:66) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:47) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:39) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:104) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:98) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invokeVoid(InterceptingExecutableInvoker.java:71) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$0(TestMethodTestDescriptor.java:219) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:215) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:157) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125) ~[surefire-api-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.5.6.jar:3.5.6]
+
+2026-09-29T15:49:32.166Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:49:32.167Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:49:32.197Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=customer
+2026-09-29T15:49:32.209Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=5, actorRole=null
+2026-09-29T15:49:32.225Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=5, actorRole=null
+2026-09-29T15:49:32.246Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:49:32.247Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:49:32.260Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=  POLICY_CREATED  , entityType=  POLICY  , entityId=null
+2026-09-29T15:49:32.279Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Mine [audit event]
+2026-09-29T15:49:32.312Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:49:32.321Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:49:32.337Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=POLICY_CREATED, entityType=POLICY, entityId=100
+2026-09-29T15:49:33.442Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-29T15:49:33.443Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:49:33.449Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.493Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-29T15:49:33.516Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.535Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=null, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:33.584Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:33.609Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification batch
+2026-09-29T15:49:33.613Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification for channels
+2026-09-29T15:49:33.616Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=PAYOUT_SUCCESS, channel=IN_APP, recipientUserId=null, idempotencyPresent=true
+2026-09-29T15:49:33.634Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:33.654Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:49:33.658Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.693Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching failed notifications
+2026-09-29T15:49:33.716Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=false
+2026-09-29T15:49:33.724Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.750Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=false
+2026-09-29T15:49:33.753Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.769Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin marking notification read: id=7
+2026-09-29T15:49:33.783Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking all notifications read
+2026-09-29T15:49:33.813Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:33.863Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Sending notification from template
+2026-09-29T15:49:33.871Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification for channels
+2026-09-29T15:49:33.882Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, channel=IN_APP, recipientUserId=null, idempotencyPresent=false
+2026-09-29T15:49:33.919Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:33.942Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking notification as read: id=1
+2026-09-29T15:49:33.965Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:33.974Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:33.988Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:34.001Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:34.003Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Duplicate idempotency key detected, returning existing notification: id=99
+2026-09-29T15:49:34.018Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-29T15:49:34.032Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin marking notification read: id=7
+2026-09-29T15:49:34.045Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching failed notifications
+2026-09-29T15:49:34.066Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking all notifications read
+2026-09-29T15:49:34.084Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin deleting notification: id=7
+2026-09-29T15:49:34.107Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=POLICY_SUBMITTED, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:49:34.121Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Deleting notification: id=1
+2026-09-29T15:49:34.169Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationRoutesIntegrationTest]: NotificationRoutesIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:34.211Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationRoutesIntegrationTest
+2026-09-29T15:49:34.220Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationRoutesIntegrationTest]: NotificationRoutesIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:34.227Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationRoutesIntegrationTest
+2026-09-29T15:49:34.478Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Starting NotificationRoutesIntegrationTest using Java 21.0.10 with PID 1607 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:49:34.489Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:49:34.489Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : The following 1 profile is active: "integration"
+2026-09-29T15:49:37.074Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:49:37.143Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 48 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:49:38.961Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=ea2b6f08-9950-382f-a9da-4b5da6811c6b
+2026-09-29T15:49:42.024Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 541ae20b-a0e8-4992-81f5-fde192393086
+
+2026-09-29T15:49:43.389Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-09-29T15:49:44.657Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-29T15:49:44.804Z  WARN 1607 --- [NOTIFICATION-SERVICE] [main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-29T15:49:45.078Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.s.boot.reactor.netty.NettyWebServer    : Netty started on port 44651 (http)
+2026-09-29T15:49:45.104Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Started NotificationRoutesIntegrationTest in 10.863 seconds (process running for 41.39)
+2026-09-29T15:49:46.788Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:46.827Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=1, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:47.084Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:47.343Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:47.373Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=2, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:47.543Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:47.554Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=3, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:47.588Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:47.726Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:47.738Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=4, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:47.780Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:47.862Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:47.878Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=5, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:47.905Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-29T15:49:47.906Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:49:47.906Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:49:48.014Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:48.031Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=6, channel=IN_APP, status=DELIVERED
+2026-09-29T15:49:48.064Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:49:48.076Z  INFO 1607 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-1] o.e.n.service.NotificationService        : Duplicate idempotency key detected, returning existing notification: id=6
+2026-09-29T15:49:48.104Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationserviceApplicationTests]: NotificationserviceApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:48.112Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationserviceApplicationTests
+2026-09-29T15:49:48.116Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationserviceApplicationTests]: NotificationserviceApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:49:48.122Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationserviceApplicationTests
+2026-09-29T15:49:48.250Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Starting NotificationserviceApplicationTests using Java 21.0.10 with PID 1607 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:49:48.257Z DEBUG 1607 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:49:48.257Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : The following 1 profile is active: "integration"
+2026-09-29T15:49:48.733Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:49:48.748Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 13 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:49:48.923Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=e4aac6b9-ac3c-3811-95c1-739d5def4ab7
+2026-09-29T15:49:49.175Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: e494aaee-24ef-4fe3-89b6-cd373d839dbf
+
+2026-09-29T15:49:49.314Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-09-29T15:49:49.468Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-29T15:49:49.494Z  WARN 1607 --- [NOTIFICATION-SERVICE] [main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-29T15:49:49.512Z  INFO 1607 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Started NotificationserviceApplicationTests in 1.374 seconds (process running for 45.798)
+2026-09-29T15:49:49.691Z  INFO 1607 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] o.s.boot.reactor.netty.GracefulShutdown  : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-29T15:49:49.702Z  INFO 1607 --- [NOTIFICATION-SERVICE] [netty-shutdown] o.s.boot.reactor.netty.GracefulShutdown  : Graceful shutdown complete
+2026-09-29T15:52:05.866Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Starting NotificationRepositoryTest using Java 21.0.10 with PID 2357 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:52:05.874Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:52:05.876Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : The following 1 profile is active: "test"
+2026-09-29T15:52:07.313Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:52:07.746Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 411 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:52:10.499Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.r.NotificationRepositoryTest       : Started NotificationRepositoryTest in 6.762 seconds (process running for 18.434)
+2026-09-29T15:52:12.491Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.repository.AuditEventRepositoryTest]: AuditEventRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:12.508Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.repository.AuditEventRepositoryTest
+2026-09-29T15:52:12.519Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.repository.AuditEventRepositoryTest]: AuditEventRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:12.531Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.repository.AuditEventRepositoryTest
+2026-09-29T15:52:14.454Z ERROR 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.exception.GlobalErrorHandler       : Unhandled error on GET /api/notifications/me
+
+java.lang.RuntimeException: Something went wrong
+	at org.example.notificationservice.exception.GlobalErrorHandlerTest.handle_unexpectedException_returns500(GlobalErrorHandlerTest.java:92) ~[test-classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:701) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:502) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.support.MethodReflectionUtils.invoke(MethodReflectionUtils.java:45) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:61) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:124) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:163) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:148) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:123) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:105) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:99) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:66) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:47) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:39) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:104) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:98) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invokeVoid(InterceptingExecutableInvoker.java:71) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$0(TestMethodTestDescriptor.java:219) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:215) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:157) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125) ~[surefire-api-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.5.6.jar:3.5.6]
+
+2026-09-29T15:52:15.222Z ERROR 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.exception.GlobalErrorHandler       : Unhandled error on GET /api/notifications/me
+
+java.lang.RuntimeException: Internal DB password leaked
+	at org.example.notificationservice.exception.GlobalErrorHandlerTest.handle_unexpectedException_messageIsSanitized(GlobalErrorHandlerTest.java:105) ~[test-classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:701) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:502) ~[junit-platform-commons-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.support.MethodReflectionUtils.invoke(MethodReflectionUtils.java:45) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:61) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:124) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:163) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:148) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:123) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:105) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:99) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:66) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:47) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:39) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:104) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:98) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invokeVoid(InterceptingExecutableInvoker.java:71) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$0(TestMethodTestDescriptor.java:219) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:215) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:157) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70) ~[junit-jupiter-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:176) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58) ~[junit-platform-engine-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58) ~[junit-platform-launcher-6.0.3.jar:6.0.3]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125) ~[surefire-api-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136) ~[surefire-junit-platform-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.5.6.jar:3.5.6]
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.5.6.jar:3.5.6]
+
+2026-09-29T15:52:16.679Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:52:16.680Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:52:16.719Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=customer
+2026-09-29T15:52:16.734Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=5, actorRole=null
+2026-09-29T15:52:16.766Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=PRODUCT_THRESHOLD_UPDATED, entityType=PRODUCT, entityId=1
+2026-09-29T15:52:16.779Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=POLICY_CREATED, entityType=POLICY, entityId=null
+2026-09-29T15:52:16.788Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=5, actorRole=null
+2026-09-29T15:52:16.802Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:52:16.804Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:52:16.813Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=  POLICY_CREATED  , entityType=  POLICY  , entityId=null
+2026-09-29T15:52:16.825Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Mine [audit event]
+2026-09-29T15:52:16.871Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]
+2026-09-29T15:52:16.877Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : All [audit event]: actorUserId=null, actorRole=null
+2026-09-29T15:52:16.880Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.AuditEventService          : Creating audit event: type=POLICY_CREATED, entityType=POLICY, entityId=100
+2026-09-29T15:52:17.752Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-29T15:52:17.753Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:52:17.757Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:17.817Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-29T15:52:17.836Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:17.866Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=null, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:17.967Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:17.998Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification batch
+2026-09-29T15:52:18.003Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification for channels
+2026-09-29T15:52:18.006Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=PAYOUT_SUCCESS, channel=IN_APP, recipientUserId=null, idempotencyPresent=true
+2026-09-29T15:52:18.039Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:18.054Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:52:18.057Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:18.080Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching failed notifications
+2026-09-29T15:52:18.102Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=false
+2026-09-29T15:52:18.106Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:18.119Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=false
+2026-09-29T15:52:18.120Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:18.136Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin marking notification read: id=7
+2026-09-29T15:52:18.152Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking all notifications read
+2026-09-29T15:52:18.172Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:18.205Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Sending notification from template
+2026-09-29T15:52:18.208Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification for channels
+2026-09-29T15:52:18.211Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, channel=IN_APP, recipientUserId=null, idempotencyPresent=false
+2026-09-29T15:52:18.240Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:18.258Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking notification as read: id=1
+2026-09-29T15:52:18.275Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:18.286Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=GENERAL, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:18.293Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:18.312Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:18.317Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Duplicate idempotency key detected, returning existing notification: id=99
+2026-09-29T15:52:18.331Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching all notifications
+2026-09-29T15:52:18.340Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin marking notification read: id=7
+2026-09-29T15:52:18.374Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Fetching failed notifications
+2026-09-29T15:52:18.399Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Marking all notifications read
+2026-09-29T15:52:18.421Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Admin deleting notification: id=7
+2026-09-29T15:52:18.443Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Creating notification: type=POLICY_SUBMITTED, recipientUserId=1, recipientCustomerId=null, channel=IN_APP, idempotencyPresent=false
+2026-09-29T15:52:18.459Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.service.NotificationService        : Deleting notification: id=1
+2026-09-29T15:52:18.503Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationRoutesIntegrationTest]: NotificationRoutesIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:18.566Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationRoutesIntegrationTest
+2026-09-29T15:52:18.584Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationRoutesIntegrationTest]: NotificationRoutesIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:18.587Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationRoutesIntegrationTest
+2026-09-29T15:52:18.784Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Starting NotificationRoutesIntegrationTest using Java 21.0.10 with PID 2357 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:52:18.793Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:52:18.794Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : The following 1 profile is active: "integration"
+2026-09-29T15:52:20.639Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:52:20.672Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 30 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:52:21.987Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=ea2b6f08-9950-382f-a9da-4b5da6811c6b
+2026-09-29T15:52:23.884Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 8eda708a-ef6e-4e80-b23c-99713ca2564f
+
+2026-09-29T15:52:25.583Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-09-29T15:52:26.641Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-29T15:52:26.785Z  WARN 2357 --- [NOTIFICATION-SERVICE] [main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-29T15:52:27.225Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.s.boot.reactor.netty.NettyWebServer    : Netty started on port 39749 (http)
+2026-09-29T15:52:27.284Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.e.n.NotificationRoutesIntegrationTest  : Started NotificationRoutesIntegrationTest in 8.654 seconds (process running for 35.218)
+2026-09-29T15:52:29.956Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:30.022Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=1, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:30.399Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:30.810Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:30.835Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=2, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:31.149Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:31.176Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=3, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:31.260Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:31.492Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:31.510Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-2] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=4, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:31.574Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-2] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:31.740Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:31.757Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=5, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:31.811Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching unread notification count
+2026-09-29T15:52:31.811Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications: unreadOnly=true
+2026-09-29T15:52:31.812Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [parallel-4] o.e.n.service.NotificationService        : Fetching my notifications
+2026-09-29T15:52:31.962Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:31.975Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.DeliveryAttemptService     : Recording delivery attempt: notificationId=6, channel=IN_APP, status=DELIVERED
+2026-09-29T15:52:32.037Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.NotificationService        : Creating notification: type=TRIGGER_EVENT_VERIFIED, recipientUserId=15, recipientCustomerId=25, channel=IN_APP, idempotencyPresent=true
+2026-09-29T15:52:32.053Z  INFO 2357 --- [NOTIFICATION-SERVICE] [webflux-http-epoll-3] o.e.n.service.NotificationService        : Duplicate idempotency key detected, returning existing notification: id=6
+2026-09-29T15:52:32.102Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationserviceApplicationTests]: NotificationserviceApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:32.117Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationserviceApplicationTests
+2026-09-29T15:52:32.121Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [org.example.notificationservice.NotificationserviceApplicationTests]: NotificationserviceApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-29T15:52:32.128Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration org.example.notificationservice.NotificationserviceApplication for test class org.example.notificationservice.NotificationserviceApplicationTests
+2026-09-29T15:52:32.264Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Starting NotificationserviceApplicationTests using Java 21.0.10 with PID 2357 (started by root in /home/user/ParametricInsurance/notificationservice)
+2026-09-29T15:52:32.272Z DEBUG 2357 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-09-29T15:52:32.273Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : The following 1 profile is active: "integration"
+2026-09-29T15:52:33.253Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data R2DBC repositories in DEFAULT mode.
+2026-09-29T15:52:33.290Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 35 ms. Found 6 R2DBC repository interfaces.
+2026-09-29T15:52:33.620Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=e4aac6b9-ac3c-3811-95c1-739d5def4ab7
+2026-09-29T15:52:34.152Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] ctiveUserDetailsServiceAutoConfiguration : 
+
+Using generated security password: f64b18b6-24d2-40f3-901a-77c8c09415ff
+
+2026-09-29T15:52:34.720Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-09-29T15:52:34.998Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestClient.
+2026-09-29T15:52:35.074Z  WARN 2357 --- [NOTIFICATION-SERVICE] [main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-09-29T15:52:35.138Z  INFO 2357 --- [NOTIFICATION-SERVICE] [main] .e.n.NotificationserviceApplicationTests : Started NotificationserviceApplicationTests in 2.992 seconds (process running for 43.073)
+2026-09-29T15:52:35.829Z  INFO 2357 --- [NOTIFICATION-SERVICE] [SpringApplicationShutdownHook] o.s.boot.reactor.netty.GracefulShutdown  : Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-29T15:52:35.871Z  INFO 2357 --- [NOTIFICATION-SERVICE] [netty-shutdown] o.s.boot.reactor.netty.GracefulShutdown  : Graceful shutdown complete

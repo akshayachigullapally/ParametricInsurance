@@ -16,4 +16,6 @@ private String actorRole;
 private Long entityId;
 @NotBlank@Size(max=1000) private String description;
 @Size(max=100) private String correlationId;
+@Size(max=1000) private String oldValue;
+@Size(max=1000) private String newValue;
 }

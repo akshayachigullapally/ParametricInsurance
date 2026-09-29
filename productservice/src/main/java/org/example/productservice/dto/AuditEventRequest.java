@@ -18,5 +18,7 @@ public class AuditEventRequest {
     private Long actorUserId;
     private String actorRole;
     private String description;
+    private String oldValue;
+    private String newValue;
     private LocalDateTime timestamp;
 }

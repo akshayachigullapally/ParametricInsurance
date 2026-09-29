@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@Builder
+@Builder(toBuilder=true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class InternalZoneResponse {
@@ -23,4 +23,8 @@ public class InternalZoneResponse {
     private BigDecimal longitude;
     private BigDecimal radiusKm;
     private String status;
+    private Boolean weatherAlert;
+    private String alertMessage;
+    private java.time.LocalDateTime alertRaisedAt;
+    private BigDecimal maxExposure;
 }

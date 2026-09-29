@@ -128,6 +128,7 @@ public class SecurityConfig{
 
                         .pathMatchers(HttpMethod.GET,
                                 "/api/policies/admin/all",
+                                "/api/policies/admin/zone-exposure",
                                 "/api/policies/admin/{policyId:[0-9]+}"
                         ).hasAnyRole("ADMIN", "UNDERWRITER")
 

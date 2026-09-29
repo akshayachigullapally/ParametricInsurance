@@ -49,6 +49,16 @@ public class LocationZoneRouter{
                                 contentType(MediaType.APPLICATION_JSON),
                                 handler::updateStatus
                         )
+                        .PUT(
+                                "/{zoneId:[0-9]+}/alert",
+                                contentType(MediaType.APPLICATION_JSON),
+                                handler::updateAlert
+                        )
+                        .PUT(
+                                "/{zoneId:[0-9]+}/exposure-cap",
+                                contentType(MediaType.APPLICATION_JSON),
+                                handler::updateExposureCap
+                        )
                         .DELETE(
                                 "/{zoneId:[0-9]+}",
                                 handler::archive

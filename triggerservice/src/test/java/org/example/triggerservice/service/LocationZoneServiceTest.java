@@ -35,6 +35,8 @@ class LocationZoneServiceTest {
 
     @BeforeEach
     void stubAudit(){
+        lenient().when(notificationService.auditChange(any(),any(),any(),any(),any(),any(),any()))
+                .thenReturn(Mono.empty());
         lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
     }
@@ -285,6 +287,86 @@ class LocationZoneServiceTest {
                 .verify();
 
         verify(locationZoneRepository,never()).save(any(LocationZone.class));
+    }
+
+    @Test
+    void updateAlert_raise_shouldPauseSalesAndAuditOffToOn() {
+        LocationZone zone=zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE);
+        when(locationZoneRepository.findById(1L)).thenReturn(Mono.just(zone));
+        when(locationZoneRepository.save(any(LocationZone.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(locationZoneService.updateAlert(1L,
+                        org.example.triggerservice.dto.ZoneAlertRequest.builder()
+                                .active(true).message(" Cyclone warning ").build(),9L))
+                .assertNext(result->{
+                    assertThat(result.getWeatherAlert()).isTrue();
+                    assertThat(result.getAlertMessage()).isEqualTo("Cyclone warning");
+                    assertThat(result.getAlertRaisedAt()).isNotNull();
+                })
+                .verifyComplete();
+
+        verify(notificationService).auditChange("ZONE_ALERT_RAISED","LOCATION_ZONE",1L,9L,
+                "Raised weather alert for Hyderabad (HYD)",
+                "Weather alert: OFF",
+                "Weather alert: ON (Cyclone warning)");
+    }
+
+    @Test
+    void updateAlert_clear_shouldResumeSales() {
+        LocationZone zone=zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE);
+        zone.setWeatherAlert(true);
+        zone.setAlertMessage("Flood");
+        zone.setAlertRaisedAt(LocalDateTime.now());
+        when(locationZoneRepository.findById(1L)).thenReturn(Mono.just(zone));
+        when(locationZoneRepository.save(any(LocationZone.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(locationZoneService.updateAlert(1L,
+                        org.example.triggerservice.dto.ZoneAlertRequest.builder().active(false).build(),9L))
+                .assertNext(result->{
+                    assertThat(result.getWeatherAlert()).isFalse();
+                    assertThat(result.getAlertMessage()).isNull();
+                    assertThat(result.getAlertRaisedAt()).isNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updateAlert_clearWhenNoneRaised_shouldConflict() {
+        when(locationZoneRepository.findById(1L))
+                .thenReturn(Mono.just(zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE)));
+
+        StepVerifier.create(locationZoneService.updateAlert(1L,
+                        org.example.triggerservice.dto.ZoneAlertRequest.builder().active(false).build(),9L))
+                .expectError(ConflictException.class)
+                .verify();
+
+        verify(locationZoneRepository,never()).save(any());
+    }
+
+    @Test
+    void updateExposureCap_shouldStoreCapAndAuditBeforeAfter() {
+        when(locationZoneRepository.findById(1L))
+                .thenReturn(Mono.just(zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE)));
+        when(locationZoneRepository.save(any(LocationZone.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(locationZoneService.updateExposureCap(1L,new BigDecimal("50000000"),9L))
+                .assertNext(result->assertThat(result.getMaxExposure()).isEqualByComparingTo("50000000"))
+                .verifyComplete();
+
+        verify(notificationService).auditChange("ZONE_EXPOSURE_CAP_CHANGED","LOCATION_ZONE",1L,9L,
+                "Changed exposure cap of Hyderabad (HYD)",
+                "Exposure cap: No cap",
+                "Exposure cap: ₹50000000");
+    }
+
+    @Test
+    void updateExposureCap_whenNotPositive_shouldFailValidation() {
+        StepVerifier.create(locationZoneService.updateExposureCap(1L,BigDecimal.ZERO,9L))
+                .expectError(ValidationException.class)
+                .verify();
     }
 
     private LocationZone zone(Long id,String code,String name,LocationZoneStatus status) {
