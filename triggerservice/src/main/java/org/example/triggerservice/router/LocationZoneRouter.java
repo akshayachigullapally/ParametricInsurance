@@ -63,13 +63,14 @@ public class LocationZoneRouter{
                                 "/{zoneId:[0-9]+}",
                                 handler::archive
                         ))
-                .GET(
-                        "/internal/triggers/zones/{zoneId}",
-                        handler::getInternalById
-                )
+                // "active" must be matched before the numeric id route.
                 .GET(
                         "/internal/triggers/zones/active",
                         handler::getInternalActive
+                )
+                .GET(
+                        "/internal/triggers/zones/{zoneId:[0-9]+}",
+                        handler::getInternalById
                 )
                 .build();
     }

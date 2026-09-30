@@ -74,6 +74,8 @@ public class ZoneUnderwritingService{
 
     public Mono<List<ZoneExposureResponse>> exposureReport(){
         return triggerServiceClient.getActiveZones()
+                .doOnError(error->log.warn("Could not load active zones for the exposure report: {}",
+                        error.getMessage()))
                 .onErrorMap(error->!(error instanceof DependentServiceException),
                         error->new DependentServiceException("Trigger service is currently unavailable"))
                 .concatMap(this::exposureOf)
@@ -116,6 +118,8 @@ public class ZoneUnderwritingService{
 
     private Mono<InternalZoneResponse> zone(Long zoneId){
         return triggerServiceClient.getZoneById(zoneId)
+                .doOnError(error->log.warn("Could not load zone {} for underwriting checks: {}",
+                        zoneId,error.getMessage()))
                 .onErrorMap(WebClientResponseException.NotFound.class,
                         error->new NotFoundException("Location zone not found"))
                 .onErrorMap(error->!(error instanceof NotFoundException),
