@@ -648,6 +648,8 @@ public class ProductService{
                         ?current.getZoneCode():null)
                 .zoneName(current!=null
                         ?current.getZoneName():null)
+                .source(current!=null
+                        ?current.getSource():null)
                 .products(statuses)
                 .build();
     }

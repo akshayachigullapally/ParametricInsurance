@@ -7,6 +7,7 @@ import org.example.triggerservice.model.MeasurementType;
 import org.example.triggerservice.model.MeasurementUnit;
 import org.example.triggerservice.model.Observation;
 import org.example.triggerservice.model.ObservationSource;
+import java.time.Duration;
 import org.example.triggerservice.model.ObservationStatus;
 import org.example.triggerservice.repository.LocationZoneRepository;
 import org.example.triggerservice.repository.ObservationRepository;
@@ -59,17 +60,20 @@ public class DemoObservationGenerator implements CommandLineRunner{
     private final ObservationRepository observationRepository;
     private final int backfillHours;
     private final int retentionDays;
+    private final Duration manualHold;
 
     public DemoObservationGenerator(
             LocationZoneRepository locationZoneRepository,
             ObservationRepository observationRepository,
             @Value("${demo.feed.backfill-hours:24}") int backfillHours,
-            @Value("${demo.feed.retention-days:3}") int retentionDays
+            @Value("${demo.feed.retention-days:3}") int retentionDays,
+            @Value("${demo.feed.manual-hold-minutes:30}") int manualHoldMinutes
     ){
         this.locationZoneRepository=locationZoneRepository;
         this.observationRepository=observationRepository;
         this.backfillHours=Math.max(backfillHours,0);
         this.retentionDays=Math.max(retentionDays,1);
+        this.manualHold=Duration.ofMinutes(Math.max(manualHoldMinutes,0));
     }
 
     @Override
@@ -135,6 +139,26 @@ public class DemoObservationGenerator implements CommandLineRunner{
     }
 
     private Mono<Observation> saveReading(
+            LocationZone zone,
+            MeasurementType measurementType,
+            LocalDateTime observedAt
+    ){
+        return observationRepository
+                .findFirstByLocationZoneIdAndMeasurementTypeOrderByObservedAtDesc(zone.getId(),measurementType)
+                .map(latest->isHeldByAdmin(latest,observedAt))
+                .defaultIfEmpty(false)
+                .flatMap(held->held?Mono.<Observation>empty():saveRandomReading(zone,measurementType,observedAt));
+    }
+
+    /** A reading an admin set by hand is kept as the live value for a while instead of being overwritten. */
+    boolean isHeldByAdmin(Observation latest,LocalDateTime observedAt){
+        return latest.getSource()==ObservationSource.MANUAL
+                &&latest.getObservedAt()!=null
+                &&!latest.getObservedAt().isAfter(observedAt)
+                &&latest.getObservedAt().isAfter(observedAt.minus(manualHold));
+    }
+
+    private Mono<Observation> saveRandomReading(
             LocationZone zone,
             MeasurementType measurementType,
             LocalDateTime observedAt

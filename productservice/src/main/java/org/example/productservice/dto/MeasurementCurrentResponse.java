@@ -21,4 +21,6 @@ public class MeasurementCurrentResponse{
     private String zoneCode;
     private String zoneName;
     private String status;
+    /** MOCK for the demo feed, MANUAL when an admin set the value. */
+    private String source;
 }

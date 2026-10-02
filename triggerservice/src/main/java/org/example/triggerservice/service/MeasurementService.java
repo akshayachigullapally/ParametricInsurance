@@ -3,6 +3,11 @@ package org.example.triggerservice.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.MeasurementCurrentResponse;
+import org.example.triggerservice.dto.ManualReadingRequest;
+import org.example.triggerservice.dto.ManualReadingResponse;
+import org.example.triggerservice.model.LocationZoneStatus;
+import org.example.triggerservice.model.ObservationSource;
+import org.example.triggerservice.model.ObservationStatus;
 import org.example.triggerservice.dto.MeasurementTypeInfo;
 import org.example.triggerservice.dto.CurrentMeasurementRequest;
 import org.example.triggerservice.dto.CurrentMeasurementResult;
@@ -315,6 +320,93 @@ public class MeasurementService{
                         .map(zone->toResponse(observation,zone)));
     }
 
+    /**
+     * Sets the live reading of one measurement type in every active zone. The reading is
+     * stored as a validated MANUAL observation, so the dashboard and the monitor treat it
+     * like any other reading, and the demo feed leaves it alone for {@code holdMinutes}.
+     */
+    public Mono<ManualReadingResponse> recordManualReading(
+            ManualReadingRequest request,
+            Long userId,
+            int holdMinutes
+    ){
+        if(request==null||request.getMeasurementType()==null||request.getMeasurementType().isBlank()){
+            return Mono.error(new ValidationException("Measurement type is required"));
+        }
+        if(request.getValue()==null){
+            return Mono.error(new ValidationException("Value is required"));
+        }
+
+        MeasurementType type;
+        try{
+            type=MeasurementType.valueOf(request.getMeasurementType().trim().toUpperCase(java.util.Locale.ROOT));
+        }catch(IllegalArgumentException exception){
+            return Mono.error(new ValidationException("Unknown measurement type: "+request.getMeasurementType()));
+        }
+        if(type==MeasurementType.OTHER){
+            return Mono.error(new ValidationException("This measurement type has no live reading"));
+        }
+
+        java.math.BigDecimal value=request.getValue();
+        if(type!=MeasurementType.TEMPERATURE&&value.signum()<0){
+            return Mono.error(new ValidationException("Value cannot be negative"));
+        }
+        if((type==MeasurementType.HUMIDITY||type==MeasurementType.SOIL_MOISTURE)
+                &&value.compareTo(java.math.BigDecimal.valueOf(100))>0){
+            return Mono.error(new ValidationException("A percentage cannot be more than 100"));
+        }
+
+        LocalDateTime now=LocalDateTime.now();
+        MeasurementUnit unit=unitFor(type);
+
+        return latestValidatedFor(type)
+                .map(Observation::getObservedValue)
+                .map(java.util.Optional::of)
+                .defaultIfEmpty(java.util.Optional.empty())
+                .flatMap(previous->locationZoneRepository
+                        .findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE)
+                        .flatMap(zone->observationRepository.save(Observation.builder()
+                                .observationReference("OBS-"+now.getYear()+"-"+shortId())
+                                .locationZoneId(zone.getId())
+                                .measurementType(type)
+                                .measurementUnit(unit)
+                                .observedValue(value)
+                                .observedAt(now)
+                                .source(ObservationSource.MANUAL)
+                                .sourceReference("ADMIN-"+shortId())
+                                .status(ObservationStatus.VALIDATED)
+                                .receivedBy(userId)
+                                .receivedAt(now)
+                                .build()))
+                        .count()
+                        .flatMap(zoneCount->{
+                            if(zoneCount==0){
+                                return Mono.error(new ValidationException(
+                                        "There are no active zones to record the reading for"));
+                            }
+                            String label=type.name().replace('_',' ').toLowerCase(java.util.Locale.ROOT);
+                            return notificationService.auditChange(
+                                            "MEASUREMENT_VALUE_UPDATED","MEASUREMENT",null,userId,
+                                            "Set current "+label+" to "+value.toPlainString()+" in "+zoneCount+" zone(s)",
+                                            previous.map(java.math.BigDecimal::toPlainString).orElse(null),
+                                            value.toPlainString())
+                                    .onErrorResume(error->Mono.empty())
+                                    .thenReturn(ManualReadingResponse.builder()
+                                            .measurementType(type)
+                                            .measurementUnit(unit)
+                                            .value(value)
+                                            .previousValue(previous.orElse(null))
+                                            .observedAt(now)
+                                            .zoneCount(zoneCount.intValue())
+                                            .holdMinutes(holdMinutes)
+                                            .build());
+                        }));
+    }
+
+    private static String shortId(){
+        return UUID.randomUUID().toString().replace("-","").substring(0,10).toUpperCase(java.util.Locale.ROOT);
+    }
+
     private Mono<Observation> latestValidatedFor(
             MeasurementType measurementType
     ){
@@ -334,6 +426,7 @@ public class MeasurementService{
                 .zoneCode(zone.getZoneCode())
                 .zoneName(zone.getZoneName())
                 .status(observation.getStatus())
+                .source(observation.getSource())
                 .build();
     }
 

@@ -17,6 +17,12 @@ import org.example.triggerservice.dto.ClaimCreationRequest;
 import org.example.triggerservice.dto.ClaimCreationResponse;
 import org.example.triggerservice.dto.CurrentMeasurementRequest;
 import org.example.triggerservice.dto.InternalProductConfig;
+import org.example.triggerservice.dto.ManualReadingRequest;
+import org.example.triggerservice.exception.ValidationException;
+import org.example.triggerservice.model.MeasurementType;
+import org.example.triggerservice.model.Observation;
+import org.example.triggerservice.model.ObservationSource;
+import org.example.triggerservice.model.ObservationStatus;
 import org.example.triggerservice.model.CurrentMeasurement;
 import org.example.triggerservice.model.LocationZone;
 import org.example.triggerservice.model.LocationZoneStatus;
@@ -162,6 +168,78 @@ class MeasurementServiceTest{
                     assertThat(result.getMessage())
                             .isEqualTo("The current measurement did not match any active policy trigger.");
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void manualReading_isStoredAsValidatedManualObservationInEveryActiveZone(){
+        when(observationRepository.findLatestValidated("RAINFALL")).thenReturn(Mono.just(
+                Observation.builder().observedValue(new BigDecimal("0.11")).build()));
+        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
+                .thenReturn(Flux.just(LocationZone.builder().id(1L).build(),LocationZone.builder().id(2L).build()));
+        when(observationRepository.save(any(Observation.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.recordManualReading(
+                        ManualReadingRequest.builder().measurementType("rainfall").value(new BigDecimal("160")).build(),
+                        1L,30))
+                .assertNext(result->{
+                    assertThat(result.getZoneCount()).isEqualTo(2);
+                    assertThat(result.getValue()).isEqualByComparingTo("160");
+                    assertThat(result.getPreviousValue()).isEqualByComparingTo("0.11");
+                    assertThat(result.getHoldMinutes()).isEqualTo(30);
+                })
+                .verifyComplete();
+
+        ArgumentCaptor<Observation> saved=ArgumentCaptor.forClass(Observation.class);
+        verify(observationRepository,org.mockito.Mockito.times(2)).save(saved.capture());
+        assertThat(saved.getAllValues()).allSatisfy(observation->{
+            assertThat(observation.getMeasurementType()).isEqualTo(MeasurementType.RAINFALL);
+            assertThat(observation.getSource()).isEqualTo(ObservationSource.MANUAL);
+            assertThat(observation.getStatus()).isEqualTo(ObservationStatus.VALIDATED);
+            assertThat(observation.getObservedValue()).isEqualByComparingTo("160");
+        });
+        assertThat(saved.getAllValues()).extracting(Observation::getLocationZoneId).containsExactlyInAnyOrder(1L,2L);
+        verify(notificationService).auditChange(eq("MEASUREMENT_VALUE_UPDATED"),eq("MEASUREMENT"),any(),eq(1L),
+                anyString(),eq("0.11"),eq("160"));
+    }
+
+    @Test
+    void manualReading_rejectsImpossibleValues(){
+        StepVerifier.create(service.recordManualReading(
+                        ManualReadingRequest.builder().measurementType("HUMIDITY").value(new BigDecimal("120")).build(),1L,30))
+                .expectErrorSatisfies(error->assertThat(error)
+                        .isInstanceOfSatisfying(ValidationException.class,validation->assertThat(validation.getErrors())
+                                .containsExactly("A percentage cannot be more than 100")))
+                .verify();
+        StepVerifier.create(service.recordManualReading(
+                        ManualReadingRequest.builder().measurementType("RAINFALL").value(new BigDecimal("-1")).build(),1L,30))
+                .expectErrorSatisfies(error->assertThat(((ValidationException)error).getErrors())
+                        .containsExactly("Value cannot be negative"))
+                .verify();
+        StepVerifier.create(service.recordManualReading(
+                        ManualReadingRequest.builder().measurementType("SNOW").value(BigDecimal.ONE).build(),1L,30))
+                .expectErrorSatisfies(error->assertThat(((ValidationException)error).getErrors())
+                        .containsExactly("Unknown measurement type: SNOW"))
+                .verify();
+        verify(observationRepository,never()).save(any());
+    }
+
+    @Test
+    void manualReading_allowsBelowZeroTemperatures(){
+        when(observationRepository.findLatestValidated("TEMPERATURE")).thenReturn(Mono.empty());
+        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
+                .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
+        when(observationRepository.save(any(Observation.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.recordManualReading(
+                        ManualReadingRequest.builder().measurementType("TEMPERATURE").value(new BigDecimal("-4")).build(),1L,30))
+                .assertNext(result->assertThat(result.getPreviousValue()).isNull())
                 .verifyComplete();
     }
 

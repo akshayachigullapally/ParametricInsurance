@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.triggerservice.model.MeasurementType;
 import org.example.triggerservice.model.MeasurementUnit;
+import org.example.triggerservice.model.ObservationSource;
 import org.example.triggerservice.model.ObservationStatus;
 
 import java.math.BigDecimal;
@@ -24,4 +25,5 @@ public class MeasurementCurrentResponse{
     private String zoneCode;
     private String zoneName;
     private ObservationStatus status;
+    private ObservationSource source;
 }

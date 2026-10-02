@@ -21,5 +21,7 @@ public class MeasurementStatusResponse{
     private LocalDateTime observedAt;
     private String zoneCode;
     private String zoneName;
+    /** MOCK for the demo feed, MANUAL when an admin set the value. */
+    private String source;
     private List<ProductTriggerStatus> products;
 }

@@ -18,6 +18,11 @@ public interface ObservationRepository extends ReactiveCrudRepository<Observatio
 
     Flux<Observation> findAllByOrderByObservedAtDesc();
 
+    Mono<Observation> findFirstByLocationZoneIdAndMeasurementTypeOrderByObservedAtDesc(
+            Long locationZoneId,
+            MeasurementType measurementType
+    );
+
     Flux<Observation> findAllByLocationZoneIdOrderByObservedAtDesc(
             Long locationZoneId
     );

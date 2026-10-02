@@ -35,6 +35,8 @@ demo:
     interval-ms: ${DEMO_FEED_INTERVAL_MS:60000}
     backfill-hours: 24
     retention-days: ${DEMO_FEED_RETENTION_DAYS:3}
+    # An admin-set reading stays the live value this long before the feed resumes.
+    manual-hold-minutes: ${DEMO_FEED_MANUAL_HOLD_MINUTES:30}
 
 
 management:
