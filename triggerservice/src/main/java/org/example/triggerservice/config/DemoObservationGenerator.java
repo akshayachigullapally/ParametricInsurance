@@ -67,7 +67,7 @@ public class DemoObservationGenerator implements CommandLineRunner{
             ObservationRepository observationRepository,
             @Value("${demo.feed.backfill-hours:24}") int backfillHours,
             @Value("${demo.feed.retention-days:3}") int retentionDays,
-            @Value("${demo.feed.manual-hold-minutes:30}") int manualHoldMinutes
+            @Value("${demo.feed.manual-hold-minutes:60}") int manualHoldMinutes
     ){
         this.locationZoneRepository=locationZoneRepository;
         this.observationRepository=observationRepository;

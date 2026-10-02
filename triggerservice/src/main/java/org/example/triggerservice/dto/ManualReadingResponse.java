@@ -24,4 +24,10 @@ public class ManualReadingResponse{
     private int zoneCount;
     /** Minutes the demo feed leaves this reading alone before generating values again. */
     private int holdMinutes;
+    /** Policies whose locked threshold the new reading crosses (paid ones get an automatic claim). */
+    private int matchedPolicyCount;
+    private int claimsCreatedCount;
+    private int unpaidPolicyCount;
+    /** Codes of the products that triggered. */
+    private java.util.List<String> triggeredProducts;
 }

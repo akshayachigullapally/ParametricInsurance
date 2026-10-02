@@ -378,8 +378,10 @@ public class MeasurementService{
                                 .receivedBy(userId)
                                 .receivedAt(now)
                                 .build()))
-                        .count()
-                        .flatMap(zoneCount->{
+                        .map(Observation::getLocationZoneId)
+                        .collectList()
+                        .flatMap(zoneIds->{
+                            long zoneCount=zoneIds.size();
                             if(zoneCount==0){
                                 return Mono.error(new ValidationException(
                                         "There are no active zones to record the reading for"));
@@ -391,16 +393,66 @@ public class MeasurementService{
                                             previous.map(java.math.BigDecimal::toPlainString).orElse(null),
                                             value.toPlainString())
                                     .onErrorResume(error->Mono.empty())
-                                    .thenReturn(ManualReadingResponse.builder()
+                                    .then(triggerProducts(type,value,request.getProductIds(),zoneIds,userId,now))
+                                    .map(results->ManualReadingResponse.builder()
                                             .measurementType(type)
                                             .measurementUnit(unit)
                                             .value(value)
                                             .previousValue(previous.orElse(null))
                                             .observedAt(now)
-                                            .zoneCount(zoneCount.intValue())
+                                            .zoneCount((int)zoneCount)
                                             .holdMinutes(holdMinutes)
+                                            .matchedPolicyCount(results.stream().mapToInt(CurrentMeasurementResult::getMatchedPolicyCount).sum())
+                                            .claimsCreatedCount(results.stream().mapToInt(CurrentMeasurementResult::getClaimsCreatedCount).sum())
+                                            .unpaidPolicyCount(results.stream().mapToInt(CurrentMeasurementResult::getUnpaidPolicyCount).sum())
+                                            .triggeredProducts(results.stream()
+                                                    .filter(CurrentMeasurementResult::isMatched)
+                                                    .map(CurrentMeasurementResult::getProductCode)
+                                                    .distinct()
+                                                    .toList())
                                             .build());
                         }));
+    }
+
+    /**
+     * Runs the same check as the trigger simulator for every product that uses this
+     * measurement, in every zone: policies whose locked threshold the reading crosses are
+     * matched, and paid ones get an automatic claim. Products of another type are skipped.
+     */
+    private Mono<java.util.List<CurrentMeasurementResult>> triggerProducts(
+            MeasurementType type,
+            java.math.BigDecimal value,
+            java.util.List<Long> productIds,
+            java.util.List<Long> zoneIds,
+            Long userId,
+            LocalDateTime now
+    ){
+        if(productIds==null||productIds.isEmpty()){
+            return Mono.just(java.util.List.of());
+        }
+        long stamp=now.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return Flux.fromIterable(new java.util.LinkedHashSet<>(productIds))
+                .concatMap(productId->productTriggerClient.getProduct(productId)
+                        .filter(product->type.name().equalsIgnoreCase(product.getMeasurementType())
+                                &&"ACTIVE".equalsIgnoreCase(product.getStatus()))
+                        .flatMapMany(product->Flux.fromIterable(zoneIds))
+                        .concatMap(zoneId->processCurrentMeasurement(CurrentMeasurementRequest.builder()
+                                        .productId(productId)
+                                        .locationZoneId(zoneId)
+                                        .currentValue(value)
+                                        .idempotencyKey("MANUAL-READING:"+type.name()+":"+productId+":"+zoneId+":"+stamp)
+                                        .build(),userId)
+                                .onErrorResume(error->{
+                                    log.warn("Manual reading check skipped: productId={}, zoneId={}, reason={}",
+                                            productId,zoneId,error.getMessage());
+                                    return Mono.empty();
+                                }))
+                        .onErrorResume(error->{
+                            log.warn("Manual reading check skipped: productId={}, reason={}",
+                                    productId,error.getMessage());
+                            return Flux.empty();
+                        }))
+                .collectList();
     }
 
     private static String shortId(){

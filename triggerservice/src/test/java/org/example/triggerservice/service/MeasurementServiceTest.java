@@ -207,6 +207,63 @@ class MeasurementServiceTest{
     }
 
     @Test
+    void manualReading_triggersProductsLikeTheSimulator(){
+        when(observationRepository.findLatestValidated("RAINFALL")).thenReturn(Mono.empty());
+        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
+                .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
+        when(observationRepository.save(any(Observation.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
+                .thenReturn(Mono.empty());
+        when(idempotencyService.isDuplicate(anyString())).thenReturn(Mono.just(false));
+        when(productTriggerClient.getActivePolicies(1L,1L)).thenReturn(Flux.just(policy(100L,true),policy(200L,false)));
+        when(claimsServiceClient.createClaimsFromTriggerEvent(any()))
+                .thenReturn(Mono.just(ClaimCreationResponse.builder().claimsCreated(1).claimsFailed(0).build()));
+        // Product 2 measures something else, so it is skipped.
+        when(productTriggerClient.getProduct(2L)).thenReturn(Mono.just(InternalProductConfig.builder()
+                .productId(2L).status("ACTIVE").measurementType("HUMIDITY").build()));
+
+        StepVerifier.create(service.recordManualReading(ManualReadingRequest.builder()
+                        .measurementType("RAINFALL").value(new BigDecimal("160")).productIds(java.util.List.of(1L,2L)).build(),
+                        1L,60))
+                .assertNext(result->{
+                    assertThat(result.getMatchedPolicyCount()).isEqualTo(1);
+                    assertThat(result.getClaimsCreatedCount()).isEqualTo(1);
+                    assertThat(result.getUnpaidPolicyCount()).isEqualTo(1);
+                    assertThat(result.getTriggeredProducts()).containsExactly("WEATHER-001");
+                    assertThat(result.getHoldMinutes()).isEqualTo(60);
+                })
+                .verifyComplete();
+
+        verify(productTriggerClient,never()).getActivePolicies(eq(2L),anyLong());
+    }
+
+    @Test
+    void manualReading_belowThreshold_createsNoClaims(){
+        when(observationRepository.findLatestValidated("RAINFALL")).thenReturn(Mono.empty());
+        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
+                .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
+        when(observationRepository.save(any(Observation.class)))
+                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
+        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
+                .thenReturn(Mono.empty());
+        when(idempotencyService.isDuplicate(anyString())).thenReturn(Mono.just(false));
+        when(productTriggerClient.getActivePolicies(1L,1L)).thenReturn(Flux.just(policy(100L,true)));
+
+        StepVerifier.create(service.recordManualReading(ManualReadingRequest.builder()
+                        .measurementType("RAINFALL").value(new BigDecimal("40")).productIds(java.util.List.of(1L)).build(),
+                        1L,60))
+                .assertNext(result->{
+                    assertThat(result.getMatchedPolicyCount()).isZero();
+                    assertThat(result.getClaimsCreatedCount()).isZero();
+                    assertThat(result.getTriggeredProducts()).isEmpty();
+                })
+                .verifyComplete();
+
+        verify(claimsServiceClient,never()).createClaimsFromTriggerEvent(any());
+    }
+
+    @Test
     void manualReading_rejectsImpossibleValues(){
         StepVerifier.create(service.recordManualReading(
                         ManualReadingRequest.builder().measurementType("HUMIDITY").value(new BigDecimal("120")).build(),1L,30))

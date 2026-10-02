@@ -34,7 +34,7 @@ public class MeasurementHandler{
 
     public MeasurementHandler(
             MeasurementService measurementService,
-            @Value("${demo.feed.manual-hold-minutes:30}") int manualHoldMinutes
+            @Value("${demo.feed.manual-hold-minutes:60}") int manualHoldMinutes
     ){
         this.measurementService=measurementService;
         this.manualHoldMinutes=manualHoldMinutes;

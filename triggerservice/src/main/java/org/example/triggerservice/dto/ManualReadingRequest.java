@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /** An admin setting the live reading of one measurement type, e.g. rainfall = 160 mm. */
 @Data
@@ -15,4 +16,6 @@ import java.math.BigDecimal;
 public class ManualReadingRequest{
     private String measurementType;
     private BigDecimal value;
+    /** Products that use this measurement; each is checked for triggered policies, like the trigger simulator. */
+    private List<Long> productIds;
 }
