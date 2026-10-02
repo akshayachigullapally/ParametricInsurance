@@ -63,39 +63,6 @@ public class PayoutHandler{
                         Object.class);
     }
 
-    public Mono<ServerResponse> process(ServerRequest request){
-        return actionBody(request)
-                .flatMap(body->service.process(
-                        payoutId(request),
-                        body
-                ))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
-    public Mono<ServerResponse> success(ServerRequest request){
-        return actionBody(request)
-                .flatMap(body->service.success(
-                        payoutId(request),
-                        body
-                ))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
-    public Mono<ServerResponse> fail(ServerRequest request){
-        return actionBody(request)
-                .flatMap(body->service.fail(
-                        payoutId(request),
-                        body
-                ))
-                .flatMap(response->
-                        ServerResponse.ok().bodyValue(response)
-                );
-    }
-
     public Mono<ServerResponse> retry(ServerRequest request){
         return actionBody(request)
                 .flatMap(body->service.retry(

@@ -142,9 +142,12 @@ public class ClaimHandler{
                         ).flatMap(body->claimService.approveClaim(
                                 reviewerId,claimId,body
                         ))))
+                // The payout is paid straight away and settles the claim, so return the
+                // claim as it is now (SETTLED) rather than as it was at approval.
                 .flatMap(response->claimService
                         .requestPayout(response.getId())
-                        .thenReturn(response))
+                        .then(claimService.getClaim(response.getId()))
+                        .onErrorReturn(response))
                 .flatMap(response->ServerResponse.ok().bodyValue(response));
     }
 

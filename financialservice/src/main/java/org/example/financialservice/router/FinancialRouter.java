@@ -130,21 +130,6 @@ public class FinancialRouter{
                         payoutHandler::findAll
                 )
                 .PUT(
-                        "/api/financial/payouts/{payoutId}/process",
-                        accept(APPLICATION_JSON),
-                        payoutHandler::process
-                )
-                .PUT(
-                        "/api/financial/payouts/{payoutId}/success",
-                        accept(APPLICATION_JSON),
-                        payoutHandler::success
-                )
-                .PUT(
-                        "/api/financial/payouts/{payoutId}/fail",
-                        accept(APPLICATION_JSON),
-                        payoutHandler::fail
-                )
-                .PUT(
                         "/api/financial/payouts/{payoutId}/retry",
                         accept(APPLICATION_JSON),
                         payoutHandler::retry

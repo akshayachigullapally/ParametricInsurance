@@ -83,23 +83,7 @@ public class PayoutService{
                         "claimId="+saved.getClaimId()+
                                 ",amount="+saved.getAmount()
                 ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPayoutPending(
-                                saved.getCustomerId(),
-                                saved.getPayoutReference(),
-                                saved.getAmount()
-                        )
-                        .thenReturn(saved))
-                .flatMap(saved->financialTransactions
-                        .recordPayout(
-                                saved.getCustomerId(),
-                                saved.getPolicyId(),
-                                saved.getId(),
-                                saved.getClaimId(),
-                                saved.getAmount(),
-                                "PENDING"
-                        )
-                        .thenReturn(saved))
+                .flatMap(this::disburse)
                 .map(this::response);
     }
 
@@ -145,154 +129,9 @@ public class PayoutService{
                 .map(this::response);
     }
 
-    public Mono<PayoutResponse> process(
-            Long payoutId,
-            PayoutActionRequest request
-    ){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(payoutId))
-                .flatMap(payout->{
-                    if(payout.getStatus()!=PayoutStatus.PENDING){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only pending payouts can be processed"
-                                )
-                        );
-                    }
-
-                    log.info("Payout {} processing",payout.getPayoutReference());
-                    payout.setStatus(PayoutStatus.PROCESSING);
-                    payout.setProcessedAt(LocalDateTime.now());
-                    payout.setUpdatedAt(LocalDateTime.now());
-
-                    return payoutRepository.save(payout);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYOUT_PROCESSING",
-                        "PAYOUT",
-                        saved.getId(),
-                        null,
-                        "payoutReference="+
-                                saved.getPayoutReference()
-                ).thenReturn(saved))
-                .map(this::response);
-    }
-
-    public Mono<PayoutResponse> success(
-            Long payoutId,
-            PayoutActionRequest request
-    ){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(payoutId))
-                .flatMap(payout->{
-                    if(payout.getStatus()!=PayoutStatus.PROCESSING){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only processing payouts can succeed"
-                                )
-                        );
-                    }
-
-                    log.info("Payout {} succeeded",payout.getPayoutReference());
-                    payout.setStatus(PayoutStatus.SUCCESS);
-                    payout.setUpdatedAt(LocalDateTime.now());
-
-                    if(request.getExternalReference()!=null){
-                        payout.setExternalReference(
-                                request.getExternalReference()
-                        );
-                    }
-
-                    return payoutRepository.save(payout);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYOUT_SUCCESS",
-                        "PAYOUT",
-                        saved.getId(),
-                        null,
-                        "payoutReference="+
-                                saved.getPayoutReference()
-                ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPayoutProcessed(
-                                saved.getCustomerId(),
-                                saved.getPayoutReference(),
-                                saved.getAmount()
-                        )
-                        .thenReturn(saved))
-                .flatMap(saved->claimsServiceClient
-                        .settleClaim(saved.getClaimId(),saved.getPayoutReference())
-                        .thenReturn(saved))
-                .flatMap(saved->{
-                    if(saved.getTriggerEventId()!=null){
-                        return triggerServiceClient
-                                .markEventProcessed(
-                                        saved.getTriggerEventId()
-                                )
-                                .thenReturn(saved);
-                    }
-                    return Mono.just(saved);
-                })
-                .flatMap(saved->financialTransactions
-                        .recordPayout(
-                                saved.getCustomerId(),
-                                saved.getPolicyId(),
-                                saved.getId(),
-                                saved.getClaimId(),
-                                saved.getAmount(),
-                                "SUCCESS"
-                        )
-                        .thenReturn(saved))
-                .map(this::response);
-    }
-
-    public Mono<PayoutResponse> fail(
-            Long payoutId,
-            PayoutActionRequest request
-    ){
-        return SecurityUtil.requireAdmin()
-                .then(findEntity(payoutId))
-                .flatMap(payout->{
-                    if(payout.getStatus()!=PayoutStatus.PROCESSING){
-                        return Mono.error(
-                                new ConflictException(
-                                        "Only processing payouts can fail"
-                                )
-                        );
-                    }
-
-                    log.warn("Payout {} failed: {}",
-                            payout.getPayoutReference(),request.getFailureReason());
-                    payout.setStatus(PayoutStatus.FAILED);
-                    payout.setUpdatedAt(LocalDateTime.now());
-
-                    if(request.getFailureReason()!=null){
-                        payout.setFailureReason(
-                                request.getFailureReason()
-                        );
-                    }
-
-                    return payoutRepository.save(payout);
-                })
-                .flatMap(saved->notifications.audit(
-                        "PAYOUT_FAILED",
-                        "PAYOUT",
-                        saved.getId(),
-                        null,
-                        "payoutReference="+
-                                saved.getPayoutReference()+
-                                ",reason="+saved.getFailureReason()
-                ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPayoutFailed(
-                                saved.getCustomerId(),
-                                saved.getPayoutReference(),
-                                saved.getFailureReason()
-                        )
-                        .thenReturn(saved))
-                .map(this::response);
-    }
-
+    /**
+     * Admin retry of a failed payout: the transfer is attempted again straight away.
+     */
     public Mono<PayoutResponse> retry(
             Long payoutId,
             PayoutActionRequest request
@@ -307,34 +146,88 @@ public class PayoutService{
                                 )
                         );
                     }
-
-                    log.info("Retrying payout {} (retry {})",
-                            payout.getPayoutReference(),payout.getRetryCount()+1);
-                    payout.setStatus(PayoutStatus.PROCESSING);
-                    payout.setRetryCount(payout.getRetryCount()+1);
-                    payout.setProcessedAt(LocalDateTime.now());
-                    payout.setUpdatedAt(LocalDateTime.now());
-
-                    return payoutRepository.save(payout);
+                    return retryAutomatically(payout);
                 })
-                .flatMap(saved->notifications.audit(
+                .map(this::response);
+    }
+
+    /** Retries a failed payout (used by the admin retry and the retry scheduler). */
+    public Mono<Payout> retryAutomatically(Payout payout){
+        payout.setRetryCount(payout.getRetryCount()+1);
+        log.info("Retrying payout {} (retry {})",
+                payout.getPayoutReference(),payout.getRetryCount());
+        return notifications.audit(
                         "PAYOUT_RETRY",
+                        "PAYOUT",
+                        payout.getId(),
+                        null,
+                        "payoutReference="+payout.getPayoutReference()+
+                                ",retryCount="+payout.getRetryCount())
+                .then(disburse(payout));
+    }
+
+    /**
+     * Pays the approved amount out straight away — there is no admin approval step. The
+     * transfer is a mock bank transfer, so it completes immediately; afterwards the customer
+     * is notified, the claim is settled and the trigger event is closed. Those follow-up
+     * steps are best effort: a failure there is logged and never undoes the payment.
+     */
+    public Mono<Payout> disburse(Payout payout){
+        LocalDateTime now=LocalDateTime.now();
+        payout.setStatus(PayoutStatus.SUCCESS);
+        payout.setFailureReason(null);
+        payout.setExternalReference(generateTransferReference());
+        payout.setProcessedAt(now);
+        payout.setUpdatedAt(now);
+
+        log.info("Payout {} paid automatically, transfer {}",
+                payout.getPayoutReference(),payout.getExternalReference());
+
+        return payoutRepository.save(payout)
+                .flatMap(saved->notifications.audit(
+                        "PAYOUT_SUCCESS",
                         "PAYOUT",
                         saved.getId(),
                         null,
-                        "payoutReference="+
-                                saved.getPayoutReference()+
-                                ",retryCount="+saved.getRetryCount()
+                        "payoutReference="+saved.getPayoutReference()+
+                                ",transfer="+saved.getExternalReference()+
+                                " (automatic)"
                 ).thenReturn(saved))
-                .flatMap(saved->notifications
-                        .notifyPayoutRetry(
+                .flatMap(saved->bestEffort(
+                        notifications.notifyPayoutProcessed(
                                 saved.getCustomerId(),
                                 saved.getPayoutReference(),
+                                saved.getAmount()),
+                        "notify customer",saved))
+                .flatMap(saved->bestEffort(
+                        claimsServiceClient.settleClaim(
+                                saved.getClaimId(),saved.getPayoutReference()),
+                        "settle claim",saved))
+                .flatMap(saved->saved.getTriggerEventId()==null
+                        ?Mono.just(saved)
+                        :bestEffort(
+                                triggerServiceClient.markEventProcessed(
+                                        saved.getTriggerEventId()),
+                                "close trigger event",saved))
+                .flatMap(saved->bestEffort(
+                        financialTransactions.recordPayout(
+                                saved.getCustomerId(),
+                                saved.getPolicyId(),
+                                saved.getId(),
+                                saved.getClaimId(),
                                 saved.getAmount(),
-                                saved.getRetryCount()
-                        )
-                        .thenReturn(saved))
-                .map(this::response);
+                                "SUCCESS").then(),
+                        "record transaction",saved));
+    }
+
+    private Mono<Payout> bestEffort(Mono<?> step,String what,Payout payout){
+        return step
+                .then(Mono.just(payout))
+                .onErrorResume(error->{
+                    log.warn("Payout {}: could not {}: {}",
+                            payout.getPayoutReference(),what,error.getMessage());
+                    return Mono.just(payout);
+                });
     }
 
     private void validateClaim(
@@ -374,6 +267,15 @@ public class PayoutService{
                 .switchIfEmpty(Mono.error(
                         new NotFoundException("Payout not found")
                 ));
+    }
+
+    private String generateTransferReference(){
+        return "AUTO-"+
+                UUID.randomUUID()
+                        .toString()
+                        .replace("-","")
+                        .substring(0,12)
+                        .toUpperCase();
     }
 
     private String generateReference(){

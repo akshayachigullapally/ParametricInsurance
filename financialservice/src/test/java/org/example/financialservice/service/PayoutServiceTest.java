@@ -67,6 +67,9 @@ class PayoutServiceTest{
         when(notifications.notifyPayoutRetry(
                 any(),any(),any(),any()
         )).thenReturn(Mono.empty());
+        when(notifications.notifyPayoutProcessed(
+                any(),any(),any()
+        )).thenReturn(Mono.empty());
         when(claimsServiceClient.settleClaim(any(),any()))
                 .thenReturn(Mono.empty());
         when(triggerServiceClient.markEventProcessed(
@@ -166,11 +169,53 @@ class PayoutServiceTest{
                             .isEqualTo("CLM-10");
                     assertThat(response.getTriggerEventId())
                             .isEqualTo(3L);
-                    assertThat(response.getStatus())
-                            .isEqualTo(PayoutStatus.PENDING);
                     assertThat(response.getRetryCount()).isZero();
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void createPaysOutStraightAwayWithoutAdminApproval(){
+        stubApprovedClaim();
+        when(payoutRepository.save(any(Payout.class)))
+                .thenAnswer(inv->{
+                    Payout payout=inv.getArgument(0);
+                    payout.setId(1L);
+                    return Mono.just(payout);
+                });
+
+        StepVerifier.create(service.create(
+                CreatePayoutRequest.builder().claimId(10L).build()
+        ))
+                .assertNext(response->{
+                    assertThat(response.getStatus()).isEqualTo(PayoutStatus.SUCCESS);
+                    assertThat(response.getExternalReference()).startsWith("AUTO-");
+                    assertThat(response.getProcessedAt()).isNotNull();
+                })
+                .verifyComplete();
+
+        verify(notifications).notifyPayoutProcessed(org.mockito.ArgumentMatchers.eq(5L),anyString(),any());
+        verify(claimsServiceClient).settleClaim(org.mockito.ArgumentMatchers.eq(10L),anyString());
+        verify(triggerServiceClient).markEventProcessed(3L);
+    }
+
+    @Test
+    void paymentIsKeptEvenIfSettlingTheClaimFails(){
+        stubApprovedClaim();
+        when(payoutRepository.save(any(Payout.class)))
+                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
+        when(claimsServiceClient.settleClaim(any(),any()))
+                .thenReturn(Mono.error(new RuntimeException("claims service down")));
+
+        StepVerifier.create(service.create(
+                CreatePayoutRequest.builder().claimId(10L).build()
+        ))
+                .assertNext(response->assertThat(response.getStatus())
+                        .isEqualTo(PayoutStatus.SUCCESS))
+                .verifyComplete();
+
+        verify(financialTransactions).recordPayout(5L,7L,null,10L,
+                new BigDecimal("5000.00"),"SUCCESS");
     }
 
     private Payout pendingPayout(Long id){
@@ -187,113 +232,6 @@ class PayoutServiceTest{
                 .retryCount(0)
                 .createdAt(LocalDateTime.now())
                 .build();
-    }
-
-    @Test
-    void processTransition(){
-        Payout payout=pendingPayout(1L);
-        when(payoutRepository.findById(1L))
-                .thenReturn(Mono.just(payout));
-        when(payoutRepository.save(any(Payout.class)))
-                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
-
-        StepVerifier.create(TestAuth.admin(
-                service.process(
-                        1L,
-                        new PayoutActionRequest()
-                ),
-                1L
-        ))
-                .assertNext(response->assertThat(response.getStatus())
-                        .isEqualTo(PayoutStatus.PROCESSING))
-                .verifyComplete();
-    }
-
-    @Test
-    void successTransition(){
-        Payout payout=pendingPayout(1L);
-        payout.setStatus(PayoutStatus.PROCESSING);
-        payout.setProcessedAt(LocalDateTime.now());
-
-        when(payoutRepository.findById(1L))
-                .thenReturn(Mono.just(payout));
-        when(payoutRepository.save(any(Payout.class)))
-                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
-        when(notifications.notifyPayoutProcessed(
-                any(),
-                any(),
-                any()
-        )).thenReturn(Mono.empty());
-
-        StepVerifier.create(TestAuth.admin(
-                service.success(
-                        1L,
-                        PayoutActionRequest.builder()
-                                .externalReference("BANK-1")
-                                .build()
-                ),
-                1L
-        ))
-                .assertNext(response->{
-                    assertThat(response.getStatus())
-                            .isEqualTo(PayoutStatus.SUCCESS);
-                    assertThat(response.getExternalReference())
-                            .isEqualTo("BANK-1");
-                })
-                .verifyComplete();
-
-        verify(claimsServiceClient).settleClaim(
-                payout.getClaimId(),payout.getPayoutReference());
-    }
-
-    @Test
-    void successOnlyFromProcessing(){
-        Payout payout=pendingPayout(1L);
-        when(payoutRepository.findById(1L))
-                .thenReturn(Mono.just(payout));
-
-        StepVerifier.create(TestAuth.admin(
-                service.success(
-                        1L,
-                        new PayoutActionRequest()
-                ),
-                1L
-        ))
-                .expectError(ConflictException.class)
-                .verify();
-    }
-
-    @Test
-    void failTransition(){
-        Payout payout=pendingPayout(1L);
-        payout.setStatus(PayoutStatus.PROCESSING);
-
-        when(payoutRepository.findById(1L))
-                .thenReturn(Mono.just(payout));
-        when(payoutRepository.save(any(Payout.class)))
-                .thenAnswer(inv->Mono.just(inv.getArgument(0)));
-        when(notifications.notifyPayoutFailed(
-                any(),
-                any(),
-                any()
-        )).thenReturn(Mono.empty());
-
-        StepVerifier.create(TestAuth.admin(
-                service.fail(
-                        1L,
-                        PayoutActionRequest.builder()
-                                .failureReason("Bank declined")
-                                .build()
-                ),
-                1L
-        ))
-                .assertNext(response->{
-                    assertThat(response.getStatus())
-                            .isEqualTo(PayoutStatus.FAILED);
-                    assertThat(response.getFailureReason())
-                            .isEqualTo("Bank declined");
-                })
-                .verifyComplete();
     }
 
     @Test
@@ -317,10 +255,13 @@ class PayoutServiceTest{
         ))
                 .assertNext(response->{
                     assertThat(response.getStatus())
-                            .isEqualTo(PayoutStatus.PROCESSING);
+                            .isEqualTo(PayoutStatus.SUCCESS);
                     assertThat(response.getRetryCount()).isEqualTo(2);
+                    assertThat(response.getFailureReason()).isNull();
                 })
                 .verifyComplete();
+
+        verify(claimsServiceClient).settleClaim(10L,"PO-1");
     }
 
     @Test

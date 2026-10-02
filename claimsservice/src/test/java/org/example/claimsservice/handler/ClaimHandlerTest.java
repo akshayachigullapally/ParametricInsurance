@@ -261,6 +261,7 @@ class ClaimHandlerTest {
         when(claimService.approveClaim(eq(1L), eq(1L), any(ApproveClaimRequest.class)))
                 .thenReturn(Mono.just(response));
         when(claimService.requestPayout(1L)).thenReturn(Mono.empty());
+        when(claimService.getClaim(1L)).thenReturn(Mono.just(claimResponse(1L, "SETTLED")));
         when(serverRequest.pathVariable("claimId")).thenReturn("1");
         mockPrincipal(1L);
         when(serverRequest.bodyToMono(ApproveClaimRequest.class))
@@ -273,6 +274,9 @@ class ClaimHandlerTest {
                     assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
                 })
                 .verifyComplete();
+
+        // Approval pays out automatically, so the latest claim (settled) is returned.
+        org.mockito.Mockito.verify(claimService).getClaim(1L);
     }
 
     @Test

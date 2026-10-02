@@ -46,11 +46,6 @@ class PayoutHandlerTest{
                 .GET("/api/financial/payouts/admin/all",handler::findAll)
                 .GET("/internal/financial/payouts/claim/{claimId}",
                         handler::findByClaim)
-                .PUT("/api/financial/payouts/{payoutId}/process",
-                        handler::process)
-                .PUT("/api/financial/payouts/{payoutId}/success",
-                        handler::success)
-                .PUT("/api/financial/payouts/{payoutId}/fail",handler::fail)
                 .PUT("/api/financial/payouts/{payoutId}/retry",handler::retry)
                 .build();
 
@@ -166,61 +161,6 @@ class PayoutHandlerTest{
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(PayoutResponse.class).hasSize(1);
-    }
-
-    @Test
-    void processReturnsProcessing(){
-        PayoutResponse processing=samplePayout(1L);
-        processing.setStatus(PayoutStatus.PROCESSING);
-
-        when(payoutService.process(anyLong(),any()))
-                .thenReturn(Mono.just(processing));
-
-        webClient.put()
-                .uri("/api/financial/payouts/1/process")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("PROCESSING");
-    }
-
-    @Test
-    void successReturnsSuccess(){
-        PayoutResponse success=samplePayout(1L);
-        success.setStatus(PayoutStatus.SUCCESS);
-
-        when(payoutService.success(anyLong(),any()))
-                .thenReturn(Mono.just(success));
-
-        webClient.put()
-                .uri("/api/financial/payouts/1/success")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"externalReference\":\"BANK-1\"}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("SUCCESS");
-    }
-
-    @Test
-    void failReturnsFailed(){
-        PayoutResponse failed=samplePayout(1L);
-        failed.setStatus(PayoutStatus.FAILED);
-        failed.setFailureReason("Bank decline");
-
-        when(payoutService.fail(anyLong(),any()))
-                .thenReturn(Mono.just(failed));
-
-        webClient.put()
-                .uri("/api/financial/payouts/1/fail")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"failureReason\":\"Bank decline\"}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("FAILED");
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import org.example.financialservice.dto.InternalClaimResponse;
 import org.example.financialservice.dto.PaymentResponse;
 import org.example.financialservice.dto.PayoutResponse;
+import org.example.financialservice.model.PayoutStatus;
 import org.example.financialservice.dto.InternalPolicyResponse;
 import org.example.financialservice.dto.PricingRuleResponse;
 import org.example.financialservice.dto.InternalProductResponse;
@@ -684,29 +685,9 @@ class FinancialRoutesIntegrationTest{
                 .expectBody()
                 .jsonPath("$.claimNumber").isEqualTo("CLM-10");
 
-        // Admin process
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payouts/"+
-                        payout.getId()+"/process")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{}"))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("PROCESSING");
-
-        // Admin success
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payouts/"+
-                        payout.getId()+"/success")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"externalReference\":\"BANK-1\"}"))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("SUCCESS");
+        // Paid straight away, no admin step
+        assertThat(payout.getStatus()).isEqualTo(PayoutStatus.SUCCESS);
+        assertThat(payout.getExternalReference()).startsWith("AUTO-");
 
         // Internal by claim
         webClient.get()
@@ -728,7 +709,7 @@ class FinancialRoutesIntegrationTest{
     }
 
     @Test
-    void payoutFailAndRetry(){
+    void payoutIsPaidAutomaticallyAndCannotBeRetried(){
         when(claimsServiceClient.findClaim(11L))
                 .thenReturn(Mono.just(InternalClaimResponse.builder()
                         .claimId(11L)
@@ -753,32 +734,14 @@ class FinancialRoutesIntegrationTest{
                 .getResponseBody()
                 .blockFirst();
 
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payouts/"+
-                        payout.getId()+"/process"))
-                .exchange()
-                .expectStatus().isOk();
+        assertThat(payout.getStatus()).isEqualTo(PayoutStatus.SUCCESS);
 
-        adminHeaders(webClient.put()
-                .uri("/api/financial/payouts/"+
-                        payout.getId()+"/fail")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"failureReason\":\"Bank decline\"}"))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("FAILED");
-
-        // Retry failed payout
+        // Only failed payouts can be retried
         adminHeaders(webClient.put()
                 .uri("/api/financial/payouts/"+
                         payout.getId()+"/retry"))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("PROCESSING")
-                .jsonPath("$.retryCount").isEqualTo(1);
+                .expectStatus().isEqualTo(409);
     }
 
     @Test
@@ -805,7 +768,7 @@ class FinancialRoutesIntegrationTest{
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
-                .jsonPath("$.status").isEqualTo("PENDING");
+                .jsonPath("$.status").isEqualTo("SUCCESS");
     }
 
     // ---- Metrics (Phase H) ----
