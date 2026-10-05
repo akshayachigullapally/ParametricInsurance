@@ -104,8 +104,11 @@ Most examples follow the same story:
 ### 2.6 Logout
 **What it is.** Logging out cancels the session on the server and clears the tokens in the browser.
 
-### 2.7 Disabled accounts cannot log in
-**What it is.** Login checks an "enabled" flag on every account and refuses disabled ones with "Account is disabled". This is a safety check: no screen sets the flag today, so it is changed in the database.
+### 2.7 Suspended and inactive accounts cannot log in
+**What it is.** When an admin sets a user to **Suspended** or **Inactive**, the user is **signed out everywhere** (all sessions end) and cannot log in or refresh their sign-in. The access token they already hold runs out within 15 minutes, and then the app signs them out. Setting the user back to **Active** lets them in again. A customer who closes their own account becomes Inactive in the same way. The message only appears after a correct password, so it does not reveal which emails exist.
+**Example.** Admin suspends Priya. Her next login shows "Your account is suspended. Please contact support."
+
+There is also a lower-level "enabled" flag on every login account; a disabled one gets "Account is disabled". No screen changes that flag.
 
 ### 2.8 Page protection by role (guards)
 **What it is.** Pages check that you are logged in and have the right role. Logged-in users cannot open the login or register pages.
@@ -567,8 +570,8 @@ The date must be inside the policy period. A claims officer reviews it.
 **What it is.** Every user with role, segment, contact, location and join date. You can search by name, email, role, phone or location, and filter by status or segment.
 
 ### 18.2 Change a user's status
-**What it is.** Set a profile to **Active, Inactive or Suspended**, after a confirmation dialog. The change is audited. The status is a label for the admin (shown in the list and usable as a filter); it does not block login.
-**Example.** Admin marks a customer *Suspended* while checking their documents.
+**What it is.** Set a profile to **Active, Inactive or Suspended**, after a confirmation dialog that explains the effect. The change is audited (old → new). **Inactive and Suspended users are signed out and cannot log in** (see 2.7); **Active** lets them sign in again. The status can also be used as a filter.
+**Example.** Admin suspends a customer. The dialog says "They will be signed out and cannot sign in until an admin makes them active again."
 
 ### 18.3 User detail
 **What it is.** One customer's record: profile, address, all their policies and all their claims.
@@ -710,7 +713,7 @@ These work in the backend but have no screen yet. They can be shown with an API 
 | Feature | What it does |
 |---|---|
 | Sessions | List your logged-in devices and sign one out (`/api/auth/sessions`) |
-| Deactivate account | Customer closes their own profile (`DELETE /api/users/me`) |
+| Deactivate account | Customer closes their own profile (`DELETE /api/users/me`); they are signed out and cannot log in again |
 | Observations | Record raw readings, then validate or reject them one by one or all at once |
 | Monitor runs | See each automatic scan and start one by hand |
 | Trigger definitions and evaluations | View, create and evaluate per-zone trigger definitions |
@@ -733,7 +736,7 @@ These work in the backend but have no screen yet. They can be shown with an API 
 | Payout | Created → Success (instantly) · Failed → retried → Success |
 | Trigger event | Verified on creation → Processed when the payout succeeds |
 | Zone | Active ↔ Inactive · Archived · weather alert on/off · cap set/removed |
-| User profile | Active ↔ Inactive ↔ Suspended (label set by admin) · a customer closing their account sets Inactive |
+| User profile | Active ↔ Inactive ↔ Suspended (admin) · Inactive and Suspended cannot log in · a customer closing their account becomes Inactive |
 
 ---
 

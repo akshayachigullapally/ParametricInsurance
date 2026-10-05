@@ -8,6 +8,8 @@ import org.example.authservice.exception.NotFoundException;
 import org.example.authservice.exception.ValidationException;
 import org.example.authservice.model.*;
 import org.example.authservice.repository.AddressRepository;
+import org.example.authservice.repository.RefreshTokenRepository;
+import org.example.authservice.repository.SessionRepository;
 import org.example.authservice.repository.UserCredentialRepository;
 import org.example.authservice.repository.UserProfileRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class UserProfileService{
     private final UserProfileRepository profileRepository;
     private final AddressRepository addressRepository;
     private final NotificationServiceClient notificationServiceClient;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final SessionRepository sessionRepository;
 
     @Transactional
     public Mono<UserResponse> saveProfile(Long authUserId,UpdateProfileRequest request){
@@ -75,7 +79,8 @@ public class UserProfileService{
                     log.info("Profile deactivated by userId={}",authUserId);
                     profile.setStatus(UserStatus.INACTIVE.name());
                     profile.setUpdatedAt(LocalDateTime.now());
-                    return profileRepository.save(profile);
+                    return profileRepository.save(profile)
+                            .flatMap(saved->signOutEverywhere(authUserId).thenReturn(saved));
                 })
                 .flatMap(saved->notificationServiceClient.audit(
                         "PROFILE_DEACTIVATED","USER",authUserId,authUserId,
@@ -145,9 +150,13 @@ public class UserProfileService{
                             profile.setStatus(status);
                             profile.setUpdatedAt(LocalDateTime.now());
 
+                            Mono<Void> signOut=UserStatus.ACTIVE.name().equals(status)
+                                    ?Mono.empty()
+                                    :signOutEverywhere(authUserId);
+
                             return profileRepository.save(profile)
-                                    .flatMap(savedProfile->
-                                            buildUserResponse(user,savedProfile)
+                                    .flatMap(savedProfile->signOut
+                                            .then(buildUserResponse(user,savedProfile))
                                     )
                                     .flatMap(response->notificationServiceClient.auditChange(
                                             "USER_STATUS_CHANGED","USER",authUserId,null,null,
@@ -156,6 +165,27 @@ public class UserProfileService{
                                             "Status: "+status
                                     ).thenReturn(response));
                         }));
+    }
+
+    /**
+     * Ends every session of the user: refresh tokens are revoked so the app cannot renew
+     * its sign-in. The current access token simply runs out (at most 15 minutes).
+     */
+    private Mono<Void> signOutEverywhere(Long authUserId){
+        LocalDateTime now=LocalDateTime.now();
+        return refreshTokenRepository.findAllByUserIdAndRevokedFalse(authUserId)
+                .flatMap(token->{
+                    token.setRevoked(true);
+                    return refreshTokenRepository.save(token);
+                })
+                .thenMany(sessionRepository.findAllByUserIdAndActiveTrue(authUserId)
+                        .flatMap(session->{
+                            session.setActive(false);
+                            session.setLastAccessedAt(now);
+                            return sessionRepository.save(session);
+                        }))
+                .then()
+                .doOnSuccess(ignored->log.info("Signed out all sessions of userId={}",authUserId));
     }
 
     private Mono<UserProfile> saveOrUpdateProfile(

@@ -1,5 +1,7 @@
 package org.example.authservice.service;
 
+import org.example.authservice.model.UserStatus;
+
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.authservice.dto.*;
@@ -92,6 +94,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                         new AuthenticationException("Invalid email or password")
                 ))
                 .flatMap(user->validateUserForLogin(user,request.getPassword()))
+                .flatMap(this::requireActiveProfile)
                 .flatMap(user->createTokens(user,deviceName,ipAddress))
                 .flatMap(response->auditUser(
                         "USER_LOGIN",response,
@@ -127,7 +130,8 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                         ));
                     }
                     log.debug("Refreshing tokens for userId={}",user.getId());
-                    return createTokens(user,deviceName,ipAddress);
+                    return requireActiveProfile(user)
+                            .flatMap(active->createTokens(active,deviceName,ipAddress));
                 });
 
     }
@@ -245,6 +249,29 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
         }
 
         return Mono.just(user);
+    }
+
+    /**
+     * A profile the admin set to SUSPENDED or INACTIVE (or a customer closed) cannot sign in
+     * or refresh its session. Users without a profile (e.g. staff) are not affected.
+     */
+    private Mono<UserCredential> requireActiveProfile(UserCredential user){
+        return profileRepository.findByAuthUserId(user.getId())
+                .flatMap(profile->{
+                    String status=profile.getStatus();
+                    if(UserStatus.SUSPENDED.name().equalsIgnoreCase(status)){
+                        log.warn("Login blocked for suspended userId={}",user.getId());
+                        return Mono.<UserCredential>error(new AuthenticationException(
+                                "Your account is suspended. Please contact support."));
+                    }
+                    if(UserStatus.INACTIVE.name().equalsIgnoreCase(status)){
+                        log.warn("Login blocked for inactive userId={}",user.getId());
+                        return Mono.<UserCredential>error(new AuthenticationException(
+                                "Your account is inactive. Please contact support."));
+                    }
+                    return Mono.just(user);
+                })
+                .defaultIfEmpty(user);
     }
 
     private Mono<RefreshToken> validateRefreshToken(RefreshToken token){

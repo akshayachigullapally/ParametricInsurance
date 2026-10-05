@@ -1,5 +1,14 @@
 # Frontend Implementation Guidance - Complete Automatic Parametric Claim Flow
 
+> **Note (October 2026): this is an early design plan and is now out of date.**
+> For how the app works today see **[docs/FEATURES.md](docs/FEATURES.md)** (every feature with an example) and **docs/CityShield_Project_Documentation.docx** (journeys, formulas, demo script). Main differences:
+> - There is no `/admin/measurement-console` page. Live readings are shown in the header's **Measurement details & thresholds** panel, where an admin can **Update value** (`PUT /api/triggers/measurements/current`), and single products are tested on the **Trigger simulator** page (`/admin/current-measurements`, `PUT /api/triggers/current-measurements`).
+> - Trigger events are verified when they are created; there is no manual Verify button.
+> - Only policies with a paid premium get automatic claims, and payouts are paid automatically when a claim is approved (no admin process / success / fail steps).
+> - Zones can have a weather alert (pauses sales) and an exposure cap.
+> - Suspended or inactive users are signed out and cannot log in.
+
+
 ## Overview
 
 This document describes the frontend changes needed to support the complete automatic parametric insurance demo flow:

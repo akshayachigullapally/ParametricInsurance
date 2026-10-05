@@ -10,6 +10,10 @@ import org.example.authservice.model.Address;
 import org.example.authservice.model.UserCredential;
 import org.example.authservice.model.UserProfile;
 import org.example.authservice.repository.AddressRepository;
+import org.example.authservice.repository.RefreshTokenRepository;
+import org.example.authservice.repository.SessionRepository;
+import org.example.authservice.model.RefreshToken;
+import org.example.authservice.model.Session;
 import org.example.authservice.repository.UserCredentialRepository;
 import org.example.authservice.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +48,12 @@ class UserProfileServiceTest {
     @Mock
     private NotificationServiceClient notificationServiceClient;
 
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private SessionRepository sessionRepository;
+
     private UserProfileService userProfileService;
 
     @BeforeEach
@@ -52,8 +62,14 @@ class UserProfileServiceTest {
                 userRepository,
                 profileRepository,
                 addressRepository,
-                notificationServiceClient
+                notificationServiceClient,
+                refreshTokenRepository,
+                sessionRepository
         );
+        lenient().when(refreshTokenRepository.findAllByUserIdAndRevokedFalse(any()))
+                .thenReturn(Flux.empty());
+        lenient().when(sessionRepository.findAllByUserIdAndActiveTrue(any()))
+                .thenReturn(Flux.empty());
         lenient().when(notificationServiceClient.auditChange(any(),any(),any(),any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
         lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
@@ -648,6 +664,51 @@ class UserProfileServiceTest {
         verify(profileRepository).findByAuthUserId(1L);
         verify(profileRepository).save(profile);
         verify(addressRepository).findAllByUserProfileId(10L);
+    }
+
+    @Test
+    void updateStatus_whenSuspended_shouldSignTheUserOutEverywhere() {
+        UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
+        UserCredential user=user(1L,"ROLE_CUSTOMER");
+        UserProfile profile=profile(10L,1L,"ACTIVE","INDIVIDUAL");
+        RefreshToken token=RefreshToken.builder().id(5L).userId(1L).revoked(false).build();
+        Session session=Session.builder().id(6L).userId(1L).active(true).build();
+
+        when(request.getStatus()).thenReturn("SUSPENDED");
+        when(userRepository.findById(1L)).thenReturn(Mono.just(user));
+        when(profileRepository.findByAuthUserId(1L)).thenReturn(Mono.just(profile));
+        when(profileRepository.save(profile)).thenReturn(Mono.just(profile));
+        when(addressRepository.findAllByUserProfileId(10L)).thenReturn(Flux.empty());
+        when(refreshTokenRepository.findAllByUserIdAndRevokedFalse(1L)).thenReturn(Flux.just(token));
+        when(refreshTokenRepository.save(token)).thenReturn(Mono.just(token));
+        when(sessionRepository.findAllByUserIdAndActiveTrue(1L)).thenReturn(Flux.just(session));
+        when(sessionRepository.save(session)).thenReturn(Mono.just(session));
+
+        StepVerifier.create(userProfileService.updateStatus(1L,request))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        assertThat(token.getRevoked()).isTrue();
+        assertThat(session.getActive()).isFalse();
+    }
+
+    @Test
+    void updateStatus_whenReactivated_shouldKeepSessions() {
+        UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
+        UserCredential user=user(1L,"ROLE_CUSTOMER");
+        UserProfile profile=profile(10L,1L,"SUSPENDED","INDIVIDUAL");
+
+        when(request.getStatus()).thenReturn("ACTIVE");
+        when(userRepository.findById(1L)).thenReturn(Mono.just(user));
+        when(profileRepository.findByAuthUserId(1L)).thenReturn(Mono.just(profile));
+        when(profileRepository.save(profile)).thenReturn(Mono.just(profile));
+        when(addressRepository.findAllByUserProfileId(10L)).thenReturn(Flux.empty());
+
+        StepVerifier.create(userProfileService.updateStatus(1L,request))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        verify(refreshTokenRepository,never()).findAllByUserIdAndRevokedFalse(any());
     }
 
     @Test

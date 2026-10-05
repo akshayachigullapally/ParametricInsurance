@@ -1,5 +1,7 @@
 package org.example.authservice.service;
 
+import org.example.authservice.model.UserProfile;
+
 import org.example.authservice.dto.*;
 import org.example.authservice.exception.AuthenticationException;
 import org.example.authservice.exception.ConflictException;
@@ -51,6 +53,62 @@ class AuthServiceTest{
         lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
                 .thenReturn(reactor.core.publisher.Mono.empty());
         ReflectionTestUtils.setField(authService,"refreshExpiration",604_800_000L);
+        lenient().when(profileRepository.findByAuthUserId(any()))
+                .thenReturn(Mono.empty());
+    }
+
+    @Test
+    void login_whenProfileIsSuspended_shouldBeBlocked(){
+        LoginRequest request=mock(LoginRequest.class);
+        UserCredential user=user(true);
+
+        when(request.getEmail()).thenReturn("user@test.com");
+        when(request.getPassword()).thenReturn("Password@123");
+        when(userRepository.findByEmailIgnoreCase("user@test.com")).thenReturn(Mono.just(user));
+        when(passwordEncoder.matches("Password@123","encoded-password")).thenReturn(true);
+        when(profileRepository.findByAuthUserId(user.getId())).thenReturn(Mono.just(
+                UserProfile.builder().authUserId(user.getId()).status("SUSPENDED").build()));
+
+        StepVerifier.create(authService.login(request,"Mobile","10.0.0.1"))
+                .expectErrorSatisfies(error->assertThat(error)
+                        .isInstanceOf(AuthenticationException.class)
+                        .hasMessage("Your account is suspended. Please contact support."))
+                .verify();
+
+        verify(refreshTokenRepository,never()).save(any());
+        verify(sessionRepository,never()).save(any());
+    }
+
+    @Test
+    void login_whenProfileIsInactive_shouldBeBlocked(){
+        LoginRequest request=mock(LoginRequest.class);
+        UserCredential user=user(true);
+
+        when(request.getEmail()).thenReturn("user@test.com");
+        when(request.getPassword()).thenReturn("Password@123");
+        when(userRepository.findByEmailIgnoreCase("user@test.com")).thenReturn(Mono.just(user));
+        when(passwordEncoder.matches("Password@123","encoded-password")).thenReturn(true);
+        when(profileRepository.findByAuthUserId(user.getId())).thenReturn(Mono.just(
+                UserProfile.builder().authUserId(user.getId()).status("INACTIVE").build()));
+
+        StepVerifier.create(authService.login(request,"Mobile","10.0.0.1"))
+                .expectErrorMessage("Your account is inactive. Please contact support.")
+                .verify();
+    }
+
+    @Test
+    void login_whenSuspendedUserGivesWrongPassword_shouldNotRevealTheSuspension(){
+        LoginRequest request=mock(LoginRequest.class);
+        UserCredential user=user(true);
+
+        when(request.getEmail()).thenReturn("user@test.com");
+        when(request.getPassword()).thenReturn("wrong");
+        when(userRepository.findByEmailIgnoreCase("user@test.com")).thenReturn(Mono.just(user));
+        when(passwordEncoder.matches("wrong","encoded-password")).thenReturn(false);
+
+        StepVerifier.create(authService.login(request,"Mobile","10.0.0.1"))
+                .expectErrorMessage("Invalid email or password")
+                .verify();
     }
 
     @Test
