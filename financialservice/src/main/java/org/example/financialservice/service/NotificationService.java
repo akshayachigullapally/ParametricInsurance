@@ -370,7 +370,6 @@ public class NotificationService{
                 .build();
 
         return client.sendNotification(request)
-                .doOnSuccess(ignored -> log.info("Notification {} sent", type))
                 .onErrorResume(exception->{
                     log.error(
                             "Notification {} was NOT delivered, so nobody will see it. Check that NOTIFICATION-SERVICE is running and registered in Eureka (http://localhost:8761). Cause: {}",
@@ -399,7 +398,6 @@ public class NotificationService{
                 .build();
 
         return client.sendNotification(request)
-                .doOnSuccess(ignored -> log.info("Notification {} sent", type))
                 .onErrorResume(exception->{
                     log.error(
                             "Notification {} was NOT delivered, so nobody will see it. Check that NOTIFICATION-SERVICE is running and registered in Eureka (http://localhost:8761). Cause: {}",
