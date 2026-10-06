@@ -70,8 +70,8 @@ logging:
   level:
     root: INFO
     org.example.authservice: ${APP_LOG_LEVEL:DEBUG}
-    org.springframework.r2dbc: DEBUG
-    org.springframework.data.r2dbc: DEBUG
+    org.springframework.r2dbc: ${SQL_LOG_LEVEL:INFO}
+    org.springframework.data.r2dbc: ${SQL_LOG_LEVEL:INFO}
   file:
     name: ./logs/auth-service.log
   logback:

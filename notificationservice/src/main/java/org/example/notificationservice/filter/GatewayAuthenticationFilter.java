@@ -25,7 +25,9 @@ String path=exchange.getRequest().getPath().value();
 if(path.equals("/actuator")||path.startsWith("/actuator/"))return chain.filter(exchange);
 String key=exchange.getRequest().getHeaders().getFirst(GatewayHeaders.GATEWAY_KEY);
 if(!internalKey.equals(key))return reject(exchange,HttpStatus.UNAUTHORIZED,"Invalid gateway key");
-if(path.startsWith("/internal/"))return chain.filter(exchange);
+// Service-to-service call: the key was checked above, so run it as an authenticated internal caller.
+if(path.startsWith("/internal/"))return chain.filter(exchange).contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+        new UsernamePasswordAuthenticationToken("internal-service",null,List.of(new SimpleGrantedAuthority("ROLE_INTERNAL_SERVICE")))));
 String userId=exchange.getRequest().getHeaders().getFirst(GatewayHeaders.USER_ID);
 String role=exchange.getRequest().getHeaders().getFirst(GatewayHeaders.USER_ROLE);
 if(userId==null||role==null)return reject(exchange,HttpStatus.UNAUTHORIZED,"Missing trusted identity headers");

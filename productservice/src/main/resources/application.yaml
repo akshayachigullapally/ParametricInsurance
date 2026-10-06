@@ -55,9 +55,9 @@ logging:
   level:
     root: INFO
     org.example.productservice: ${APP_LOG_LEVEL:DEBUG}
-    org.springframework.r2dbc: DEBUG
-    org.springframework.data.r2dbc: DEBUG
-    io.r2dbc.h2: DEBUG
+    org.springframework.r2dbc: ${SQL_LOG_LEVEL:INFO}
+    org.springframework.data.r2dbc: ${SQL_LOG_LEVEL:INFO}
+    io.r2dbc.h2: ${SQL_LOG_LEVEL:INFO}
   file:
     name: ./logs/product-service.log
   logback:
