@@ -378,10 +378,6 @@ class UserHandlerTest {
 
     @Test
     void updateStatus_whenInvalidStatus_shouldPropagateValidationException() {
-        when(userProfileService.updateStatus(eq(1L), any(UpdateUserStatusRequest.class)))
-                .thenReturn(Mono.error(
-                        new ValidationException("Status must be ACTIVE, SUSPENDED or INACTIVE")));
-
         ServerRequest request = authenticatedRequestWithPathVarAndBody(
                 1L, "userId", "1",
                 UpdateUserStatusRequest.builder().status("DELETED").build());
@@ -390,9 +386,12 @@ class UserHandlerTest {
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
                     assertThat(((ValidationException) error).getErrors())
-                            .containsExactly("Status must be ACTIVE, SUSPENDED or INACTIVE");
+                            .containsExactly("status: Status must be ACTIVE, INACTIVE or SUSPENDED");
                 })
                 .verify();
+
+        // Rejected by the request check, before the service is called.
+        verify(userProfileService, never()).updateStatus(any(), any());
     }
 
     @Test

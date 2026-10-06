@@ -81,7 +81,8 @@ public class PayoutHandler{
                 .bodyToMono(PayoutActionRequest.class)
                 .defaultIfEmpty(
                         PayoutActionRequest.builder().build()
-                );
+                )
+                .map(validation::validate);
     }
 
     private Long payoutId(ServerRequest request){

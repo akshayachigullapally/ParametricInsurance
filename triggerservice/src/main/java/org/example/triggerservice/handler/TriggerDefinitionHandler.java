@@ -182,6 +182,7 @@ public class TriggerDefinitionHandler{
                                 new ValidationException(
                                         "Request body is required"
                                 )))
+                        .flatMap(validationUtil::validate)
                         .flatMap(body->productTriggerSyncService
                                 .syncProductDefinition(productId,body)))
                 .flatMap(result->ServerResponse.ok()
