@@ -23,6 +23,8 @@ public class NotificationserviceApplication {
             "spring.r2dbc.username", "sa",
             "spring.sql.init.mode", "always",
             "eureka.client.service-url.defaultZone", "http://localhost:8761/eureka/",
+            "eureka.instance.hostname", "localhost",
+            "eureka.instance.prefer-ip-address", "false",
             "gateway.internal-key", "cityshield-local-gateway-key"
     );
 
