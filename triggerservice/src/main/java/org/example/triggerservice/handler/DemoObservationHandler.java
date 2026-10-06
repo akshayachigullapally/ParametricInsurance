@@ -1,6 +1,7 @@
 package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
+import org.example.triggerservice.util.RequestValidationUtil;
 import org.example.triggerservice.dto.DemoObservationRequest;
 import org.example.triggerservice.dto.DemoObservationResponse;
 import org.example.triggerservice.exception.ForbiddenException;
@@ -21,12 +22,14 @@ public class DemoObservationHandler{
     private static final Set<String> ADMIN_ROLES=Set.of("ROLE_ADMIN");
 
     private final DemoObservationService demoObservationService;
+    private final RequestValidationUtil validationUtil;
 
     public Mono<ServerResponse> recordAndEvaluate(ServerRequest request){
         return requireAdmin()
                 .then(requireUserId())
                 .flatMap(userId->request.bodyToMono(DemoObservationRequest.class)
                         .switchIfEmpty(Mono.error(new ValidationException("Request body is required")))
+                        .flatMap(validationUtil::validate)
                         .flatMap(body->demoObservationService.recordAndEvaluate(body,userId)))
                 .flatMap(response->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)

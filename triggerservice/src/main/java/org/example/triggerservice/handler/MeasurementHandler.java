@@ -6,6 +6,7 @@ import org.example.triggerservice.dto.ManualReadingRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.example.triggerservice.service.MeasurementService;
 import org.example.triggerservice.util.SecurityUtil;
+import org.example.triggerservice.util.RequestValidationUtil;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -30,13 +31,16 @@ public class MeasurementHandler{
     );
 
     private final MeasurementService measurementService;
+    private final RequestValidationUtil validationUtil;
     private final int manualHoldMinutes;
 
     public MeasurementHandler(
             MeasurementService measurementService,
+            RequestValidationUtil validationUtil,
             @Value("${demo.feed.manual-hold-minutes:60}") int manualHoldMinutes
     ){
         this.measurementService=measurementService;
+        this.validationUtil=validationUtil;
         this.manualHoldMinutes=manualHoldMinutes;
     }
 
@@ -45,7 +49,8 @@ public class MeasurementHandler{
         return requireAdmin()
                 .then(SecurityUtil.getUserId())
                 .zipWith(request.bodyToMono(ManualReadingRequest.class)
-                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body is required"))))
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body is required")))
+                        .flatMap(validationUtil::validate))
                 .flatMap(tuple->measurementService.recordManualReading(
                         tuple.getT2(),tuple.getT1(),manualHoldMinutes))
                 .flatMap(result->ServerResponse.ok()
@@ -57,7 +62,8 @@ public class MeasurementHandler{
         return requireAdmin()
                 .then(SecurityUtil.getUserId())
                 .zipWith(request.bodyToMono(CurrentMeasurementRequest.class)
-                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body is required"))))
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body is required")))
+                        .flatMap(validationUtil::validate))
                 .flatMap(tuple->measurementService.processCurrentMeasurement(
                         tuple.getT2(),tuple.getT1()))
                 .flatMap(result->ServerResponse.ok()

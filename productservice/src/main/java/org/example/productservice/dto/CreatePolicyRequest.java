@@ -15,10 +15,12 @@ public class CreatePolicyRequest{
 
     @NotNull(message="Sum insured is required")
     @Positive(message="Sum insured must be positive")
+    @Digits(integer=13,fraction=2,message="Sum insured can have at most 2 decimal places")
     private BigDecimal sumInsured;
 
     @NotNull(message="Policy term is required")
     @Min(value=1,message="Policy term must be at least 1 month")
+    @Max(value=120,message="Policy term cannot exceed 120 months")
     private Integer termMonths;
 
     @NotNull(message="Location zone ID is required")

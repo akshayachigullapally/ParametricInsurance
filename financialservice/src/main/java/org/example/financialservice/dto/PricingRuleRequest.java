@@ -1,5 +1,7 @@
 package org.example.financialservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import jakarta.validation.constraints.DecimalMax;
@@ -27,6 +29,7 @@ public class PricingRuleRequest{
 
     @NotNull
     @DecimalMin(value="0.00")
+    @Digits(integer=13,fraction=2,message="Minimum premium can have at most 2 decimal places")
     private BigDecimal minimumPremium;
 
     @NotNull
@@ -46,4 +49,10 @@ public class PricingRuleRequest{
     private LocalDate effectiveFrom;
 
     private LocalDate effectiveTo;
+
+    @JsonIgnore
+    @AssertTrue(message="Effective to date cannot be before the effective from date")
+    public boolean isEffectiveRangeValid(){
+        return effectiveFrom==null||effectiveTo==null||!effectiveTo.isBefore(effectiveFrom);
+    }
 }

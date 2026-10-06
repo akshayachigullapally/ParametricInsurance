@@ -1,4 +1,5 @@
 package org.example.productservice.handler;
+import jakarta.validation.Validator;
 
 import lombok.RequiredArgsConstructor;
 import org.example.productservice.dto.AutoRenewRequest;
@@ -21,6 +22,7 @@ import reactor.core.publisher.Mono;
 public class PolicyLifecycleHandler{
     private final PolicyService policyService;
     private final PolicyCertificateService certificateService;
+    private final Validator validator;
 
     public Mono<ServerResponse> renew(ServerRequest request){
         Long policyId=policyId(request);
@@ -36,12 +38,8 @@ public class PolicyLifecycleHandler{
         return SecurityUtil.getUserId(request)
                 .flatMap(customerId->request.bodyToMono(AutoRenewRequest.class)
                         .switchIfEmpty(Mono.error(new ValidationException("enabled is required")))
-                        .flatMap(body->{
-                            if(body.getEnabled()==null){
-                                return Mono.error(new ValidationException("enabled is required"));
-                            }
-                            return policyService.setAutoRenew(customerId,policyId,body.getEnabled());
-                        }))
+                        .flatMap(this::validate)
+                        .flatMap(body->policyService.setAutoRenew(customerId,policyId,body.getEnabled())))
                 .flatMap(policy->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(policy));
@@ -78,5 +76,13 @@ public class PolicyLifecycleHandler{
         }catch(NumberFormatException e){
             throw new ValidationException("Invalid policyId");
         }
+    }
+
+    /** Runs the rules declared on the request DTO. */
+    private <T> Mono<T> validate(T body){
+        java.util.List<String> errors=validator.validate(body).stream()
+                .map(violation->violation.getMessage())
+                .toList();
+        return errors.isEmpty()?Mono.just(body):Mono.error(new ValidationException(errors.get(0)));
     }
 }

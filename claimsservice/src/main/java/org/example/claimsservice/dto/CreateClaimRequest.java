@@ -32,10 +32,13 @@ public class CreateClaimRequest{
 
     @NotNull(message="Claimed amount is required")
     @Positive(message="Claimed amount must be positive")
+    @Digits(integer=13,fraction=2,message="Claimed amount can have at most 2 decimal places")
     private BigDecimal claimedAmount;
 
+    @Positive(message="Trigger event id must be positive")
     private Long triggerEventId;
 
+    @Pattern(regexp="(?i)^\\s*(AUTO_TRIGGERED|MANUAL_EXCEPTION)\\s*$",message="Claim source must be AUTO_TRIGGERED or MANUAL_EXCEPTION")
     private String claimSource;
 
     @Size(max=2000,

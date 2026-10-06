@@ -27,6 +27,7 @@ public class UpdateProfileRequest{
     private LocalDate dateOfBirth;
 
     @NotBlank(message="Customer segment is required")
+    @Pattern(regexp="(?i)^\\s*(INDIVIDUAL|FARMER|SMALL_BUSINESS|ENTERPRISE)\\s*$",message="Customer segment must be INDIVIDUAL, FARMER, SMALL_BUSINESS or ENTERPRISE")
     private String customerSegment;
 
     @Valid
