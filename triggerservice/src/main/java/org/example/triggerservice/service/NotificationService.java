@@ -77,7 +77,7 @@ public class NotificationService {
                 .build();
         return client.sendNotification(request)
                 .onErrorResume(e -> {
-                    log.warn("Notification {} failed: {}", type, e.getMessage());
+                    log.error("Notification {} was NOT delivered, so nobody will see it. Check that NOTIFICATION-SERVICE is running and registered in Eureka (http://localhost:8761). Cause: {}", type, e.toString());
                     return Mono.empty();
                 });
     }

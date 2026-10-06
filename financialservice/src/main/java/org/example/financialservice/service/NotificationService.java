@@ -371,10 +371,10 @@ public class NotificationService{
 
         return client.sendNotification(request)
                 .onErrorResume(exception->{
-                    log.warn(
-                            "Notification {} failed: {}",
+                    log.error(
+                            "Notification {} was NOT delivered, so nobody will see it. Check that NOTIFICATION-SERVICE is running and registered in Eureka (http://localhost:8761). Cause: {}",
                             type,
-                            exception.getMessage()
+                            exception.toString()
                     );
                     return Mono.empty();
                 });
@@ -399,10 +399,10 @@ public class NotificationService{
 
         return client.sendNotification(request)
                 .onErrorResume(exception->{
-                    log.warn(
-                            "Notification {} failed: {}",
+                    log.error(
+                            "Notification {} was NOT delivered, so nobody will see it. Check that NOTIFICATION-SERVICE is running and registered in Eureka (http://localhost:8761). Cause: {}",
                             type,
-                            exception.getMessage()
+                            exception.toString()
                     );
                     return Mono.empty();
                 });
