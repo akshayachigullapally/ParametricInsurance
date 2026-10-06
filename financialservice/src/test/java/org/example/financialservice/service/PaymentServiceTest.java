@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -107,11 +109,7 @@ class PaymentServiceTest{
                 7L,
                 QuoteStatus.CONSUMED
         )).thenReturn(Mono.just(CONSUMED_QUOTE));
-        when(paymentRepository.existsByPolicyIdAndStatus(
-                7L,
-                PaymentStatus.SUCCESS
-        )).thenReturn(Mono.just(false));
-        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
                 .thenReturn(Flux.empty());
     }
 
@@ -147,14 +145,8 @@ class PaymentServiceTest{
                 7L,
                 QuoteStatus.CONSUMED
         )).thenReturn(Mono.empty());
-        when(paymentRepository.existsByPolicyIdAndStatus(
-                7L,
-                PaymentStatus.SUCCESS
-        )).thenReturn(Mono.just(false));
-        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
                 .thenReturn(Flux.empty());
-        when(paymentRepository.countByPolicyId(7L))
-                .thenReturn(Mono.just(0L));
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(inv->{
                     Payment payment=inv.getArgument(0);
@@ -215,12 +207,8 @@ class PaymentServiceTest{
                 7L,
                 QuoteStatus.CONSUMED
         )).thenReturn(Mono.just(CONSUMED_QUOTE));
-        when(paymentRepository.existsByPolicyIdAndStatus(
-                7L,
-                PaymentStatus.SUCCESS
-        )).thenReturn(Mono.just(true));
-        when(paymentRepository.countByPolicyId(7L))
-                .thenReturn(Mono.just(0L));
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
+                .thenReturn(Flux.just(successfulPayment(3L)));
 
         StepVerifier.create(TestAuth.customer(
                 service.create(PaymentRequest.builder()
@@ -237,8 +225,8 @@ class PaymentServiceTest{
     @Test
     void createUsesPolicyPremiumAndAttemptNumber(){
         stubPolicyFlow();
-        when(paymentRepository.countByPolicyId(7L))
-                .thenReturn(Mono.just(2L));
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
+                .thenReturn(Flux.just(failedPayment(1L),failedPayment(2L)));
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(inv->{
                     Payment payment=inv.getArgument(0);
@@ -277,7 +265,7 @@ class PaymentServiceTest{
     void createSettlesAnExistingPendingPayment(){
         stubPolicyFlow();
         Payment leftover=pendingPayment(4L);
-        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
                 .thenReturn(Flux.just(leftover));
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(inv->Mono.just(inv.getArgument(0)));
@@ -363,12 +351,66 @@ class PaymentServiceTest{
                 .findAllByPolicyIdOrderByCreatedAtDesc(7L))
                 .thenReturn(Flux.just(successful));
 
-        StepVerifier.create(service.policyStatus(7L))
+        StepVerifier.create(service.policyStatus(7L,null))
                 .assertNext(result->{
                     assertThat(result.isSuccessful()).isTrue();
                     assertThat(result.getLatestStatus())
                             .isEqualTo(PaymentStatus.SUCCESS);
                 })
                 .verifyComplete();
+    }
+
+    private Payment successfulPayment(Long id){
+        Payment payment=pendingPayment(id);
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setCompletedAt(LocalDateTime.now());
+        return payment;
+    }
+
+    private Payment failedPayment(Long id){
+        Payment payment=pendingPayment(id);
+        payment.setStatus(PaymentStatus.FAILED);
+        return payment;
+    }
+
+    @Test
+    void createIgnoresAnOldPaymentOfAnotherPolicyWithTheSameId(){
+        // The product database was recreated, so policy id 7 now belongs to a new policy.
+        // An old successful payment for id 7 (another policy number) must not block it.
+        stubPolicyFlow();
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(inv->{
+                    Payment payment=inv.getArgument(0);
+                    payment.setId(9L);
+                    return Mono.just(payment);
+                });
+
+        StepVerifier.create(TestAuth.customer(
+                service.create(PaymentRequest.builder()
+                        .policyId(7L)
+                        .method(PaymentMethod.MOCK_CARD)
+                        .build()),
+                5L,
+                5L
+        ))
+                .assertNext(response->{
+                    assertThat(response.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+                    assertThat(response.getAttemptNumber()).isEqualTo(1);
+                })
+                .verifyComplete();
+
+        verify(paymentRepository,never()).findAllByPolicyIdOrderByCreatedAtDesc(any());
+    }
+
+    @Test
+    void policyStatusMatchesThePolicyNumberWhenGiven(){
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(service.policyStatus(7L,"POL-7"))
+                .assertNext(result->assertThat(result.isSuccessful()).isFalse())
+                .verifyComplete();
+
+        verify(paymentRepository,never()).findAllByPolicyIdOrderByCreatedAtDesc(any());
     }
 }

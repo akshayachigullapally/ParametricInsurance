@@ -39,10 +39,13 @@ public class FinancialServiceClient{
     }
 
     /** Whether the policy's latest premium payment succeeded; unreachable counts as unpaid. */
-    public Mono<Boolean> isPremiumPaid(Long policyId){
+    public Mono<Boolean> isPremiumPaid(Long policyId,String policyNumber){
         return loadBalancedWebClientBuilder.build()
                 .get()
-                .uri("http://FINANCIAL-SERVICE/internal/financial/payments/policy/{policyId}/status",policyId)
+                .uri(builder->builder.scheme("http").host("FINANCIAL-SERVICE")
+                        .path("/internal/financial/payments/policy/{policyId}/status")
+                        .queryParamIfPresent("policyNumber",java.util.Optional.ofNullable(policyNumber))
+                        .build(policyId))
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)
                 .retrieve()
                 .bodyToMono(java.util.Map.class)

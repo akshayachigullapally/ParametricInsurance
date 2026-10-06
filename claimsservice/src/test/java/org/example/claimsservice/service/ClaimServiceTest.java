@@ -100,7 +100,7 @@ class ClaimServiceTest {
                 .thenReturn(Mono.empty());
         when(notificationService.audit(any(),any(),any(),any(),any()))
                 .thenReturn(Mono.empty());
-        when(financialServiceClient.isPremiumPaid(anyLong()))
+        when(financialServiceClient.isPremiumPaid(anyLong(),any()))
                 .thenReturn(Mono.just(true));
 
         ReflectionTestUtils.setField(
@@ -258,7 +258,7 @@ class ClaimServiceTest {
         CreateClaimRequest request=createRequest();
         mockPolicyResponse(policy());
 
-        when(financialServiceClient.isPremiumPaid(100L))
+        when(financialServiceClient.isPremiumPaid(eq(100L),any()))
                 .thenReturn(Mono.just(false));
 
         StepVerifier.create(claimService.createClaim(1L,request))

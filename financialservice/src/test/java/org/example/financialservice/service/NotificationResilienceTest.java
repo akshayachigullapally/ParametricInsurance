@@ -58,9 +58,7 @@ class NotificationResilienceTest{
                         .build()));
         when(quoteRepository.findByPolicyIdAndStatus(7L,QuoteStatus.CONSUMED))
                 .thenReturn(Mono.empty());
-        when(paymentRepository.existsByPolicyIdAndStatus(7L,PaymentStatus.SUCCESS))
-                .thenReturn(Mono.just(false));
-        when(paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(7L))
+        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
                 .thenReturn(Flux.just(payment));
 
         // Every audit/notification attempt fails

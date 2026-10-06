@@ -61,7 +61,7 @@ public class ClaimService{
         log.info("Create claim: customerId={}",customerId);
         return getPolicy(request.getPolicyId())
                 .doOnNext(policy->validatePolicy(policy,customerId,request))
-                .flatMap(policy->financialServiceClient.isPremiumPaid(policy.getId())
+                .flatMap(policy->financialServiceClient.isPremiumPaid(policy.getId(),policy.getPolicyNumber())
                         .flatMap(paid->paid
                                 ?Mono.just(policy)
                                 :Mono.error(new ValidationException(

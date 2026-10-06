@@ -326,7 +326,7 @@ public class ProductService{
                 .flatMap(policy->Mono.zip(
                                 snapshotRepository.findByPolicyId(policy.getId())
                                         .defaultIfEmpty(new PolicyTriggerSnapshot()),
-                                financialServiceClient.isPremiumPaid(policy.getId()))
+                                financialServiceClient.isPremiumPaid(policy.getId(),policy.getPolicyNumber()))
                         .map(tuple->{
                                 PolicyTriggerSnapshot snapshot=tuple.getT1();
                                 return EligiblePolicyResponse.builder()

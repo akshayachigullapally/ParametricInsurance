@@ -137,7 +137,7 @@ class PaymentHandlerTest{
 
     @Test
     void policyStatusReturnsResult(){
-        when(paymentService.policyStatus(7L))
+        when(paymentService.policyStatus(7L,"POL-7"))
                 .thenReturn(Mono.just(PaymentStatusResult.builder()
                         .policyId(7L)
                         .latestStatus(PaymentStatus.SUCCESS)
@@ -145,7 +145,7 @@ class PaymentHandlerTest{
                         .build()));
 
         webClient.get()
-                .uri("/internal/financial/payments/policy/7/status")
+                .uri("/internal/financial/payments/policy/7/status?policyNumber=POL-7")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

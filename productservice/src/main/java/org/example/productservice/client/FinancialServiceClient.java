@@ -142,9 +142,11 @@ public class FinancialServiceClient{
      * reach the financial service counts as unpaid, so an unverified policy
      * is never paid out.
      */
-    public Mono<Boolean> isPremiumPaid(Long policyId){
+    public Mono<Boolean> isPremiumPaid(Long policyId,String policyNumber){
         return financialServiceWebClient.get()
-                .uri("/internal/financial/payments/policy/{policyId}/status",policyId)
+                .uri(builder->builder.path("/internal/financial/payments/policy/{policyId}/status")
+                        .queryParamIfPresent("policyNumber",java.util.Optional.ofNullable(policyNumber))
+                        .build(policyId))
                 .header(GatewayHeaders.GATEWAY_KEY,internalKey)
                 .retrieve()
                 .bodyToMono(java.util.Map.class)

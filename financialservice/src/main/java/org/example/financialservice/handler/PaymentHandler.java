@@ -58,7 +58,8 @@ public class PaymentHandler{
     }
 
     public Mono<ServerResponse> policyStatus(ServerRequest request){
-        return service.policyStatus(policyId(request))
+        return service.policyStatus(policyId(request),
+                        request.queryParam("policyNumber").orElse(null))
                 .flatMap(response->
                         ServerResponse.ok().bodyValue(response)
                 );

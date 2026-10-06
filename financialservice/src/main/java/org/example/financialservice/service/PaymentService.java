@@ -72,11 +72,8 @@ public class PaymentService{
                                             requirePayableWithoutQuote(policy)
                                                     .thenReturn(Optional.<Long>empty())
                                     ))
-                                    .flatMap(quoteId->paymentRepository
-                                            .existsByPolicyIdAndStatus(
-                                                    policy.getId(),
-                                                    PaymentStatus.SUCCESS
-                                            )
+                                    .flatMap(quoteId->paymentsOf(policy.getId(),policy.getPolicyNumber())
+                                            .any(existing->existing.getStatus()==PaymentStatus.SUCCESS)
                                             .flatMap(exists->exists
                                                     ?Mono.error(
                                                     new ConflictException(
@@ -87,15 +84,14 @@ public class PaymentService{
                                             )
                                             // Reuse an unfinished payment left over from
                                             // before checkout settled instantly.
-                                            .then(Mono.defer(()->paymentRepository
-                                                    .findAllByPolicyIdOrderByCreatedAtDesc(
-                                                            policy.getId()
-                                                    )
+                                            .then(Mono.defer(()->paymentsOf(
+                                                            policy.getId(),policy.getPolicyNumber())
                                                     .filter(existing->existing.getStatus()==
                                                             PaymentStatus.PENDING)
                                                     .next())
-                                                    .switchIfEmpty(Mono.defer(()->paymentRepository
-                                                            .countByPolicyId(policy.getId())
+                                                    .switchIfEmpty(Mono.defer(()->paymentsOf(
+                                                                    policy.getId(),policy.getPolicyNumber())
+                                                            .count()
                                                             .map(count->Payment.builder()
                                                                     .paymentReference(generateReference())
                                                                     .customerId(customerId)
@@ -243,10 +239,9 @@ public class PaymentService{
                 .map(this::response);
     }
 
-    public Mono<PaymentStatusResult> policyStatus(Long policyId){
-        log.debug("Policy status [payment]: policyId={}",policyId);
-        return paymentRepository
-                .findAllByPolicyIdOrderByCreatedAtDesc(policyId)
+    public Mono<PaymentStatusResult> policyStatus(Long policyId,String policyNumber){
+        log.debug("Policy status [payment]: policyId={}, policyNumber={}",policyId,policyNumber);
+        return paymentsOf(policyId,policyNumber)
                 .next()
                 .map(payment->PaymentStatusResult.builder()
                         .policyId(policyId)
@@ -267,6 +262,20 @@ public class PaymentService{
                                 .paymentReference(null)
                                 .build()
                 ));
+    }
+
+    /**
+     * Payments of one policy, newest first. Policy ids can be reused when the product
+     * database is recreated while this database keeps its old payments, so a payment
+     * only counts for a policy when its policy number matches too (policy numbers are
+     * random and unique). Without a number, falls back to the id alone.
+     */
+    private Flux<Payment> paymentsOf(Long policyId,String policyNumber){
+        if(policyNumber==null||policyNumber.isBlank()){
+            return paymentRepository.findAllByPolicyIdOrderByCreatedAtDesc(policyId);
+        }
+        return paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(
+                policyId,policyNumber.trim());
     }
 
     private Mono<Payment> findEntity(Long paymentId){
