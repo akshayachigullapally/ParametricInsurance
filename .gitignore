@@ -1,0 +1,11 @@
+# Logs
+logs/
+*.log
+*.log.*.gz
+
+# Build artifacts
+*.jar
+out/
+
+# Local H2 database (exceeds GitHub 100MB limit)
+triggerservice/data/triggerdb.mv.db

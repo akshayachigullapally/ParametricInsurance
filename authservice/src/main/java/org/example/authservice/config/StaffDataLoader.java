@@ -30,26 +30,26 @@ public class StaffDataLoader implements ApplicationRunner{
                         "ROLE_ADMIN"
                 ),
                 createUser(
-                        "Underwriter Anil",
-                        "anil@gmail.com",
+                        "Underwriter 1",
+                        "uw1@gmail.com",
                         "12345678",
                         "ROLE_UNDERWRITER"
                 ),
                 createUser(
-                        "Underwriter Sandhya",
-                        "sandhya@gmail.com",
+                        "Underwriter 2",
+                        "uw2@gmail.com",
                         "12345678",
                         "ROLE_UNDERWRITER"
                 ),
                 createUser(
-                        "Claims Officer Shiva",
-                        "shiva@gmail.com",
+                        "Claims Officer 1",
+                        "co1@gmail.com",
                         "12345678",
                         "ROLE_CLAIMS_OFFICER"
                 ),
                 createUser(
-                        "Claims Officer Pallavi",
-                        "pallavi@gmail.com",
+                        "Claims Officer 2",
+                        "co2@gmail.com",
                         "12345678",
                         "ROLE_CLAIMS_OFFICER"
                 )
