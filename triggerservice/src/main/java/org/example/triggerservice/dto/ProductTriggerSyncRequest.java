@@ -1,6 +1,5 @@
 package org.example.triggerservice.dto;
 
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,11 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductTriggerSyncRequest {
-    @NotNull(message="Product id is required")
-    @Positive(message="Product id must be positive")
     private Long productId;
-    @NotBlank(message="Product code is required")
-    @Size(max=50,message="Product code must not exceed 50 characters")
     private String productCode;
     private String productName;
     private String productStatus;

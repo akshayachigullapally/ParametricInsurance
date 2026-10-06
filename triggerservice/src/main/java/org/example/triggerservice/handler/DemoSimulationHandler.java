@@ -1,7 +1,6 @@
 package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
-import org.example.triggerservice.util.RequestValidationUtil;
 import org.example.triggerservice.dto.DemoSimulationRequest;
 import org.example.triggerservice.exception.ForbiddenException;
 import org.example.triggerservice.exception.ValidationException;
@@ -21,7 +20,6 @@ public class DemoSimulationHandler{
     private static final Set<String> ADMIN_ROLES=Set.of("ROLE_ADMIN");
 
     private final DemoSimulationService demoSimulationService;
-    private final RequestValidationUtil validationUtil;
 
     public Mono<ServerResponse> simulateThresholdCrossing(
             ServerRequest request
@@ -33,7 +31,6 @@ public class DemoSimulationHandler{
                         .switchIfEmpty(Mono.error(
                                 new ValidationException(
                                         "Request body is required")))
-                        .flatMap(validationUtil::validate)
                         .flatMapMany(body->demoSimulationService
                                 .simulateThresholdCrossing(
                                         body.getProductId(),

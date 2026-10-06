@@ -4,8 +4,6 @@ Every feature in the project, frontend and backend, explained in plain words wit
 
 **Repositories:** `ParametricInsurance` (backend, Spring Boot microservices) · `InsuranceFrontend` (frontend, Angular 21)
 
-Every input check (backend and frontend) is listed separately in **[VALIDATIONS.md](VALIDATIONS.md)**.
-
 ---
 
 ## How to read this document

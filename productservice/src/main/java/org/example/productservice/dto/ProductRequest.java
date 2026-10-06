@@ -1,6 +1,5 @@
 package org.example.productservice.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -25,7 +24,6 @@ public class ProductRequest{
     private String description;
 
     @NotBlank(message="Product category is required")
-    @Pattern(regexp="(?i)^\\s*(WEATHER|FLOOD|AGRICULTURE|BUSINESS_INTERRUPTION|TRAVEL|CYCLONE|OTHER)\\s*$",message="Category must be one of WEATHER, FLOOD, AGRICULTURE, BUSINESS_INTERRUPTION, TRAVEL, CYCLONE, OTHER")
     private String category;
 
     @NotNull(message="Minimum sum insured is required")
@@ -42,7 +40,6 @@ public class ProductRequest{
 
     @NotNull(message="Maximum term is required")
     @Min(value=1,message="Maximum term must be at least 1 month")
-    @Max(value=120,message="Maximum term cannot exceed 120 months")
     private Integer maximumTermMonths;
 
     @Size(max=1000,message="Eligibility description must not exceed 1000 characters")
@@ -71,7 +68,6 @@ public class ProductRequest{
     private Integer observationWindowHours;
 
     @Min(value=1,message="Minimum observation count must be at least 1")
-    @Max(value=1000,message="Minimum observation count cannot exceed 1000")
     private Integer minimumObservationCount;
 
     @Size(max=1000,message="Trigger description must not exceed 1000 characters")
@@ -79,18 +75,4 @@ public class ProductRequest{
 
     @Valid
     private List<CoverageRequest> coverages;
-
-    @JsonIgnore
-    @AssertTrue(message="Maximum sum insured must be greater than or equal to the minimum sum insured")
-    public boolean isSumInsuredRangeValid(){
-        return minimumSumInsured==null||maximumSumInsured==null
-                ||maximumSumInsured.compareTo(minimumSumInsured)>=0;
-    }
-
-    @JsonIgnore
-    @AssertTrue(message="Maximum term must be greater than or equal to the minimum term")
-    public boolean isTermRangeValid(){
-        return minimumTermMonths==null||maximumTermMonths==null
-                ||maximumTermMonths>=minimumTermMonths;
-    }
 }

@@ -212,7 +212,6 @@ public class ProductHandler{
                 .switchIfEmpty(Mono.error(new org.example.productservice.exception.ValidationException(
                         "Request body is required"
                 )))
-                .flatMap(this::validate)
                 .flatMap(productService::processVerifiedEvent)
                 .flatMap(response->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)

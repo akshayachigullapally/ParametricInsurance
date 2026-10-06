@@ -1,6 +1,5 @@
 package org.example.triggerservice.dto;
 
-import jakarta.validation.constraints.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,11 +24,9 @@ public class CreateObservationRequest{
     private Long locationZoneId;
 
     @NotBlank(message="Measurement type is required")
-    @Size(max=50,message="Measurement type cannot exceed 50 characters")
     private String measurementType;
 
     @NotBlank(message="Measurement unit is required")
-    @Size(max=40,message="Measurement unit cannot exceed 40 characters")
     private String measurementUnit;
 
     @NotNull(message="Observed value is required")
@@ -41,7 +38,6 @@ public class CreateObservationRequest{
     private LocalDateTime observedAt;
 
     @NotBlank(message="Observation source is required")
-    @Pattern(regexp="(?i)^\\s*(MOCK|MANUAL|WEATHER_API|SENSOR)\\s*$",message="Source must be MOCK, MANUAL, WEATHER_API or SENSOR")
     private String source;
 
     @Size(max=150,message="Source reference cannot exceed 150 characters")

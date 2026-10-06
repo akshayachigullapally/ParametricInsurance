@@ -14,7 +14,6 @@ public class CurrentMeasurementRequest{
     @NotNull @Positive
     private Long locationZoneId;
     @NotNull @DecimalMin("0.0")
-    @DecimalMax(value="100000",message="Current value is above the supported range")
     private BigDecimal currentValue;
     @NotBlank @Size(max=200)
     private String idempotencyKey;

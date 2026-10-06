@@ -1,7 +1,5 @@
 package org.example.triggerservice.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -62,7 +60,6 @@ public class TriggerDefinitionRequest{
 
     @NotNull(message="Observation window is required")
     @Positive(message="Observation window must be greater than zero")
-    @Max(value=720,message="Observation window cannot exceed 720 hours")
     private Integer observationWindowHours;
 
     @NotNull(message="Minimum observation count is required")
@@ -73,10 +70,4 @@ public class TriggerDefinitionRequest{
     private LocalDate effectiveFrom;
 
     private LocalDate effectiveTo;
-
-    @JsonIgnore
-    @AssertTrue(message="Effective end date cannot be before the effective start date")
-    public boolean isEffectiveRangeValid(){
-        return effectiveFrom==null||effectiveTo==null||!effectiveTo.isBefore(effectiveFrom);
-    }
 }

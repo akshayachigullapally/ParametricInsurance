@@ -120,7 +120,6 @@ public class ClaimHandler{
         public Mono<ServerResponse> createClaimsFromTriggerEvent(ServerRequest request){
                 return request.bodyToMono(org.example.claimsservice.dto.ClaimCreationRequest.class)
                         .switchIfEmpty(Mono.error(new org.example.claimsservice.exception.ValidationException("Request body is required")))
-                        .flatMap(this::validate)
                         .flatMap(claimService::createClaimsFromTriggerEvent)
                         .flatMap(response->ServerResponse.status(HttpStatus.CREATED)
                                 .contentType(MediaType.APPLICATION_JSON).bodyValue(response));
@@ -238,8 +237,7 @@ public class ClaimHandler{
             ServerRequest request,
             Class<T> type
     ){
-        return request.bodyToMono(type)
-                .flatMap(this::validate);
+        return request.bodyToMono(type);
     }
 
     private String message(ConstraintViolation<?> violation){
