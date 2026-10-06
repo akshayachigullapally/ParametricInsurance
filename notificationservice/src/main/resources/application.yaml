@@ -2,6 +2,10 @@ server:
   port: 8085
 
 spring:
+  cloud:
+    loadbalancer:
+      cache:
+        ttl: 5s
   application:
     name: NOTIFICATION-SERVICE
   r2dbc:
@@ -14,6 +18,8 @@ spring:
 
 eureka:
   client:
+    # Pick up restarted services within seconds instead of ~30 s.
+    registry-fetch-interval-seconds: 5
     service-url:
       defaultZone: http://localhost:8761/eureka/
   instance:

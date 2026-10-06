@@ -2,6 +2,10 @@ server:
   port: 8088
 
 spring:
+  cloud:
+    loadbalancer:
+      cache:
+        ttl: 5s
   application:
     name: FINANCIAL-SERVICE
 
@@ -16,6 +20,8 @@ spring:
 
 eureka:
   client:
+    # Pick up restarted services within seconds instead of ~30 s.
+    registry-fetch-interval-seconds: 5
     register-with-eureka: true
     fetch-registry: true
     service-url:

@@ -85,7 +85,9 @@ public class NotificationHandler {
     public Mono<ServerResponse> stream(ServerRequest r) {
         Flux<ServerSentEvent<NotificationResponse>> sse = Flux.merge(
                 service.stream().map(n -> ServerSentEvent.<NotificationResponse>builder(n).build()),
-                Flux.interval(Duration.ofSeconds(20))
+                // First comment right away so the browser sees the stream open at once,
+                // then every 20 s to keep proxies from closing an idle connection.
+                Flux.interval(Duration.ZERO, Duration.ofSeconds(20))
                         .map(i -> ServerSentEvent.<NotificationResponse>builder().comment("keep-alive").build()));
         return ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)

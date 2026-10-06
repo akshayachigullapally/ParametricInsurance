@@ -29,8 +29,32 @@ public class InternalNotificationClient{
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(NotificationResponse.class)
+                .retryWhen(TEMPORARY_FAILURE_RETRY)
                 .doOnError(error->log.error(
                         "Failed to create internal notification: {}",
                         error.getMessage()));
+    }
+
+    /**
+     * The notification service may be briefly unreachable, e.g. just after it (re)starts and
+     * before every service has its new address. Retry such temporary failures a few times
+     * (0.5 s, 1 s, 2 s) instead of losing the notification; real errors are not retried.
+     */
+    private static final reactor.util.retry.Retry TEMPORARY_FAILURE_RETRY=
+            reactor.util.retry.Retry.backoff(3,java.time.Duration.ofMillis(500))
+                    .filter(NOTIFICATION_RETRY_FILTER())
+                    .onRetryExhaustedThrow((spec,signal)->signal.failure());
+
+    private static java.util.function.Predicate<Throwable> NOTIFICATION_RETRY_FILTER(){
+        return error->{
+            if(error instanceof org.springframework.web.reactive.function.client.WebClientRequestException){
+                return true;
+            }
+            if(error instanceof org.springframework.web.reactive.function.client.WebClientResponseException response){
+                int status=response.getStatusCode().value();
+                return status==502||status==503||status==504;
+            }
+            return false;
+        };
     }
 }
