@@ -25,7 +25,7 @@ public class GatewayAuthenticationFilter implements WebFilter{
     private final String internalKey;
 
     public GatewayAuthenticationFilter(
-            @Value("${gateway.internal-key}") String internalKey
+            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
     ){
         this.internalKey=internalKey;
     }

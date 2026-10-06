@@ -53,7 +53,7 @@ public class ClaimService{
     private final NotificationService notificationService;
     private final FinancialServiceClient financialServiceClient;
 
-    @Value("${gateway.internal-key}")
+    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
     private String internalGatewayKey;
 
     @Transactional

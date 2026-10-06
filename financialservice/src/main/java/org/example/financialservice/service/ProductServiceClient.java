@@ -20,7 +20,7 @@ public class ProductServiceClient{
 
     public ProductServiceClient(
             WebClient.Builder builder,
-            @Value("${gateway.internal-key}") String internalKey
+            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
     ){
         this.webClient=builder
                 .baseUrl("http://PRODUCT-SERVICE")

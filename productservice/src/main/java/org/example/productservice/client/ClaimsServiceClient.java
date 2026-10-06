@@ -17,7 +17,7 @@ public class ClaimsServiceClient{
 
     public ClaimsServiceClient(
             WebClient.Builder builder,
-            @Value("${gateway.internal-key}") String internalKey
+            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
     ){
         this.webClient=builder
                 .baseUrl("http://CLAIMS-SERVICE")

@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 public class InternalNotificationClient{
     private final WebClient.Builder webClientBuilder;
 
-    @Value("${gateway.internal-key}")
+    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
     private String internalKey;
 
     public Mono<NotificationResponse> createInternalNotification(InternalNotificationRequest request){

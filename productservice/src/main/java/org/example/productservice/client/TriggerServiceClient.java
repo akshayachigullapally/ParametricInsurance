@@ -27,7 +27,7 @@ public class TriggerServiceClient{
     @Qualifier("triggerServiceWebClient")
     private final WebClient triggerServiceWebClient;
 
-    @Value("${gateway.internal-key}")
+    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
     private String internalKey;
 
     public Flux<InternalZoneResponse> getActiveZones(){

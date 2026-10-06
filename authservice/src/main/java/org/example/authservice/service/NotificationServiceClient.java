@@ -19,7 +19,7 @@ public class NotificationServiceClient{
 
     public NotificationServiceClient(
             WebClient.Builder loadBalancedWebClientBuilder,
-            @Value("${gateway.internal-key}") String internalKey
+            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
     ){
         this.webClient=loadBalancedWebClientBuilder.clone()
                 .baseUrl("http://NOTIFICATION-SERVICE")

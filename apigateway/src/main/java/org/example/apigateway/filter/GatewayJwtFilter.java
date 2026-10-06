@@ -45,7 +45,7 @@ public class GatewayJwtFilter implements WebFilter{
     private final String internalGatewayKey;
 
     public GatewayJwtFilter(JwtUtil jwtUtil,ObjectMapper objectMapper,
-                            @Value("${gateway.internal-key}") String internalGatewayKey){
+                            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalGatewayKey){
         this.jwtUtil=jwtUtil;
         this.objectMapper=objectMapper;
         this.internalGatewayKey=internalGatewayKey;

@@ -18,7 +18,7 @@ public class TriggerServiceClient{
 
     public TriggerServiceClient(
             WebClient.Builder builder,
-            @Value("${gateway.internal-key}") String internalKey
+            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
     ){
         this.webClient=builder
                 .baseUrl("http://TRIGGER-SERVICE")

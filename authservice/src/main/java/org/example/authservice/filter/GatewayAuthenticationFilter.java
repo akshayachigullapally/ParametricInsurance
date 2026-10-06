@@ -20,7 +20,7 @@ import java.util.List;
 public class GatewayAuthenticationFilter implements WebFilter{
     private final String internalGatewayKey;
 
-    public GatewayAuthenticationFilter(@Value("${gateway.internal-key}") String internalGatewayKey){
+    public GatewayAuthenticationFilter(@Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalGatewayKey){
         this.internalGatewayKey=internalGatewayKey;
     }
 

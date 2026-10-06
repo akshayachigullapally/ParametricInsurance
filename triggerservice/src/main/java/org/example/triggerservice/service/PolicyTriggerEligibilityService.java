@@ -30,7 +30,7 @@ public class PolicyTriggerEligibilityService{
     private final WebClient.Builder loadBalancedWebClientBuilder;
     private final TriggerEventRepository triggerEventRepository;
 
-    @Value("${gateway.internal-key}")
+    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
     private String internalKey;
 
     public Mono<PolicyTriggerEligibilityResponse> checkEligibility(Long policyId){
