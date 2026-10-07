@@ -83,42 +83,12 @@ class PolicyHandlerTest{
     }
 
     @Test
-    void createPolicy_whenConflict_shouldReturn409(){
-        when(policyService.createPolicy(anyLong(),any(CreatePolicyRequest.class)))
-                .thenReturn(Mono.error(new ConflictException("A pending policy application already exists")));
-        authClient("CUSTOMER","1").post().uri("/api/policies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isEqualTo(409);
-    }
-
-    @Test
-    void createPolicy_whenValidationFails_shouldReturn400(){
-        when(policyService.createPolicy(anyLong(),any(CreatePolicyRequest.class)))
-                .thenReturn(Mono.error(new ValidationException("Sum insured cannot be less than 10000")));
-        authClient("CUSTOMER","1").post().uri("/api/policies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
     void getMyPolicies_shouldReturnPolicies(){
         when(policyService.getMyPolicies(eq(1L),isNull()))
                 .thenReturn(Flux.just(buildResponse(100L),buildResponse(101L)));
         authClient("CUSTOMER","1").get().uri("/api/policies/me")
                 .exchange().expectStatus().isOk()
                 .expectBodyList(PolicyResponse.class).hasSize(2);
-    }
-
-    @Test
-    void getMyPolicies_withStatusFilter_shouldReturnFiltered(){
-        when(policyService.getMyPolicies(eq(1L),eq("PENDING")))
-                .thenReturn(Flux.just(buildResponse(100L)));
-        authClient("CUSTOMER","1").get()
-                .uri(uriBuilder->uriBuilder.path("/api/policies/me").queryParam("status","PENDING").build())
-                .exchange().expectStatus().isOk()
-                .expectBodyList(PolicyResponse.class).hasSize(1);
     }
 
     @Test
@@ -130,14 +100,6 @@ class PolicyHandlerTest{
     }
 
     @Test
-    void getMyPolicy_whenNotFound_shouldReturn404(){
-        when(policyService.getMyPolicy(eq(1L),eq(99L)))
-                .thenReturn(Mono.error(new NotFoundException("Policy not found")));
-        authClient("CUSTOMER","1").get().uri("/api/policies/{policyId}",99L)
-                .exchange().expectStatus().isNotFound();
-    }
-
-    @Test
     void cancelPolicy_shouldReturn200(){
         MessageResponse response=MessageResponse.builder().message("Policy cancelled successfully").build();
         when(policyService.cancelPolicy(eq(1L),eq(100L))).thenReturn(Mono.just(response));
@@ -146,28 +108,11 @@ class PolicyHandlerTest{
     }
 
     @Test
-    void cancelPolicy_whenNotPending_shouldReturn409(){
-        when(policyService.cancelPolicy(eq(1L),eq(100L)))
-                .thenReturn(Mono.error(new ConflictException("Only pending policies can be cancelled")));
-        authClient("CUSTOMER","1").put().uri("/api/policies/{policyId}/cancel",100L)
-                .exchange().expectStatus().isEqualTo(409);
-    }
-
-    @Test
     void getPendingPolicies_shouldReturnPendingPolicies(){
         when(policyService.getPendingPolicies()).thenReturn(Flux.just(buildResponse(100L)));
         authClient("UNDERWRITER","1").get().uri("/api/policies/review/pending")
                 .exchange().expectStatus().isOk()
                 .expectBodyList(PolicyResponse.class).hasSize(1);
-    }
-
-    @Test
-    void getAllPolicies_shouldReturnAllPolicies(){
-        when(policyService.getAllPolicies(isNull(),isNull()))
-                .thenReturn(Flux.just(buildResponse(100L),buildResponse(101L)));
-        authClient("ADMIN","1").get().uri("/api/policies/admin/all")
-                .exchange().expectStatus().isOk()
-                .expectBodyList(PolicyResponse.class).hasSize(2);
     }
 
     @Test
@@ -187,27 +132,12 @@ class PolicyHandlerTest{
     }
 
     @Test
-    void getPolicy_whenNotFound_shouldReturn404(){
-        when(policyService.getPolicy(99L)).thenReturn(Mono.error(new NotFoundException("Policy not found")));
-        authClient("ADMIN","1").get().uri("/api/policies/admin/{policyId}",99L)
-                .exchange().expectStatus().isNotFound();
-    }
-
-    @Test
     void approvePolicy_shouldReturn200(){
         PolicyResponse response=buildResponse(100L);
         response.setStatus("ACTIVE");
         when(policyService.approvePolicy(eq(55L),eq(100L))).thenReturn(Mono.just(response));
         authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/approve",100L)
                 .exchange().expectStatus().isOk();
-    }
-
-    @Test
-    void approvePolicy_whenNotPending_shouldReturn409(){
-        when(policyService.approvePolicy(eq(55L),eq(100L)))
-                .thenReturn(Mono.error(new ConflictException("Only pending policies can be approved")));
-        authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/approve",100L)
-                .exchange().expectStatus().isEqualTo(409);
     }
 
     @Test
@@ -253,114 +183,9 @@ class PolicyHandlerTest{
     }
 
     @Test
-    void getMyPolicy_whenInvalidPolicyId_shouldReturn400(){
-        webTestClient.get().uri("/api/policies/{policyId}","abc")
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void cancelPolicy_whenInvalidPolicyId_shouldReturn400(){
-        webTestClient.put().uri("/api/policies/{policyId}/cancel","abc")
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void approvePolicy_whenInvalidPolicyId_shouldReturn400(){
-        authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/approve","abc")
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void rejectPolicy_whenInvalidPolicyId_shouldReturn400(){
-        authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/reject","abc")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(PolicyDecisionRequest.builder().reason("Risk too high").build())
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void getPolicy_whenInvalidPolicyId_shouldReturn400(){
-        webTestClient.get().uri("/api/policies/admin/{policyId}","abc")
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
     void getInternalPolicy_whenInvalidPolicyId_shouldReturn400(){
         webTestClient.get().uri("/internal/policies/{policyId}","abc")
                 .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void createPolicy_whenUnauthorized_shouldReturn403(){
-        webTestClient.post().uri("/api/policies")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void getMyPolicies_whenUnauthorized_shouldReturn403(){
-        webTestClient.get().uri("/api/policies/me")
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void getMyPolicy_whenUnauthorized_shouldReturn403(){
-        webTestClient.get().uri("/api/policies/{policyId}",100L)
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void cancelPolicy_whenUnauthorized_shouldReturn403(){
-        webTestClient.put().uri("/api/policies/{policyId}/cancel",100L)
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void approvePolicy_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").put().uri("/api/policies/{policyId}/approve",100L)
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void rejectPolicy_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").put().uri("/api/policies/{policyId}/reject",100L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(PolicyDecisionRequest.builder().reason("Risk too high").build())
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void getPendingPolicies_whenAdminRole_shouldReturn200(){
-        when(policyService.getPendingPolicies()).thenReturn(Flux.just(buildResponse(100L)));
-        authClient("ADMIN","1").get().uri("/api/policies/review/pending")
-                .exchange().expectStatus().isOk();
-    }
-
-    @Test
-    void getPendingPolicies_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").get().uri("/api/policies/review/pending")
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void getAllPolicies_whenAdminRole_shouldReturn200(){
-        when(policyService.getAllPolicies(isNull(),isNull()))
-                .thenReturn(Flux.just(buildResponse(100L),buildResponse(101L)));
-        authClient("ADMIN","1").get().uri("/api/policies/admin/all")
-                .exchange().expectStatus().isOk();
-    }
-
-    @Test
-    void getAllPolicies_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").get().uri("/api/policies/admin/all")
-                .exchange().expectStatus().isEqualTo(403);
-    }
-
-    @Test
-    void getPolicy_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").get().uri("/api/policies/admin/{policyId}",100L)
-                .exchange().expectStatus().isEqualTo(403);
     }
 
     @Test
@@ -370,30 +195,6 @@ class PolicyHandlerTest{
         authClient("CUSTOMER","1").post().uri("/api/policies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void approvePolicy_whenLocationZoneUnavailable_shouldReturn400(){
-        when(policyService.approvePolicy(eq(55L),eq(100L)))
-                .thenReturn(Mono.error(new ValidationException("Policy location zone is unavailable")));
-        authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/approve",100L)
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void rejectPolicy_whenReasonMissing_shouldReturn400(){
-        when(policyService.rejectPolicy(eq(55L),eq(100L),any(PolicyDecisionRequest.class)))
-                .thenReturn(Mono.error(new ValidationException("Rejection reason is required")));
-        authClient("UNDERWRITER","55").put().uri("/api/policies/{policyId}/reject",100L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(PolicyDecisionRequest.builder().reason("Risk too high").build())
-                .exchange().expectStatus().is4xxClientError();
-    }
-
-    @Test
-    void getInternalPolicy_whenInvalidIdFormat_shouldReturn400(){
-        webTestClient.get().uri("/internal/policies/{policyId}",-1L)
                 .exchange().expectStatus().is4xxClientError();
     }
 

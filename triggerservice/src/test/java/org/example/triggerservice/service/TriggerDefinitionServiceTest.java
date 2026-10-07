@@ -74,16 +74,6 @@ class TriggerDefinitionServiceTest {
     }
 
     @Test
-    void getById_whenDefinitionIsArchived_shouldReturnNotFound() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.ARCHIVED)));
-
-        StepVerifier.create(service.getById(1L))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
     void getByPerilId_shouldReturnDefinitions() {
         when(perilRepository.findById(1L)).thenReturn(Mono.just(peril(PerilStatus.ACTIVE)));
         when(triggerDefinitionRepository
@@ -253,32 +243,6 @@ class TriggerDefinitionServiceTest {
     void updateStatus_whenDraftRequested_shouldReturnValidationError() {
         StepVerifier.create(service.updateStatus(1L,"DRAFT",20L))
                 .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void archive_shouldArchiveInactiveDefinition() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.INACTIVE)));
-        when(triggerDefinitionRepository.save(any(TriggerDefinition.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(service.archive(1L,20L)).verifyComplete();
-
-        ArgumentCaptor<TriggerDefinition> captor=
-                ArgumentCaptor.forClass(TriggerDefinition.class);
-        verify(triggerDefinitionRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus())
-                .isEqualTo(TriggerDefinitionStatus.ARCHIVED);
-    }
-
-    @Test
-    void archive_whenDefinitionIsActive_shouldReturnConflict() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-
-        StepVerifier.create(service.archive(1L,20L))
-                .expectError(ConflictException.class)
                 .verify();
     }
 

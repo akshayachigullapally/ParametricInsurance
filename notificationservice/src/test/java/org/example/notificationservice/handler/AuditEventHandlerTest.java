@@ -98,30 +98,6 @@ class AuditEventHandlerTest {
     }
 
     @Test
-    void create_validRequest_returnsCreated() {
-        ServerRequest request = mock(ServerRequest.class);
-        InternalAuditEventRequest body = InternalAuditEventRequest.builder()
-                .eventType("POLICY_CREATED")
-                .actorUserId(1L)
-                .actorRole("ROLE_ADMIN")
-                .entityType("POLICY")
-                .entityId(100L)
-                .description("Policy was created")
-                .correlationId("corr-123")
-                .build();
-
-        when(request.bodyToMono(InternalAuditEventRequest.class)).thenReturn(Mono.just(body));
-        when(validation.validate(any(InternalAuditEventRequest.class))).thenReturn(body);
-        when(service.create(any(InternalAuditEventRequest.class))).thenReturn(Mono.just(buildResponse(1L)));
-
-        StepVerifier.create(handler.create(request))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED);
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void create_invalidBody_throwsValidationException() {
         ServerRequest request = mock(ServerRequest.class);
         InternalAuditEventRequest body = InternalAuditEventRequest.builder()

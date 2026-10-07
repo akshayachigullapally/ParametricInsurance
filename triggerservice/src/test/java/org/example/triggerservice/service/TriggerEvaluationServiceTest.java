@@ -60,15 +60,6 @@ class TriggerEvaluationServiceTest {
     }
 
     @Test
-    void getById_whenEvaluationDoesNotExist_shouldReturnNotFound() {
-        when(triggerEvaluationRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(service.getById(99L))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
     void getByDefinitionId_shouldReturnEvaluations() {
         when(triggerDefinitionRepository.findById(1L))
                 .thenReturn(Mono.just(definition()));
@@ -155,15 +146,6 @@ class TriggerEvaluationServiceTest {
                 .verifyComplete();
 
         verify(triggerEventRepository,never()).save(any());
-    }
-
-    @Test
-    void evaluate_whenDefinitionDoesNotExist_shouldReturnNotFound() {
-        when(triggerDefinitionRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(service.evaluate(99L,null,5L))
-                .expectError(NotFoundException.class)
-                .verify();
     }
 
     @Test

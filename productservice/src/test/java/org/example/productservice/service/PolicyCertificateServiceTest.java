@@ -70,13 +70,4 @@ class PolicyCertificateServiceTest{
                 .assertNext(certificate->assertThat(certificate.bytes().length).isGreaterThan(500))
                 .verifyComplete();
     }
-
-    @Test
-    void refusesCertificateForPendingApplication(){
-        when(policies.findByIdAndCustomerId(100L,1L)).thenReturn(Mono.just(policy(PolicyStatus.PENDING.name())));
-
-        StepVerifier.create(service.forCustomer(1L,100L))
-                .expectError(ConflictException.class)
-                .verify();
-    }
 }

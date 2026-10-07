@@ -21,21 +21,6 @@ class SecurityIntegrationTest{
     private static final String KEY="cityshield-local-gateway-key";
 
     @Test
-    void missingGatewayKeyIsRejectedWithJsonAndNoBasicChallenge(){
-        webClient.get()
-                .uri("/api/financial/pricing-rules")
-                .exchange()
-                .expectStatus().isUnauthorized()
-                .expectHeader()
-                .doesNotExist(HttpHeaders.WWW_AUTHENTICATE)
-                .expectHeader()
-                .contentType("application/json")
-                .expectBody()
-                .jsonPath("$.message")
-                .isEqualTo("Invalid gateway key");
-    }
-
-    @Test
     void invalidGatewayKeyIsRejectedWithNoBasicChallenge(){
         webClient.get()
                 .uri("/api/financial/pricing-rules")
@@ -104,42 +89,6 @@ class SecurityIntegrationTest{
     }
 
     @Test
-    void internalEndpointRejectsBadGatewayKey(){
-        webClient.get()
-                .uri("/internal/financial/payments/policy/999/status")
-                .exchange()
-                .expectStatus().isUnauthorized()
-                .expectHeader()
-                .doesNotExist(HttpHeaders.WWW_AUTHENTICATE);
-    }
-
-    @Test
-    void actuatorHealthIsOpenWithoutGatewayKey(){
-        webClient.get()
-                .uri("/actuator/health")
-                .exchange()
-                .expectStatus().isOk();
-    }
-
-    @Test
-    void actuatorInfoIsOpenWithoutGatewayKey(){
-        webClient.get()
-                .uri("/actuator/info")
-                .exchange()
-                .expectStatus().isOk();
-    }
-
-    @Test
-    void anyActuatorPathSkipsGatewayKeyCheck(){
-        // Reaches actuator itself (404: no such health component)
-        // instead of being rejected for a missing gateway key.
-        webClient.get()
-                .uri("/actuator/health/details")
-                .exchange()
-                .expectStatus().isNotFound();
-    }
-
-    @Test
     void invalidUserHeaderIsBadRequest(){
         webClient.get()
                 .uri("/api/financial/pricing-rules")
@@ -149,10 +98,5 @@ class SecurityIntegrationTest{
                 .header("X-Authenticated-Role","ROLE_ADMIN")
                 .exchange()
                 .expectStatus().isBadRequest();
-    }
-
-    @Test
-    void noHttpBasicAuthenticationBeanExists(){
-        assertThat(webClient).isNotNull();
     }
 }

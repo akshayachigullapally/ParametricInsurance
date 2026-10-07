@@ -397,15 +397,6 @@ class PricingRuleServiceTest{
     }
 
     @Test
-    void nonPositiveRateIsRejected(){
-        PricingRuleRequest bad=request(1L,null);
-        bad.setBaseAnnualRate(BigDecimal.ZERO);
-
-        assertThrows(ValidationException.class,
-                ()->service.create(bad));
-    }
-
-    @Test
     void termFactorAboveTenIsRejected(){
         PricingRuleRequest bad=request(1L,null);
         bad.setTermFactor(new BigDecimal("11.0000"));

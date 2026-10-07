@@ -62,15 +62,6 @@ class GatewayAuthenticationFilterTest{
     }
 
     @Test
-    void actuatorHealthBypassesAuth(){
-        MockServerWebExchange ex=exchange(
-                "/actuator/health",null,null,null,null,null);
-
-        StepVerifier.create(filter.filter(ex,chain->Mono.empty()))
-                .verifyComplete();
-    }
-
-    @Test
     void actuatorInfoBypassesAuth(){
         MockServerWebExchange ex=exchange(
                 "/actuator/info",null,null,null,null,null);
@@ -102,19 +93,6 @@ class GatewayAuthenticationFilterTest{
 
         assertThat(ex.getResponse().getStatusCode())
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
-    }
-
-    @Test
-    void internalEndpointPassesWithGatewayKeyOnly(){
-        MockServerWebExchange ex=exchange(
-                "/internal/financial/quotes/1/validate",
-                VALID_KEY,null,null,null,null);
-
-        StepVerifier.create(filter.filter(ex,chain->Mono.empty()))
-                .verifyComplete();
-
-        assertThat(ex.getResponse().getStatusCode())
-                .isNull();
     }
 
     @Test

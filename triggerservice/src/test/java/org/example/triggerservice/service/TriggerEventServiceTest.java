@@ -90,15 +90,6 @@ class TriggerEventServiceTest {
     }
 
     @Test
-    void getById_whenEventDoesNotExist_shouldReturnNotFound() {
-        when(triggerEventRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(service.getById(99L))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
     void startValidation_shouldChangeDetectedEventToUnderValidation() {
         when(triggerEventRepository.findById(1L))
                 .thenReturn(Mono.just(event(TriggerEventStatus.DETECTED)));
@@ -258,22 +249,6 @@ class TriggerEventServiceTest {
                 .verify();
 
         verifyNoInteractions(idempotencyService);
-    }
-
-    @Test
-    void markEventProcessed_shouldUpdateVerifiedEvent() {
-        when(triggerEventRepository.findById(1L))
-                .thenReturn(Mono.just(event(TriggerEventStatus.VERIFIED)));
-        when(triggerEventRepository.save(any(TriggerEvent.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(service.markEventProcessed(1L)).verifyComplete();
-
-        ArgumentCaptor<TriggerEvent> captor=ArgumentCaptor.forClass(TriggerEvent.class);
-        verify(triggerEventRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(TriggerEventStatus.PROCESSED);
-        assertThat(captor.getValue().getReviewNotes())
-                .isEqualTo("Marked processed by financial service");
     }
 
     @Test

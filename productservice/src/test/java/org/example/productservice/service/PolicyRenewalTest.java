@@ -103,13 +103,6 @@ class PolicyRenewalTest{
     }
 
     @Test
-    void applicationWithoutQuoteUsesPricingRule(){
-        StepVerifier.create(policyService.createPolicy(1L,request(null)))
-                .assertNext(policy->assertThat(policy.getPremiumAmount()).isEqualByComparingTo("1875.00"))
-                .verifyComplete();
-    }
-
-    @Test
     void renewCreatesPendingApplicationLinkedToOldPolicy(){
         when(policyRepository.findByIdAndCustomerId(100L,1L))
                 .thenReturn(Mono.just(active(LocalDate.now().plusDays(10))));

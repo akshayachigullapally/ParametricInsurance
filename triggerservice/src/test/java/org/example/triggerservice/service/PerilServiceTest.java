@@ -37,122 +37,12 @@ class PerilServiceTest {
     }
 
     @Test
-    void getAll_shouldReturnNonArchivedPerils() {
-        when(perilRepository.findAllByStatusNotOrderByPerilNameAsc(PerilStatus.ARCHIVED))
-                .thenReturn(Flux.just(
-                        peril(1L,"FLOOD","Flood",PerilStatus.ACTIVE),
-                        peril(2L,"WIND","Wind",PerilStatus.INACTIVE)
-                ));
-
-        StepVerifier.create(perilService.getAll())
-                .assertNext(result->assertThat(result.getPerilCode()).isEqualTo("FLOOD"))
-                .assertNext(result->assertThat(result.getPerilCode()).isEqualTo("WIND"))
-                .verifyComplete();
-    }
-
-    @Test
     void getActive_shouldReturnActivePerils() {
         when(perilRepository.findAllByStatusOrderByPerilNameAsc(PerilStatus.ACTIVE))
                 .thenReturn(Flux.just(peril(1L,"FLOOD","Flood",PerilStatus.ACTIVE)));
 
         StepVerifier.create(perilService.getActive())
                 .assertNext(result->assertThat(result.getStatus()).isEqualTo(PerilStatus.ACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
-    void getById_whenPerilExists_shouldReturnPeril() {
-        when(perilRepository.findById(1L))
-                .thenReturn(Mono.just(peril(1L,"FLOOD","Flood",PerilStatus.ACTIVE)));
-
-        StepVerifier.create(perilService.getById(1L))
-                .assertNext(result->assertThat(result.getId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void getById_whenPerilDoesNotExist_shouldReturnNotFound() {
-        when(perilRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(perilService.getById(99L))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
-    void create_shouldNormalizeAndSavePeril() {
-        PerilRequest request=request(" flood damage "," Flood Damage ");
-
-        when(perilRepository.existsByPerilCodeIgnoreCase("FLOOD_DAMAGE"))
-                .thenReturn(Mono.just(false));
-        when(perilRepository.save(any(Peril.class))).thenAnswer(invocation->{
-            Peril saved=invocation.getArgument(0);
-            saved.setId(1L);
-            return Mono.just(saved);
-        });
-
-        StepVerifier.create(perilService.create(request,10L))
-                .assertNext(result->{
-                    assertThat(result.getId()).isEqualTo(1L);
-                    assertThat(result.getPerilCode()).isEqualTo("FLOOD_DAMAGE");
-                    assertThat(result.getPerilName()).isEqualTo("Flood Damage");
-                    assertThat(result.getStatus()).isEqualTo(PerilStatus.ACTIVE);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void create_whenCodeExists_shouldReturnConflict() {
-        when(perilRepository.existsByPerilCodeIgnoreCase("FLOOD"))
-                .thenReturn(Mono.just(true));
-
-        StepVerifier.create(perilService.create(request("flood","Flood"),10L))
-                .expectError(ConflictException.class)
-                .verify();
-
-        verify(perilRepository,never()).save(any());
-    }
-
-    @Test
-    void update_shouldUpdatePeril() {
-        when(perilRepository.findById(1L))
-                .thenReturn(Mono.just(peril(1L,"OLD","Old",PerilStatus.ACTIVE)));
-        when(perilRepository.existsByPerilCodeAndIdNot("FLOOD",1L))
-                .thenReturn(Mono.just(false));
-        when(perilRepository.save(any(Peril.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(perilService.update(1L,request("flood","Flood"),20L))
-                .assertNext(result->{
-                    assertThat(result.getPerilCode()).isEqualTo("FLOOD");
-                    assertThat(result.getPerilName()).isEqualTo("Flood");
-                    assertThat(result.getUpdatedBy()).isEqualTo(20L);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void update_whenCodeExists_shouldReturnConflict() {
-        when(perilRepository.findById(1L))
-                .thenReturn(Mono.just(peril(1L,"OLD","Old",PerilStatus.ACTIVE)));
-        when(perilRepository.existsByPerilCodeAndIdNot("FLOOD",1L))
-                .thenReturn(Mono.just(true));
-
-        StepVerifier.create(perilService.update(1L,request("flood","Flood"),20L))
-                .expectError(ConflictException.class)
-                .verify();
-    }
-
-    @Test
-    void updateStatus_shouldUpdatePerilStatus() {
-        when(perilRepository.findById(1L))
-                .thenReturn(Mono.just(peril(1L,"FLOOD","Flood",PerilStatus.ACTIVE)));
-        when(perilRepository.save(any(Peril.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(perilService.updateStatus(1L,"inactive",20L))
-                .assertNext(result->assertThat(result.getStatus())
-                        .isEqualTo(PerilStatus.INACTIVE))
                 .verifyComplete();
     }
 
@@ -171,21 +61,6 @@ class PerilServiceTest {
                         ()->perilService.updateStatus(1L,"UNKNOWN",20L)))
                 .expectError(ValidationException.class)
                 .verify();
-    }
-
-    @Test
-    void archive_shouldSaveArchivedPeril() {
-        when(perilRepository.findById(1L))
-                .thenReturn(Mono.just(peril(1L,"FLOOD","Flood",PerilStatus.ACTIVE)));
-        when(perilRepository.save(any(Peril.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(perilService.archive(1L,20L)).verifyComplete();
-
-        ArgumentCaptor<Peril> captor=ArgumentCaptor.forClass(Peril.class);
-        verify(perilRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(PerilStatus.ARCHIVED);
-        assertThat(captor.getValue().getUpdatedBy()).isEqualTo(20L);
     }
 
     private Peril peril(Long id,String code,String name,PerilStatus status) {

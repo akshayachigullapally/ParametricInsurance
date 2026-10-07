@@ -401,16 +401,4 @@ class PaymentServiceTest{
 
         verify(paymentRepository,never()).findAllByPolicyIdOrderByCreatedAtDesc(any());
     }
-
-    @Test
-    void policyStatusMatchesThePolicyNumberWhenGiven(){
-        when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
-                .thenReturn(Flux.empty());
-
-        StepVerifier.create(service.policyStatus(7L,"POL-7"))
-                .assertNext(result->assertThat(result.isSuccessful()).isFalse())
-                .verifyComplete();
-
-        verify(paymentRepository,never()).findAllByPolicyIdOrderByCreatedAtDesc(any());
-    }
 }

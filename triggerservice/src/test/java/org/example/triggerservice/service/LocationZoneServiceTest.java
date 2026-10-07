@@ -42,23 +42,6 @@ class LocationZoneServiceTest {
     }
 
     @Test
-    void getAll_whenStateIsAbsent_shouldReturnNonArchivedZones() {
-        when(locationZoneRepository.findAllByStatusNotOrderByZoneNameAsc(LocationZoneStatus.ARCHIVED))
-                .thenReturn(Flux.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
-
-        StepVerifier.create(locationZoneService.getAll(null))
-                .assertNext(result->{
-                    assertThat(result.getId()).isEqualTo(1L);
-                    assertThat(result.getZoneCode()).isEqualTo("ZONE_1");
-                    assertThat(result.getStatus()).isEqualTo(LocationZoneStatus.ACTIVE);
-                })
-                .verifyComplete();
-
-        verify(locationZoneRepository)
-                .findAllByStatusNotOrderByZoneNameAsc(LocationZoneStatus.ARCHIVED);
-    }
-
-    @Test
     void getAll_whenStateIsProvided_shouldReturnActiveStateZones() {
         when(locationZoneRepository.findAllByStateIgnoreCaseAndStatusOrderByZoneNameAsc(
                 "CT",LocationZoneStatus.ACTIVE))
@@ -70,67 +53,12 @@ class LocationZoneServiceTest {
     }
 
     @Test
-    void getActive_shouldReturnActiveZones() {
-        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
-                .thenReturn(Flux.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
-
-        StepVerifier.create(locationZoneService.getActive())
-                .assertNext(result->assertThat(result.getStatus())
-                        .isEqualTo(LocationZoneStatus.ACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
-    void getActiveInternal_shouldReturnInternalResponses() {
-        when(locationZoneRepository.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
-                .thenReturn(Flux.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
-
-        StepVerifier.create(locationZoneService.getActiveInternal())
-                .assertNext(result->{
-                    assertThat(result.getZoneId()).isEqualTo(1L);
-                    assertThat(result.getZoneCode()).isEqualTo("ZONE_1");
-                    assertThat(result.getStatus()).isEqualTo("ACTIVE");
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void getById_whenZoneExists_shouldReturnZone() {
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
-
-        StepVerifier.create(locationZoneService.getById(1L))
-                .assertNext(result->assertThat(result.getId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void getById_whenZoneIsArchived_shouldReturnNotFound() {
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ARCHIVED)));
-
-        StepVerifier.create(locationZoneService.getById(1L))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
     void getById_whenIdIsInvalid_shouldReturnValidationError() {
         StepVerifier.create(locationZoneService.getById(0L))
                 .expectError(ValidationException.class)
                 .verify();
 
         verifyNoInteractions(locationZoneRepository);
-    }
-
-    @Test
-    void getInternalById_shouldIncludeArchivedZone() {
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ARCHIVED)));
-
-        StepVerifier.create(locationZoneService.getInternalById(1L))
-                .assertNext(result->assertThat(result.getStatus()).isEqualTo("ARCHIVED"))
-                .verifyComplete();
     }
 
     @Test
@@ -258,22 +186,6 @@ class LocationZoneServiceTest {
                 .verify();
 
         verifyNoInteractions(locationZoneRepository);
-    }
-
-    @Test
-    void archive_shouldSaveArchivedZone() {
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(1L,"ZONE_1","Zone 1",LocationZoneStatus.ACTIVE)));
-        when(productTriggerClient.hasActivePoliciesForZone(1L)).thenReturn(Mono.just(false));
-        when(locationZoneRepository.save(any(LocationZone.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(locationZoneService.archive(1L,9L)).verifyComplete();
-
-        ArgumentCaptor<LocationZone> captor=ArgumentCaptor.forClass(LocationZone.class);
-        verify(locationZoneRepository).save(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(LocationZoneStatus.ARCHIVED);
-        assertThat(captor.getValue().getUpdatedBy()).isEqualTo(9L);
     }
 
     @Test

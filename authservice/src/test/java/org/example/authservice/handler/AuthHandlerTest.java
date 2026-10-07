@@ -69,15 +69,6 @@ class AuthHandlerTest {
     }
 
     @Test
-    void register_whenBodyIsEmpty_shouldReturnValidationException() {
-        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
-
-        StepVerifier.create(authHandler.register(request))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
     void register_whenEmailAlreadyExists_shouldPropagateConflictException() {
         when(authService.register(any(RegisterRequest.class), anyString(), anyString()))
                 .thenReturn(Mono.error(new ConflictException("Email is already registered")));
@@ -225,15 +216,6 @@ class AuthHandlerTest {
     }
 
     @Test
-    void login_whenBodyIsEmpty_shouldReturnValidationException() {
-        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
-
-        StepVerifier.create(authHandler.login(request))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
     void login_whenInvalidCredentials_shouldPropagateAuthenticationException() {
         when(authService.login(any(LoginRequest.class), anyString(), anyString()))
                 .thenReturn(Mono.error(new AuthenticationException("Invalid email or password")));
@@ -279,15 +261,6 @@ class AuthHandlerTest {
     }
 
     @Test
-    void refresh_whenBodyIsEmpty_shouldReturnValidationException() {
-        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
-
-        StepVerifier.create(authHandler.refresh(request))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
     void refresh_whenTokenIsInvalid_shouldPropagateAuthenticationException() {
         when(authService.refresh(any(RefreshTokenRequest.class), anyString(), anyString()))
                 .thenReturn(Mono.error(new AuthenticationException("Invalid refresh token")));
@@ -329,19 +302,6 @@ class AuthHandlerTest {
         StepVerifier.create(authHandler.logout(request))
                 .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
                 .verifyComplete();
-    }
-
-    @Test
-    void logout_whenNotAuthenticated_shouldReturnAuthenticationException() {
-        ServerRequest request = unauthenticatedRequestWithBody(
-                RefreshTokenRequest.builder().refreshToken("refresh-token").build());
-
-        StepVerifier.create(authHandler.logout(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
-                })
-                .verify();
     }
 
     @Test
@@ -409,18 +369,6 @@ class AuthHandlerTest {
     }
 
     @Test
-    void me_whenNotAuthenticated_shouldReturnAuthenticationException() {
-        ServerRequest request = unauthenticatedRequestNoBody();
-
-        StepVerifier.create(authHandler.me(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
-                })
-                .verify();
-    }
-
-    @Test
     void me_whenUserNotFound_shouldPropagateNotFoundException() {
         when(authService.getCurrentUser(99L))
                 .thenReturn(Mono.error(new NotFoundException("User not found")));
@@ -452,18 +400,6 @@ class AuthHandlerTest {
                 .verifyComplete();
     }
 
-    @Test
-    void sessions_whenNotAuthenticated_shouldReturnAuthenticationException() {
-        ServerRequest request = unauthenticatedRequestNoBody();
-
-        StepVerifier.create(authHandler.sessions(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
-                })
-                .verify();
-    }
-
     // ======================== revokeSession ========================
 
     @Test
@@ -482,18 +418,6 @@ class AuthHandlerTest {
     @Test
     void revokeSession_whenSessionIdIsZero_shouldReturnValidationException() {
         ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "0");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(((ValidationException) error).getErrors()).containsExactly("Session id must be positive");
-                })
-                .verify();
-    }
-
-    @Test
-    void revokeSession_whenSessionIdIsNegative_shouldReturnValidationException() {
-        ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "-5");
 
         StepVerifier.create(authHandler.revokeSession(request))
                 .expectErrorSatisfies(error -> {

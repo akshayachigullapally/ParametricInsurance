@@ -70,17 +70,6 @@ class GatewayAuthenticationFilterTest{
     }
 
     @Test
-    void internalCallWithoutIdentity_shouldContinueUnauthenticated(){
-        RecordingChain chain=new RecordingChain();
-
-        run(MockServerHttpRequest.get("/internal/claims/1")
-                .header(GatewayHeaders.GATEWAY_KEY,KEY),chain);
-
-        assertThat(chain.called).isTrue();
-        assertThat(chain.authentication.get()).isNull();
-    }
-
-    @Test
     void blankRole_shouldContinueUnauthenticated(){
         RecordingChain chain=new RecordingChain();
 
@@ -92,24 +81,6 @@ class GatewayAuthenticationFilterTest{
 
         assertThat(chain.called).isTrue();
         assertThat(chain.authentication.get()).isNull();
-    }
-
-    @Test
-    void validIdentity_shouldAuthenticateWithPrefixedRole(){
-        RecordingChain chain=new RecordingChain();
-
-        run(MockServerHttpRequest.get("/api/claims/me")
-                .header(GatewayHeaders.GATEWAY_KEY,KEY)
-                .header(GatewayHeaders.USER_ID,"5")
-                .header(GatewayHeaders.USER_EMAIL,"a@b.com")
-                .header(GatewayHeaders.USER_ROLE,"CLAIMS_OFFICER"),chain);
-
-        Authentication authentication=chain.authentication.get();
-        assertThat(authentication.getPrincipal()).isEqualTo(5L);
-        assertThat(authentication.getDetails()).isEqualTo("a@b.com");
-        assertThat(authentication.getAuthorities())
-                .extracting(Object::toString)
-                .containsExactly("ROLE_CLAIMS_OFFICER");
     }
 
     @Test

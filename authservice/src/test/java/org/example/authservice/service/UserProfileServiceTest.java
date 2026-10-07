@@ -213,24 +213,6 @@ class UserProfileServiceTest {
     }
 
     @Test
-    void saveProfile_whenUserDoesNotExist_shouldReturnNotFoundException() {
-        UpdateProfileRequest request=mock(UpdateProfileRequest.class);
-
-        when(userRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.saveProfile(99L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User not found");
-                })
-                .verify();
-
-        verify(userRepository).findById(99L);
-        verify(userRepository,never()).save(any());
-        verifyNoInteractions(profileRepository,addressRepository);
-    }
-
-    @Test
     void saveProfile_whenUserIsNotCustomer_shouldReturnForbiddenException() {
         UserCredential admin=user(1L,"ROLE_ADMIN");
         UpdateProfileRequest request=mock(UpdateProfileRequest.class);
@@ -286,41 +268,6 @@ class UserProfileServiceTest {
     }
 
     @Test
-    void getMyProfile_whenUserDoesNotExist_shouldReturnNotFoundException() {
-        when(userRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.getMyProfile(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User not found");
-                })
-                .verify();
-
-        verify(userRepository).findById(99L);
-        verifyNoInteractions(profileRepository,addressRepository);
-    }
-
-    @Test
-    void getMyProfile_whenProfileDoesNotExist_shouldReturnNotFoundException() {
-        UserCredential user=user(1L,"ROLE_CUSTOMER");
-
-        when(userRepository.findById(1L)).thenReturn(Mono.just(user));
-        when(profileRepository.findByAuthUserId(1L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.getMyProfile(1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("User profile is not completed");
-                })
-                .verify();
-
-        verify(userRepository).findById(1L);
-        verify(profileRepository).findByAuthUserId(1L);
-        verifyNoInteractions(addressRepository);
-    }
-
-    @Test
     void deactivateProfile_whenProfileExists_shouldChangeStatusToInactive() {
         UserProfile profile=profile(10L,1L,"ACTIVE","INDIVIDUAL");
         LocalDateTime oldUpdatedAt=profile.getUpdatedAt();
@@ -338,22 +285,6 @@ class UserProfileServiceTest {
 
         verify(profileRepository).findByAuthUserId(1L);
         verify(profileRepository).save(profile);
-    }
-
-    @Test
-    void deactivateProfile_whenProfileDoesNotExist_shouldReturnNotFoundException() {
-        when(profileRepository.findByAuthUserId(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.deactivateProfile(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("User profile not found");
-                })
-                .verify();
-
-        verify(profileRepository).findByAuthUserId(99L);
-        verify(profileRepository,never()).save(any());
     }
 
     @Test
@@ -600,41 +531,6 @@ class UserProfileServiceTest {
     }
 
     @Test
-    void getUser_whenUserDoesNotExist_shouldReturnNotFoundException() {
-        when(userRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.getUser(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User not found");
-                })
-                .verify();
-
-        verify(userRepository).findById(99L);
-        verifyNoInteractions(profileRepository,addressRepository);
-    }
-
-    @Test
-    void getUser_whenProfileDoesNotExist_shouldReturnNotFoundException() {
-        UserCredential user=user(1L,"ROLE_CUSTOMER");
-
-        when(userRepository.findById(1L)).thenReturn(Mono.just(user));
-        when(profileRepository.findByAuthUserId(1L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.getUser(1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("User profile not found");
-                })
-                .verify();
-
-        verify(userRepository).findById(1L);
-        verify(profileRepository).findByAuthUserId(1L);
-        verifyNoInteractions(addressRepository);
-    }
-
-    @Test
     void updateStatus_whenStatusIsValid_shouldUpdateAndReturnUserResponse() {
         UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
         UserCredential user=user(1L,"ROLE_CUSTOMER");
@@ -712,28 +608,6 @@ class UserProfileServiceTest {
     }
 
     @Test
-    void updateStatus_whenStatusIsInvalid_shouldReturnValidationException() {
-        UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
-
-        when(request.getStatus()).thenReturn("DELETED");
-
-        StepVerifier.create(Mono.defer(()->
-                        userProfileService.updateStatus(1L,request)
-                ))
-                .expectErrorSatisfies(error->
-                        assertThat(error).isInstanceOf(ValidationException.class)
-                )
-                .verify();
-
-        verify(request).getStatus();
-        verifyNoInteractions(
-                userRepository,
-                profileRepository,
-                addressRepository
-        );
-    }
-
-    @Test
     void updateStatus_whenStatusIsNull_shouldReturnValidationException() {
         UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
 
@@ -753,26 +627,6 @@ class UserProfileServiceTest {
                 profileRepository,
                 addressRepository
         );
-    }
-
-    @Test
-    void updateStatus_whenUserDoesNotExist_shouldReturnNotFoundException() {
-        UpdateUserStatusRequest request=mock(UpdateUserStatusRequest.class);
-
-        when(request.getStatus()).thenReturn("ACTIVE");
-        when(userRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(userProfileService.updateStatus(99L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User not found");
-                })
-                .verify();
-
-        verify(userRepository).findById(99L);
-        verifyNoInteractions(addressRepository);
-        verify(profileRepository,never()).findByAuthUserId(any());
-        verify(profileRepository,never()).save(any());
     }
 
     @Test

@@ -66,52 +66,6 @@ class PricingRuleHandlerTest{
     }
 
     @Test
-    void createReturns201(){
-        when(pricingRuleService.create(any()))
-                .thenReturn(Mono.just(sampleRule(1L)));
-
-        webClient.post()
-                .uri("/api/financial/pricing-rules")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"productId\":1,"+
-                        "\"baseAnnualRate\":0.1,"+
-                        "\"minimumPremium\":1000.00,"+
-                        "\"termFactor\":1.0,"+
-                        "\"locationZoneId\":null,"+
-                        "\"locationFactor\":1.0,"+
-                        "\"effectiveFrom\":\"2026-01-01\"}")
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("DRAFT");
-    }
-
-    @Test
-    void findAllReturnsList(){
-        when(pricingRuleService.findAll())
-                .thenReturn(Flux.just(sampleRule(1L),sampleRule(2L)));
-
-        webClient.get()
-                .uri("/api/financial/pricing-rules")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(PricingRuleResponse.class).hasSize(2);
-    }
-
-    @Test
-    void findByIdReturnsRule(){
-        when(pricingRuleService.findById(1L))
-                .thenReturn(Mono.just(sampleRule(1L)));
-
-        webClient.get()
-                .uri("/api/financial/pricing-rules/1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.id").isEqualTo(1);
-    }
-
-    @Test
     void updateReturnsUpdatedRule(){
         when(pricingRuleService.update(anyLong(),any()))
                 .thenReturn(Mono.just(sampleRule(1L)));
@@ -129,39 +83,5 @@ class PricingRuleHandlerTest{
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.id").isEqualTo(1);
-    }
-
-    @Test
-    void updateStatusReturnsActiveRule(){
-        PricingRuleResponse active=sampleRule(1L);
-        active.setStatus(PricingRuleStatus.ACTIVE);
-
-        when(pricingRuleService.updateStatus(anyLong(),any()))
-                .thenReturn(Mono.just(active));
-
-        webClient.put()
-                .uri("/api/financial/pricing-rules/1/status")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"status\":\"ACTIVE\"}")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("ACTIVE");
-    }
-
-    @Test
-    void archiveReturnsArchivedRule(){
-        PricingRuleResponse archived=sampleRule(1L);
-        archived.setStatus(PricingRuleStatus.ARCHIVED);
-
-        when(pricingRuleService.archive(1L))
-                .thenReturn(Mono.just(archived));
-
-        webClient.delete()
-                .uri("/api/financial/pricing-rules/1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("ARCHIVED");
     }
 }

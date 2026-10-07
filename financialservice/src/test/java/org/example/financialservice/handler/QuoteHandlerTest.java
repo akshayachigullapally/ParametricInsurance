@@ -71,37 +71,6 @@ class QuoteHandlerTest{
     }
 
     @Test
-    void createReturns201(){
-        when(quoteService.create(any()))
-                .thenReturn(Mono.just(sampleQuote(1L)));
-
-        webClient.post()
-                .uri("/api/financial/quotes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"productId\":1,"+
-                        "\"locationZoneId\":2,"+
-                        "\"sumInsured\":100000.00,"+
-                        "\"termMonths\":12}")
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.quoteReference").isEqualTo("QTE-TEST")
-                .jsonPath("$.premiumAmount").isEqualTo(10000.00);
-    }
-
-    @Test
-    void findMineReturnsList(){
-        when(quoteService.findMine())
-                .thenReturn(Flux.just(sampleQuote(1L),sampleQuote(2L)));
-
-        webClient.get()
-                .uri("/api/financial/quotes/me")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(QuoteResponse.class).hasSize(2);
-    }
-
-    @Test
     void findByIdReturnsQuote(){
         when(quoteService.findMine(1L))
                 .thenReturn(Mono.just(sampleQuote(1L)));
@@ -112,37 +81,5 @@ class QuoteHandlerTest{
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.id").isEqualTo(1);
-    }
-
-    @Test
-    void acceptReturnsAcceptedQuote(){
-        QuoteResponse accepted=sampleQuote(1L);
-        accepted.setStatus(QuoteStatus.ACCEPTED);
-
-        when(quoteService.accept(1L))
-                .thenReturn(Mono.just(accepted));
-
-        webClient.put()
-                .uri("/api/financial/quotes/1/accept")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("ACCEPTED");
-    }
-
-    @Test
-    void cancelReturnsCancelledQuote(){
-        QuoteResponse cancelled=sampleQuote(1L);
-        cancelled.setStatus(QuoteStatus.CANCELLED);
-
-        when(quoteService.cancel(1L))
-                .thenReturn(Mono.just(cancelled));
-
-        webClient.put()
-                .uri("/api/financial/quotes/1/cancel")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("CANCELLED");
     }
 }

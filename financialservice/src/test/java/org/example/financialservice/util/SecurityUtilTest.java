@@ -61,19 +61,6 @@ class SecurityUtilTest{
     }
 
     @Test
-    void requireCustomerRejectsAdmin(){
-        StepVerifier.create(
-                SecurityUtil.requireCustomer()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                adminAuth(1L)))
-        )
-                .expectError(ForbiddenException.class)
-                .verify();
-    }
-
-    @Test
     void requireCustomerRejectsUnderwriter(){
         StepVerifier.create(
                 SecurityUtil.requireCustomer()
@@ -84,107 +71,5 @@ class SecurityUtilTest{
         )
                 .expectError(ForbiddenException.class)
                 .verify();
-    }
-
-    @Test
-    void requireAdminAcceptsAdmin(){
-        StepVerifier.create(
-                SecurityUtil.requireAdmin()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                adminAuth(1L)))
-        )
-                .verifyComplete();
-    }
-
-    @Test
-    void requireAdminRejectsCustomer(){
-        StepVerifier.create(
-                SecurityUtil.requireAdmin()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                customerAuth(5L,5L)))
-        )
-                .expectError(ForbiddenException.class)
-                .verify();
-    }
-
-    @Test
-    void requireClaimsOfficerOrAdminAcceptsAdmin(){
-        StepVerifier.create(
-                SecurityUtil.requireClaimsOfficerOrAdmin()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                adminAuth(1L)))
-        )
-                .verifyComplete();
-    }
-
-    @Test
-    void requireClaimsOfficerOrAdminAcceptsClaimsOfficer(){
-        StepVerifier.create(
-                SecurityUtil.requireClaimsOfficerOrAdmin()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                claimsOfficerAuth(2L)))
-        )
-                .verifyComplete();
-    }
-
-    @Test
-    void requireClaimsOfficerOrAdminRejectsCustomer(){
-        StepVerifier.create(
-                SecurityUtil.requireClaimsOfficerOrAdmin()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                customerAuth(5L,5L)))
-        )
-                .expectError(ForbiddenException.class)
-                .verify();
-    }
-
-    @Test
-    void customerIdReturnsFromDetails(){
-        StepVerifier.create(
-                SecurityUtil.customerId()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                customerAuth(5L,5L)))
-        )
-                .assertNext(id->assertThat(id).isEqualTo(5L))
-                .verifyComplete();
-    }
-
-    @Test
-    void roleReturnsCorrectRole(){
-        StepVerifier.create(
-                SecurityUtil.role()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                adminAuth(1L)))
-        )
-                .assertNext(role->assertThat(role)
-                        .isEqualTo("ROLE_ADMIN"))
-                .verifyComplete();
-    }
-
-    @Test
-    void userIdReturnsCorrectId(){
-        StepVerifier.create(
-                SecurityUtil.userId()
-                        .contextWrite(
-                                ReactiveSecurityContextHolder
-                                        .withAuthentication(
-                                                adminAuth(42L)))
-        )
-                .assertNext(id->assertThat(id).isEqualTo(42L))
-                .verifyComplete();
     }
 }

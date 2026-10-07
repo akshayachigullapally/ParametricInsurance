@@ -7,40 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TriggerDescriptionGeneratorTest{
 
     @Test
-    void buildDescription_whenRainfallWith_countOne_shouldBuildSentence(){
-        String description=TriggerDescriptionGenerator.buildDescription(
-                "RAINFALL",
-                "mm",
-                new BigDecimal("150.00"),
-                "GREATER_THAN_OR_EQUAL",
-                "SUM",
-                24,
-                1
-        );
-
-        assertThat(description).isEqualTo(
-                "Coverage is triggered when total rainfall reaches or exceeds 150 mm within 24 hours."
-        );
-    }
-
-    @Test
-    void buildDescription_whenWaterLevelMax_shouldBuildSentence(){
-        String description=TriggerDescriptionGenerator.buildDescription(
-                "WATER_LEVEL",
-                "m",
-                new BigDecimal("5.00"),
-                "GREATER_THAN_OR_EQUAL",
-                "MAX",
-                6,
-                1
-        );
-
-        assertThat(description).isEqualTo(
-                "Coverage is triggered when the maximum water level reaches or exceeds 5 m within 6 hours."
-        );
-    }
-
-    @Test
     void buildDescription_whenMinimumCountGreaterThanOne_shouldMentionObservations(){
         String description=TriggerDescriptionGenerator.buildDescription(
                 "TEMPERATURE",

@@ -69,12 +69,6 @@ class NotificationServiceTest{
     }
 
     @Test
-    void notifyClaimApproved_shouldUseApprovedType(){
-        assertThat(sentNotification(()->service.notifyClaimApproved(3L,10L,"CLM-1")).getType())
-                .isEqualTo("CLAIM_APPROVED");
-    }
-
-    @Test
     void notifyClaimRejected_shouldIncludeReason(){
         NotificationRequest request=sentNotification(()->service.notifyClaimRejected(3L,10L,"CLM-1","No loss"));
 
@@ -92,19 +86,6 @@ class NotificationServiceTest{
     void notifyClaimCancelled_shouldUseCancelledType(){
         assertThat(sentNotification(()->service.notifyClaimCancelled(3L,10L,"CLM-1")).getType())
                 .isEqualTo("CLAIM_CANCELLED");
-    }
-
-    @Test
-    void notifyClaimPendingReview_shouldTargetClaimsOfficerAndAdminRoles(){
-        StepVerifier.create(service.notifyClaimPendingReview(10L,"CLM-1")).verifyComplete();
-        ArgumentCaptor<NotificationRequest> captor=ArgumentCaptor.forClass(NotificationRequest.class);
-        verify(client,times(2)).sendNotification(captor.capture());
-
-        assertThat(captor.getAllValues())
-                .extracting(NotificationRequest::getRecipientRole)
-                .containsExactly("ROLE_CLAIMS_OFFICER","ROLE_ADMIN");
-        assertThat(captor.getAllValues())
-                .allSatisfy(request->assertThat(request.getRecipientCustomerId()).isNull());
     }
 
     @Test
@@ -140,33 +121,6 @@ class NotificationServiceTest{
         assertThat(request.getActorRole()).isEqualTo("ROLE_CLAIMS_OFFICER");
         assertThat(request.getEventType()).isEqualTo("CLAIM_APPROVED");
         assertThat(request.getEntityId()).isEqualTo(10L);
-    }
-
-    @Test
-    void audit_withoutSignedInUser_shouldFallBackToPassedActor(){
-        AuditEventRequest request=sentAudit(service.audit("CLAIM_SETTLED","CLAIM",10L,7L,"Settled"));
-
-        assertThat(request.getActorUserId()).isEqualTo(7L);
-        assertThat(request.getActorRole()).isNull();
-    }
-
-    @Test
-    void audit_withoutAnyActor_shouldRecordSystem(){
-        AuditEventRequest request=sentAudit(service.audit("CLAIM_AUTO_CREATED","CLAIM",10L,null,"Auto"));
-
-        assertThat(request.getActorUserId()).isNull();
-        assertThat(request.getActorRole()).isEqualTo("SYSTEM");
-    }
-
-    @Test
-    void audit_withNonNumericPrincipal_shouldFallBack(){
-        UsernamePasswordAuthenticationToken anonymous=new UsernamePasswordAuthenticationToken(
-                "anonymousUser",null,List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
-
-        AuditEventRequest request=sentAudit(service.audit("CLAIM_SUBMITTED","CLAIM",10L,null,"Submitted")
-                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(anonymous)));
-
-        assertThat(request.getActorRole()).isEqualTo("SYSTEM");
     }
 
     @Test

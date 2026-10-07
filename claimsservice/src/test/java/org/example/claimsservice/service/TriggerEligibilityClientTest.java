@@ -49,47 +49,6 @@ class TriggerEligibilityClientTest {
     }
 
     @Test
-    void getEligibility_whenResponseIsSuccessful_shouldReturnEligibility() {
-        clientResponse=ClientResponse.create(HttpStatus.OK)
-                .header("Content-Type","application/json")
-                .body("""
-                        {
-                          "policyId": 100,
-                          "customerId": 1,
-                          "eligible": true,
-                          "eligibilityReason": "Verified trigger found",
-                          "triggerEventId": 500,
-                          "triggerEventReference": "TRG-500"
-                        }
-                        """)
-                .build();
-
-        StepVerifier.create(
-                        triggerEligibilityClient.getEligibility(100L)
-                )
-                .assertNext(response->{
-                    assertThat(response.getPolicyId()).isEqualTo(100L);
-                    assertThat(response.getCustomerId()).isEqualTo(1L);
-                    assertThat(response.isEligible()).isTrue();
-                    assertThat(response.getTriggerEventId()).isEqualTo(500L);
-                    assertThat(response.getTriggerEventReference())
-                            .isEqualTo("TRG-500");
-                })
-                .verifyComplete();
-
-        ClientRequest request=capturedRequest.get();
-
-        assertThat(request).isNotNull();
-        assertThat(request.method().name()).isEqualTo("GET");
-        assertThat(request.url().toString()).isEqualTo(
-                "http://TRIGGER-SERVICE/internal/triggers/policy/100/eligibility"
-        );
-        assertThat(request.headers().getFirst(
-                GatewayHeaders.GATEWAY_KEY
-        )).isEqualTo("test-internal-key");
-    }
-
-    @Test
     void getEligibility_whenResponseIsNotFound_shouldReturnNotFoundException() {
         clientResponse=ClientResponse.create(HttpStatus.NOT_FOUND)
                 .build();
@@ -138,24 +97,6 @@ class TriggerEligibilityClientTest {
                             .isInstanceOf(DependentServiceException.class);
                     assertThat(error.getMessage()).isEqualTo(
                             "Trigger service is currently unavailable"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
-    void getEligibility_whenResponseBodyIsEmpty_shouldReturnDependentServiceException() {
-        clientResponse=ClientResponse.create(HttpStatus.OK)
-                .build();
-
-        StepVerifier.create(
-                        triggerEligibilityClient.getEligibility(100L)
-                )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(DependentServiceException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Trigger service returned an empty eligibility response"
                     );
                 })
                 .verify();

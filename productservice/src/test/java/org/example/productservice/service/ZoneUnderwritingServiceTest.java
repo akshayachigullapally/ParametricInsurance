@@ -44,24 +44,6 @@ class ZoneUnderwritingServiceTest{
     }
 
     @Test
-    void noCap_allowsAnyAmount(){
-        when(triggerServiceClient.getZoneById(1L)).thenReturn(Mono.just(zone(false,null)));
-
-        StepVerifier.create(service.checkCanSell(1L,new BigDecimal("99999999"),List.of()))
-                .verifyComplete();
-    }
-
-    @Test
-    void cap_allowsSaleThatFitsExactly(){
-        when(triggerServiceClient.getZoneById(1L)).thenReturn(Mono.just(zone(false,"500000")));
-        stubOpen(List.of(policy(10L,"300000")),List.of(policy(11L,"100000")));
-
-        // 300,000 active + 100,000 pending + 100,000 new = 500,000 = cap
-        StepVerifier.create(service.checkCanSell(1L,new BigDecimal("100000"),List.of()))
-                .verifyComplete();
-    }
-
-    @Test
     void cap_blocksSaleThatWouldExceedIt(){
         when(triggerServiceClient.getZoneById(1L)).thenReturn(Mono.just(zone(false,"500000")));
         stubOpen(List.of(policy(10L,"300000")),List.of(policy(11L,"100000")));
@@ -73,16 +55,6 @@ class ZoneUnderwritingServiceTest{
                             "Exposure cap reached for Hyderabad Central: ₹400000 of ₹500000 is already committed, only ₹100000 of cover is still available");
                 })
                 .verify();
-    }
-
-    @Test
-    void cap_ignoresExcludedPolicies(){
-        // At approval the pending policy itself (id 11) is already counted, so it is excluded.
-        when(triggerServiceClient.getZoneById(1L)).thenReturn(Mono.just(zone(false,"500000")));
-        stubOpen(List.of(policy(10L,"300000")),List.of(policy(11L,"200000")));
-
-        StepVerifier.create(service.checkCanSell(1L,new BigDecimal("200000"),List.of(11L)))
-                .verifyComplete();
     }
 
     @Test

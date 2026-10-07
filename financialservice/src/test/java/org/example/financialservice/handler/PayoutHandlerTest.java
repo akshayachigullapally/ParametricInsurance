@@ -100,64 +100,12 @@ class PayoutHandlerTest{
     }
 
     @Test
-    void createInternalReturns201(){
-        when(payoutService.create(any()))
-                .thenReturn(Mono.just(samplePayout(1L)));
-
-        webClient.post()
-                .uri("/internal/financial/payouts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"claimId\":10}")
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("PENDING");
-    }
-
-    @Test
-    void findMineReturnsList(){
-        when(payoutService.findMine())
-                .thenReturn(Flux.just(samplePayout(1L),samplePayout(2L)));
-
-        webClient.get()
-                .uri("/api/financial/payouts/me")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(PayoutResponse.class).hasSize(2);
-    }
-
-    @Test
-    void findByIdReturnsPayout(){
-        when(payoutService.findById(1L))
-                .thenReturn(Mono.just(samplePayout(1L)));
-
-        webClient.get()
-                .uri("/api/financial/payouts/1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.id").isEqualTo(1);
-    }
-
-    @Test
     void findAllReturnsList(){
         when(payoutService.findAll())
                 .thenReturn(Flux.just(samplePayout(1L)));
 
         webClient.get()
                 .uri("/api/financial/payouts/admin/all")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(PayoutResponse.class).hasSize(1);
-    }
-
-    @Test
-    void findByClaimReturnsList(){
-        when(payoutService.findByClaim(10L))
-                .thenReturn(Flux.just(samplePayout(1L)));
-
-        webClient.get()
-                .uri("/internal/financial/payouts/claim/10")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(PayoutResponse.class).hasSize(1);

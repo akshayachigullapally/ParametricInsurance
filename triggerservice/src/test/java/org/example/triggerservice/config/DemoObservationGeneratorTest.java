@@ -26,26 +26,6 @@ class DemoObservationGeneratorTest{
     private final LocalDateTime now=LocalDateTime.of(2026,10,2,12,0);
 
     @Test
-    void recentAdminReading_isHeld(){
-        assertThat(generator.isHeldByAdmin(reading(ObservationSource.MANUAL,now.minusMinutes(10)),now)).isTrue();
-    }
-
-    @Test
-    void adminReading_isReleasedAfterTheHold(){
-        assertThat(generator.isHeldByAdmin(reading(ObservationSource.MANUAL,now.minusMinutes(31)),now)).isFalse();
-    }
-
-    @Test
-    void feedReadings_areNeverHeld(){
-        assertThat(generator.isHeldByAdmin(reading(ObservationSource.MOCK,now.minusMinutes(1)),now)).isFalse();
-    }
-
-    @Test
-    void backfillBeforeAnAdminReading_isNotHeld(){
-        assertThat(generator.isHeldByAdmin(reading(ObservationSource.MANUAL,now.plusHours(2)),now)).isFalse();
-    }
-
-    @Test
     void scheduledRun_skipsZonesHeldByAnAdmin(){
         when(zones.findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE))
                 .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));

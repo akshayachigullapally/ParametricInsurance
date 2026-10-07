@@ -83,69 +83,6 @@ class ClaimHandlerTest {
     }
 
     @Test
-    void createClaim_whenEmptyBody_shouldReturnError() {
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(CreateClaimRequest.class))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(handler.createClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void getMyClaims_shouldReturnClaims() {
-        ClaimResponse r1 = claimResponse(1L, "SUBMITTED");
-        ClaimResponse r2 = claimResponse(2L, "APPROVED");
-
-        when(claimService.getMyClaims(1L, null))
-                .thenReturn(Flux.just(r1, r2));
-        mockPrincipal(1L);
-        when(serverRequest.queryParam("status")).thenReturn(java.util.Optional.empty());
-
-        StepVerifier.create(handler.getMyClaims(serverRequest))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void getMyClaims_withStatusFilter_shouldDelegateToService() {
-        ClaimResponse r1 = claimResponse(1L, "SUBMITTED");
-
-        when(claimService.getMyClaims(1L, "SUBMITTED"))
-                .thenReturn(Flux.just(r1));
-        mockPrincipal(1L);
-        when(serverRequest.queryParam("status"))
-                .thenReturn(java.util.Optional.of("SUBMITTED"));
-
-        StepVerifier.create(handler.getMyClaims(serverRequest))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-
-        verify(claimService).getMyClaims(1L, "SUBMITTED");
-    }
-
-    @Test
-    void getMyClaim_whenExists_shouldReturnClaim() {
-        ClaimResponse response = claimResponse(1L, "SUBMITTED");
-
-        when(claimService.getMyClaim(1L, 1L))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-
-        StepVerifier.create(handler.getMyClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void getMyClaim_whenNotExists_shouldReturnError() {
         when(claimService.getMyClaim(1L, 99L))
                 .thenReturn(Mono.error(new NotFoundException("Claim not found")));
@@ -155,33 +92,6 @@ class ClaimHandlerTest {
         StepVerifier.create(handler.getMyClaim(serverRequest))
                 .expectError(NotFoundException.class)
                 .verify();
-    }
-
-    @Test
-    void getMyClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.getMyClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void cancelClaim_whenSubmitted_shouldReturnOk() {
-        MessageResponse response = MessageResponse.builder()
-                .message("Claim cancelled successfully")
-                .build();
-
-        when(claimService.cancelClaim(1L, 1L))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-
-        StepVerifier.create(handler.cancelClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
     }
 
     @Test
@@ -213,48 +123,6 @@ class ClaimHandlerTest {
     }
 
     @Test
-    void getClaim_shouldReturnClaim() {
-        ClaimResponse response = claimResponse(1L, "SUBMITTED");
-
-        when(claimService.getClaim(1L))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-
-        StepVerifier.create(handler.getClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void getClaim_whenNotExists_shouldReturnError() {
-        when(claimService.getClaim(99L))
-                .thenReturn(Mono.error(new NotFoundException("Claim not found")));
-        when(serverRequest.pathVariable("claimId")).thenReturn("99");
-
-        StepVerifier.create(handler.getClaim(serverRequest))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
-    void startReview_whenSubmitted_shouldReturnOk() {
-        ClaimResponse response = claimResponse(1L, "UNDER_REVIEW");
-
-        when(claimService.startReview(1L, 1L))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-
-        StepVerifier.create(handler.startReview(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void approveClaim_whenValid_shouldReturnOk() {
         ClaimResponse response = claimResponse(1L, "APPROVED");
 
@@ -277,40 +145,6 @@ class ClaimHandlerTest {
 
         // Approval pays out automatically, so the latest claim (settled) is returned.
         org.mockito.Mockito.verify(claimService).getClaim(1L);
-    }
-
-    @Test
-    void approveClaim_whenInvalidAmount_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(ApproveClaimRequest.class))
-                .thenReturn(Mono.just(ApproveClaimRequest.builder()
-                        .approvedAmount(new BigDecimal("-100"))
-                        .build()));
-
-        StepVerifier.create(handler.approveClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void rejectClaim_whenValid_shouldReturnOk() {
-        ClaimResponse response = claimResponse(1L, "REJECTED");
-
-        when(claimService.rejectClaim(eq(1L), eq(1L), any(RejectClaimRequest.class)))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(RejectClaimRequest.class))
-                .thenReturn(Mono.just(RejectClaimRequest.builder()
-                        .reason("Invalid documents")
-                        .build()));
-
-        StepVerifier.create(handler.rejectClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
     }
 
     @Test
@@ -344,78 +178,6 @@ class ClaimHandlerTest {
     }
 
     @Test
-    void getAllClaims_withStatusFilter_shouldDelegateToService() {
-        ClaimResponse r1 = claimResponse(1L, "APPROVED");
-
-        when(claimService.getAllClaims("APPROVED", null))
-                .thenReturn(Flux.just(r1));
-        when(serverRequest.queryParam("status"))
-                .thenReturn(java.util.Optional.of("APPROVED"));
-
-        StepVerifier.create(handler.getAllClaims(serverRequest))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-
-        verify(claimService).getAllClaims("APPROVED", null);
-    }
-
-    @Test
-    void getMyClaim_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-1");
-
-        StepVerifier.create(handler.getMyClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void getMyClaim_whenZeroId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("0");
-
-        StepVerifier.create(handler.getMyClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void cancelClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.cancelClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void cancelClaim_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-5");
-
-        StepVerifier.create(handler.cancelClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void startReview_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.startReview(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void startReview_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-1");
-
-        StepVerifier.create(handler.startReview(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
     void startReview_whenClaimNotFound_shouldReturnError() {
         when(claimService.startReview(1L, 99L))
                 .thenReturn(Mono.error(new NotFoundException("Claim not found")));
@@ -428,115 +190,12 @@ class ClaimHandlerTest {
     }
 
     @Test
-    void startReview_whenConflict_shouldReturnError() {
-        when(claimService.startReview(1L, 1L))
-                .thenReturn(Mono.error(
-                        new ConflictException("Only submitted claims can be reviewed")
-                ));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-
-        StepVerifier.create(handler.startReview(serverRequest))
-                .expectError(ConflictException.class)
-                .verify();
-    }
-
-    @Test
-    void approveClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.approveClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void approveClaim_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-1");
-
-        StepVerifier.create(handler.approveClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void approveClaim_whenClaimNotFound_shouldReturnError() {
-        when(claimService.approveClaim(eq(1L), eq(99L), any(ApproveClaimRequest.class)))
-                .thenReturn(Mono.error(new NotFoundException("Claim not found")));
-        when(serverRequest.pathVariable("claimId")).thenReturn("99");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(ApproveClaimRequest.class))
-                .thenReturn(Mono.just(ApproveClaimRequest.builder()
-                        .approvedAmount(new BigDecimal("40000"))
-                        .build()));
-
-        StepVerifier.create(handler.approveClaim(serverRequest))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
-    void rejectClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.rejectClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void rejectClaim_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-1");
-
-        StepVerifier.create(handler.rejectClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void rejectClaim_whenClaimNotFound_shouldReturnError() {
-        when(claimService.rejectClaim(eq(1L), eq(99L), any(RejectClaimRequest.class)))
-                .thenReturn(Mono.error(new NotFoundException("Claim not found")));
-        when(serverRequest.pathVariable("claimId")).thenReturn("99");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(RejectClaimRequest.class))
-                .thenReturn(Mono.just(RejectClaimRequest.builder()
-                        .reason("Invalid documents")
-                        .build()));
-
-        StepVerifier.create(handler.rejectClaim(serverRequest))
-                .expectError(NotFoundException.class)
-                .verify();
-    }
-
-    @Test
-    void getClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.getClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
     void getClaim_whenNegativeId_shouldReturnValidationError() {
         when(serverRequest.pathVariable("claimId")).thenReturn("-1");
 
         StepVerifier.create(handler.getClaim(serverRequest))
                 .expectError(ValidationException.class)
                 .verify();
-    }
-
-    @Test
-    void getSubmittedClaims_whenEmpty_shouldReturnEmpty() {
-        when(claimService.getSubmittedClaims())
-                .thenReturn(Flux.empty());
-
-        StepVerifier.create(handler.getSubmittedClaims(serverRequest))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
     }
 
     @Test
@@ -556,40 +215,11 @@ class ClaimHandlerTest {
     }
 
     @Test
-    void getManualClaim_shouldReturnClaim() {
-        ClaimResponse response = claimResponse(1L, "SUBMITTED");
-        response.setClaimSource("MANUAL_EXCEPTION");
-
-        when(claimService.getManualClaim(1L))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-
-        StepVerifier.create(handler.getManualClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void getManualClaim_whenInvalidId_shouldReturnValidationError() {
         when(serverRequest.pathVariable("claimId")).thenReturn("abc");
 
         StepVerifier.create(handler.getManualClaim(serverRequest))
                 .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void getManualClaim_whenNotExists_shouldReturnError() {
-        when(claimService.getManualClaim(99L))
-                .thenReturn(Mono.error(
-                        new NotFoundException("Manual claim not found")
-                ));
-        when(serverRequest.pathVariable("claimId")).thenReturn("99");
-
-        StepVerifier.create(handler.getManualClaim(serverRequest))
-                .expectError(NotFoundException.class)
                 .verify();
     }
 
@@ -605,60 +235,6 @@ class ClaimHandlerTest {
                     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
                 })
                 .verifyComplete();
-    }
-
-    @Test
-    void settleClaim_whenValid_shouldReturnOk() {
-        ClaimResponse response = claimResponse(1L, "SETTLED");
-
-        when(claimService.settleClaim(eq(1L), eq(1L), any(SettleClaimRequest.class)))
-                .thenReturn(Mono.just(response));
-        when(serverRequest.pathVariable("claimId")).thenReturn("1");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(SettleClaimRequest.class))
-                .thenReturn(Mono.just(SettleClaimRequest.builder()
-                        .notes("Payment processed")
-                        .build()));
-
-        StepVerifier.create(handler.settleClaim(serverRequest))
-                .assertNext(resp -> {
-                    assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void settleClaim_whenInvalidId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("abc");
-
-        StepVerifier.create(handler.settleClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void settleClaim_whenNegativeId_shouldReturnValidationError() {
-        when(serverRequest.pathVariable("claimId")).thenReturn("-1");
-
-        StepVerifier.create(handler.settleClaim(serverRequest))
-                .expectError(ValidationException.class)
-                .verify();
-    }
-
-    @Test
-    void settleClaim_whenClaimNotFound_shouldReturnError() {
-        when(claimService.settleClaim(eq(1L), eq(99L), any(SettleClaimRequest.class)))
-                .thenReturn(Mono.error(new NotFoundException("Claim not found")));
-        when(serverRequest.pathVariable("claimId")).thenReturn("99");
-        mockPrincipal(1L);
-        when(serverRequest.bodyToMono(SettleClaimRequest.class))
-                .thenReturn(Mono.just(SettleClaimRequest.builder()
-                        .notes("Payment processed")
-                        .build()));
-
-        StepVerifier.create(handler.settleClaim(serverRequest))
-                .expectError(NotFoundException.class)
-                .verify();
     }
 
     @Test

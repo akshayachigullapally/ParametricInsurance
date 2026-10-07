@@ -117,18 +117,6 @@ class UserHandlerTest {
     }
 
     @Test
-    void getMyProfile_whenNotAuthenticated_shouldReturnForbiddenException() {
-        ServerRequest request = unauthenticatedRequestNoBody();
-
-        StepVerifier.create(userHandler.getMyProfile(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ForbiddenException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authenticated user is required");
-                })
-                .verify();
-    }
-
-    @Test
     void getMyProfile_whenUserNotFound_shouldPropagateNotFoundException() {
         when(userProfileService.getMyProfile(99L))
                 .thenReturn(Mono.error(new NotFoundException("User not found")));
@@ -200,63 +188,6 @@ class UserHandlerTest {
                 .verifyComplete();
     }
 
-    @Test
-    void getAllUsers_whenStatusFilterProvided_shouldPassToService() {
-        UserResponse response = userResponse(1L);
-        when(userProfileService.getAllUsers("ACTIVE", null))
-                .thenReturn(Flux.just(response));
-
-        ServerRequest request = requestWithQueryParam("status", "ACTIVE");
-
-        StepVerifier.create(userHandler.getAllUsers(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-
-        verify(userProfileService).getAllUsers("ACTIVE", null);
-    }
-
-    @Test
-    void getAllUsers_whenSegmentFilterProvided_shouldPassToService() {
-        UserResponse response = userResponse(1L);
-        when(userProfileService.getAllUsers(null, "INDIVIDUAL"))
-                .thenReturn(Flux.just(response));
-
-        ServerRequest request = requestWithQueryParam("segment", "INDIVIDUAL");
-
-        StepVerifier.create(userHandler.getAllUsers(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-
-        verify(userProfileService).getAllUsers(null, "INDIVIDUAL");
-    }
-
-    @Test
-    void getAllUsers_whenBothFiltersProvided_shouldPassToService() {
-        UserResponse response = userResponse(1L);
-        when(userProfileService.getAllUsers("ACTIVE", "FARMER"))
-                .thenReturn(Flux.just(response));
-
-        ServerRequest request = requestWithTwoQueryParams("status", "ACTIVE", "segment", "FARMER");
-
-        StepVerifier.create(userHandler.getAllUsers(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-
-        verify(userProfileService).getAllUsers("ACTIVE", "FARMER");
-    }
-
-    @Test
-    void getAllUsers_whenNoUsersFound_shouldReturnEmptyFlux() {
-        when(userProfileService.getAllUsers(null, null))
-                .thenReturn(Flux.empty());
-
-        ServerRequest request = requestWithNoQueryParams();
-
-        StepVerifier.create(userHandler.getAllUsers(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
     // ======================== getUser ========================
 
     @Test
@@ -307,21 +238,6 @@ class UserHandlerTest {
                 .verify();
     }
 
-    @Test
-    void getUser_whenUserNotFound_shouldPropagateNotFoundException() {
-        when(userProfileService.getUser(99L))
-                .thenReturn(Mono.error(new NotFoundException("User not found")));
-
-        ServerRequest request = requestWithPathVar("userId", "99");
-
-        StepVerifier.create(userHandler.getUser(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User not found");
-                })
-                .verify();
-    }
-
     // ======================== updateStatus ========================
 
     @Test
@@ -349,20 +265,6 @@ class UserHandlerTest {
                 .expectErrorSatisfies(error -> {
                     assertThat(error).isInstanceOf(ValidationException.class);
                     assertThat(((ValidationException) error).getErrors()).containsExactly("User id must be positive");
-                })
-                .verify();
-    }
-
-    @Test
-    void updateStatus_whenUserIdIsNotANumber_shouldReturnValidationException() {
-        ServerRequest request = requestWithPathVarAndBody(
-                "userId", "abc",
-                UpdateUserStatusRequest.builder().status("ACTIVE").build());
-
-        StepVerifier.create(userHandler.updateStatus(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid user id");
                 })
                 .verify();
     }

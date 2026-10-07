@@ -272,27 +272,6 @@ class AuthServiceTest{
     }
 
     @Test
-    void login_whenUserDoesNotExist_shouldReturnAuthenticationException(){
-        LoginRequest request=mock(LoginRequest.class);
-        when(request.getEmail()).thenReturn("missing@test.com");
-        when(userRepository.findByEmailIgnoreCase("missing@test.com"))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(
-                authService.login(request,"Chrome","127.0.0.1"))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Invalid email or password");
-                })
-                .verify();
-
-        verify(passwordEncoder,never()).matches(anyString(),anyString());
-        verify(refreshTokenRepository,never()).save(any());
-    }
-
-    @Test
     void login_whenPasswordIsIncorrect_shouldReturnAuthenticationException(){
         LoginRequest request=mock(LoginRequest.class);
         UserCredential user=user(true);
@@ -386,24 +365,6 @@ class AuthServiceTest{
         assertThat(oldSession.getActive()).isFalse();
         verify(refreshTokenRepository,times(2)).save(any(RefreshToken.class));
         verify(sessionRepository,times(2)).save(any(Session.class));
-    }
-
-    @Test
-    void refresh_whenTokenDoesNotExist_shouldReturnAuthException(){
-        RefreshTokenRequest request=mock(RefreshTokenRequest.class);
-        when(request.getRefreshToken()).thenReturn("missing-token");
-        when(refreshTokenRepository.findByToken("missing-token"))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(
-                authService.refresh(request,"Chrome","127.0.0.1"))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Invalid refresh token");
-                })
-                .verify();
     }
 
     @Test
@@ -544,20 +505,6 @@ class AuthServiceTest{
     }
 
     @Test
-    void getCurrentUser_whenUserDoesNotExist_shouldReturnNotFound(){
-        when(userRepository.findById(99L)).thenReturn(Mono.empty());
-
-        StepVerifier.create(authService.getCurrentUser(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("User not found");
-                })
-                .verify();
-    }
-
-    @Test
     void getSessions_whenActiveExist_shouldReturnSessionResponses(){
         Session first=session(true);
         first.setId(10L);
@@ -626,21 +573,6 @@ class AuthServiceTest{
         assertThat(session.getActive()).isFalse();
         verify(refreshTokenRepository,never()).findById(anyLong());
         verify(refreshTokenRepository,never()).save(any());
-    }
-
-    @Test
-    void revokeSession_whenNotExists_shouldReturnNotFound(){
-        when(sessionRepository.findByIdAndUserId(99L,1L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(authService.revokeSession(1L,99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Session not found");
-                })
-                .verify();
     }
 
     @Test

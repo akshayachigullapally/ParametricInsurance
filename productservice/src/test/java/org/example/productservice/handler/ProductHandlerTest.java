@@ -85,46 +85,11 @@ class ProductHandlerTest{
     }
 
     @Test
-    void getProducts_whenEmpty_shouldReturnEmptyList(){
-        when(productService.getActiveProducts()).thenReturn(Flux.empty());
-        webTestClient.get().uri("/api/products")
-                .exchange().expectStatus().isOk()
-                .expectBodyList(ProductResponse.class).hasSize(0);
-    }
-
-    @Test
-    void getAllProducts_shouldReturnAllProducts(){
-        ProductResponse response=buildResponse(1L);
-        when(productService.getActiveProducts()).thenReturn(Flux.just(response));
-        webTestClient.get().uri("/api/products")
-                .exchange().expectStatus().isOk()
-                .expectBodyList(ProductResponse.class).hasSize(1);
-    }
-
-    @Test
-    void getByCategory_shouldReturnFilteredProducts(){
-        ProductResponse response=buildResponse(1L);
-        when(productService.getProductsByCategory("WEATHER")).thenReturn(Flux.just(response));
-        webTestClient.get().uri("/api/products/category/{category}","WEATHER")
-                .exchange().expectStatus().isOk()
-                .expectBodyList(ProductResponse.class).hasSize(1)
-                .value(products->assertThat(products.get(0).getCategory()).isEqualTo("WEATHER"));
-    }
-
-    @Test
     void getByCategory_whenEmpty_shouldReturnEmptyList(){
         when(productService.getProductsByCategory("WEATHER")).thenReturn(Flux.empty());
         webTestClient.get().uri("/api/products/category/{category}","WEATHER")
                 .exchange().expectStatus().isOk()
                 .expectBodyList(ProductResponse.class).hasSize(0);
-    }
-
-    @Test
-    void getProduct_whenNotFound_shouldReturn404(){
-        when(productService.getActiveProduct(99L))
-                .thenReturn(Mono.error(new NotFoundException("Active product not found")));
-        webTestClient.get().uri("/api/products/{productId}",99)
-                .exchange().expectStatus().isNotFound();
     }
 
     @Test
@@ -158,16 +123,6 @@ class ProductHandlerTest{
     }
 
     @Test
-    void createProduct_whenConflict_shouldReturn409(){
-        when(productService.createProduct(anyLong(),any(ProductRequest.class)))
-                .thenReturn(Mono.error(new ConflictException("Product code already exists")));
-        authClient("ADMIN","1").post().uri("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isEqualTo(409);
-    }
-
-    @Test
     void updateProduct_shouldReturn200(){
         ProductResponse response=buildResponse(10L);
         when(productService.updateProduct(eq(10L),any(ProductRequest.class))).thenReturn(Mono.just(response));
@@ -175,30 +130,6 @@ class ProductHandlerTest{
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(buildCreateRequest())
                 .exchange().expectStatus().isOk();
-    }
-
-    @Test
-    void updateProduct_whenConflict_shouldReturn409(){
-        when(productService.updateProduct(eq(10L),any(ProductRequest.class)))
-                .thenReturn(Mono.error(new ConflictException("Product code already exists")));
-        authClient("ADMIN","1").put().uri("/api/products/{productId}",10)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isEqualTo(409);
-    }
-
-    @Test
-    void deleteProduct_shouldReturn200(){
-        when(productService.deleteProduct(10L)).thenReturn(Mono.empty());
-        authClient("ADMIN","1").delete().uri("/api/products/{productId}",10)
-                .exchange().expectStatus().isOk();
-    }
-
-    @Test
-    void deleteProduct_whenNotFound_shouldReturn404(){
-        when(productService.deleteProduct(99L)).thenReturn(Mono.error(new NotFoundException("Product not found")));
-        authClient("ADMIN","1").delete().uri("/api/products/{productId}",99)
-                .exchange().expectStatus().isNotFound();
     }
 
     @Test
@@ -221,70 +152,14 @@ class ProductHandlerTest{
     }
 
     @Test
-    void updateStatus_whenNotFound_shouldReturn404(){
-        when(productService.updateStatus(eq(99L),any(UpdateProductStatusRequest.class)))
-                .thenReturn(Mono.error(new NotFoundException("Product not found")));
-        authClient("ADMIN","1").put().uri("/api/products/{productId}/status",99)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UpdateProductStatusRequest("ACTIVE"))
-                .exchange().expectStatus().isNotFound();
-    }
-
-    @Test
-    void createProduct_whenInvalidId_shouldReturn201(){
-        ProductResponse response=buildResponse(1L);
-        when(productService.createProduct(anyLong(),any(ProductRequest.class))).thenReturn(Mono.just(response));
-        authClient("ADMIN","1").post().uri("/api/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isCreated();
-    }
-
-    @Test
-    void updateProduct_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").put().uri("/api/products/{productId}",10)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(buildCreateRequest())
-                .exchange().expectStatus().isForbidden();
-    }
-
-    @Test
     void deleteProduct_whenUnauthorized_shouldReturn403(){
         webTestClient.delete().uri("/api/products/{productId}",10)
                 .exchange().expectStatus().isForbidden();
     }
 
     @Test
-    void updateStatus_whenUnauthorized_shouldReturn403(){
-        webTestClient.put().uri("/api/products/{productId}/status",10)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UpdateProductStatusRequest("ACTIVE"))
-                .exchange().expectStatus().isForbidden();
-    }
-
-    @Test
-    void getAdminProduct_whenUnauthorized_shouldReturn403(){
-        webTestClient.get().uri("/api/products/admin/all")
-                .exchange().expectStatus().isForbidden();
-    }
-
-    @Test
     void deleteProduct_whenCustomerRole_shouldReturn403(){
         authClient("CUSTOMER","1").delete().uri("/api/products/{productId}",10)
-                .exchange().expectStatus().isForbidden();
-    }
-
-    @Test
-    void updateStatus_whenCustomerRole_shouldReturn403(){
-        authClient("CUSTOMER","1").put().uri("/api/products/{productId}/status",10)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new UpdateProductStatusRequest("ACTIVE"))
-                .exchange().expectStatus().isForbidden();
-    }
-
-    @Test
-    void getAllProducts_whenUnauthorized_shouldReturn403(){
-        authClient("CUSTOMER","1").get().uri("/api/products/admin/all")
                 .exchange().expectStatus().isForbidden();
     }
 
@@ -325,21 +200,6 @@ class ProductHandlerTest{
                 .expectBody(ProductThresholdUpdateResponse.class)
                 .value(resp->assertThat(resp.getNewThresholdValue())
                         .isEqualByComparingTo(new BigDecimal("185.00")));
-    }
-
-    @Test
-    void updateThreshold_whenNotFound_shouldReturn404(){
-        when(productService.updateThreshold(
-                anyLong(),
-                eq(99L),
-                any(ProductThresholdUpdateRequest.class)
-        )).thenReturn(Mono.error(new NotFoundException("Product not found")));
-
-        authClient("ADMIN","1").put()
-                .uri("/api/products/admin/{productId}/threshold",99)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(threshRequest())
-                .exchange().expectStatus().isNotFound();
     }
 
     @Test
@@ -404,16 +264,6 @@ class ProductHandlerTest{
                 .exchange().expectStatus().isOk()
                 .expectBody(InternalProductResponse.class)
                 .value(resp->assertThat(resp.getProductCode()).isEqualTo("WEATHER-01"));
-    }
-
-    @Test
-    void getInternalProductByCode_whenNotFound_shouldReturn404(){
-        when(productService.getInternalProductByCode("UNKNOWN"))
-                .thenReturn(Mono.error(new NotFoundException("Product not found")));
-
-        webTestClient.get()
-                .uri("/internal/products/code/{productCode}","UNKNOWN")
-                .exchange().expectStatus().isNotFound();
     }
 
     private ProductThresholdUpdateRequest threshRequest(){

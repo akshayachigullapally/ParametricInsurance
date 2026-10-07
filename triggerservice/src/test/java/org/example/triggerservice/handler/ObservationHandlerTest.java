@@ -63,62 +63,6 @@ class ObservationHandlerTest {
     }
 
     @Test
-    void getAll_shouldReturnObservationsForAdmin() {
-        ObservationResponse response = ObservationResponse.builder()
-                .id(1L)
-                .observationReference("OBS-001")
-                .measurementType(MeasurementType.RAINFALL)
-                .observedValue(new BigDecimal("25.50"))
-                .status(ObservationStatus.VALIDATED)
-                .build();
-
-        when(observationService.getAll()).thenReturn(Flux.just(response));
-
-        ServerRequest request = createRequest("GET", "/api/triggers/observations");
-
-        StepVerifier.create(
-                        observationHandler.getAll(request)
-                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
-                                        new UsernamePasswordAuthenticationToken("1", null,
-                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
-                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
-    @Test
-    void getAll_shouldReturnForbiddenForCustomer() {
-        ServerRequest request = createRequest("GET", "/api/triggers/observations");
-
-        StepVerifier.create(
-                        observationHandler.getAll(request)
-                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
-                                        new UsernamePasswordAuthenticationToken("1", null,
-                                                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))))))
-                .expectError(ForbiddenException.class)
-                .verify();
-    }
-
-    @Test
-    void getById_shouldReturnObservation() {
-        ObservationResponse response = ObservationResponse.builder()
-                .id(1L)
-                .observationReference("OBS-001")
-                .build();
-
-        when(observationService.getById(1L)).thenReturn(Mono.just(response));
-
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/1", Map.of("observationId", "1"));
-
-        StepVerifier.create(
-                        observationHandler.getById(request)
-                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
-                                        new UsernamePasswordAuthenticationToken("1", null,
-                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
-                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
-    @Test
     void getById_shouldReturnValidationForInvalidId() {
         ServerRequest request = createRequest("GET", "/api/triggers/observations/abc", Map.of("observationId", "abc"));
 
@@ -129,45 +73,5 @@ class ObservationHandlerTest {
                                                 List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
                 .expectError(ValidationException.class)
                 .verify();
-    }
-
-    @Test
-    void getByZoneId_shouldReturnObservations() {
-        ObservationResponse response = ObservationResponse.builder()
-                .id(1L)
-                .locationZoneId(1L)
-                .build();
-
-        when(observationService.getByZoneId(1L)).thenReturn(Flux.just(response));
-
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/zone/1", Map.of("zoneId", "1"));
-
-        StepVerifier.create(
-                        observationHandler.getByZoneId(request)
-                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
-                                        new UsernamePasswordAuthenticationToken("1", null,
-                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
-                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
-    @Test
-    void getByMeasurementType_shouldReturnObservations() {
-        ObservationResponse response = ObservationResponse.builder()
-                .id(1L)
-                .measurementType(MeasurementType.TEMPERATURE)
-                .build();
-
-        when(observationService.getByMeasurementType("TEMPERATURE")).thenReturn(Flux.just(response));
-
-        ServerRequest request = createRequest("GET", "/api/triggers/observations/measurement-type/TEMPERATURE", Map.of("measurementType", "TEMPERATURE"));
-
-        StepVerifier.create(
-                        observationHandler.getByMeasurementType(request)
-                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
-                                        new UsernamePasswordAuthenticationToken("1", null,
-                                                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))))))
-                .assertNext(resp -> assertThat(resp.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
     }
 }

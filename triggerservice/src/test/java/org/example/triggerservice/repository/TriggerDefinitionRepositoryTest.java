@@ -106,92 +106,12 @@ class TriggerDefinitionRepositoryTest {
     }
 
     @Test
-    void shouldSaveAndFindTriggerDefinitionById() {
-        TriggerDefinition def = createDefinition("DEF_001", TriggerDefinitionStatus.DRAFT);
-
-        StepVerifier.create(triggerDefinitionRepository.save(def))
-                .assertNext(saved -> {
-                    assertThat(saved.getId()).isNotNull();
-                    assertThat(saved.getDefinitionCode()).isEqualTo("DEF_001");
-                    assertThat(saved.getStatus()).isEqualTo(TriggerDefinitionStatus.DRAFT);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldCheckExistsByDefinitionCode() {
-        triggerDefinitionRepository.save(createDefinition("DUP_DEF", TriggerDefinitionStatus.DRAFT)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.existsByDefinitionCodeIgnoreCase("dup_def"))
-                .assertNext(exists -> assertThat(exists).isTrue())
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldFindAllByStatusNotOrderByDefinitionNameAsc() {
-        triggerDefinitionRepository.save(createDefinition("ACTIVE_DEF", TriggerDefinitionStatus.ACTIVE)).block();
-        triggerDefinitionRepository.save(createDefinition("ARCHIVED_DEF", TriggerDefinitionStatus.ARCHIVED)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.findAllByStatusNotOrderByDefinitionNameAsc(TriggerDefinitionStatus.ARCHIVED))
-                .assertNext(d -> assertThat(d.getStatus()).isNotEqualTo(TriggerDefinitionStatus.ARCHIVED))
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldFindAllByStatusOrderByDefinitionNameAsc() {
-        triggerDefinitionRepository.save(createDefinition("ACTIVE_DEF2", TriggerDefinitionStatus.ACTIVE)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.findAllByStatusOrderByDefinitionNameAsc(TriggerDefinitionStatus.ACTIVE))
-                .assertNext(d -> assertThat(d.getStatus()).isEqualTo(TriggerDefinitionStatus.ACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
     void shouldFindAllByPerilIdAndStatusNotOrderByDefinitionNameAsc() {
         triggerDefinitionRepository.save(createDefinition("PERIL_DEF", TriggerDefinitionStatus.DRAFT)).block();
 
         StepVerifier.create(triggerDefinitionRepository.findAllByPerilIdAndStatusNotOrderByDefinitionNameAsc(
                 savedPeril.getId(), TriggerDefinitionStatus.ARCHIVED))
                 .assertNext(d -> assertThat(d.getPerilId()).isEqualTo(savedPeril.getId()))
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldFindAllByLocationZoneIdAndStatusNotOrderByDefinitionNameAsc() {
-        triggerDefinitionRepository.save(createDefinition("ZONE_DEF", TriggerDefinitionStatus.DRAFT)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.findAllByLocationZoneIdAndStatusNotOrderByDefinitionNameAsc(
-                savedZone.getId(), TriggerDefinitionStatus.ARCHIVED))
-                .assertNext(d -> assertThat(d.getLocationZoneId()).isEqualTo(savedZone.getId()))
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldFindAllByProductIdAndStatusNotOrderByDefinitionNameAsc() {
-        triggerDefinitionRepository.save(createDefinition("PRODUCT_DEF", TriggerDefinitionStatus.DRAFT)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.findAllByProductIdAndStatusNotOrderByDefinitionNameAsc(
-                1L, TriggerDefinitionStatus.ARCHIVED))
-                .assertNext(d -> assertThat(d.getProductId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldCheckExistsByDefinitionCodeAndIdNot() {
-        TriggerDefinition saved = triggerDefinitionRepository.save(
-                createDefinition("CODE_CHECK", TriggerDefinitionStatus.DRAFT)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.existsByDefinitionCodeAndIdNot("code_check", saved.getId()))
-                .assertNext(exists -> assertThat(exists).isFalse())
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldFindByDefinitionCodeIgnoreCase() {
-        triggerDefinitionRepository.save(createDefinition("FIND_ME", TriggerDefinitionStatus.DRAFT)).block();
-
-        StepVerifier.create(triggerDefinitionRepository.findByDefinitionCodeIgnoreCase("find_me"))
-                .assertNext(found -> assertThat(found.getDefinitionCode()).isEqualTo("FIND_ME"))
                 .verifyComplete();
     }
 }

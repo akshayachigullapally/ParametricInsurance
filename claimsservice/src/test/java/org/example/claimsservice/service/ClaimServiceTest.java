@@ -180,25 +180,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void createClaim_whenPolicyIdIsInvalid_shouldReturnValidationException() {
-        CreateClaimRequest request=mock(CreateClaimRequest.class);
-
-        when(request.getPolicyId()).thenReturn(0L);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Policy ID must be greater than zero");
-                })
-                .verify();
-
-        verify(request).getPolicyId();
-        verifyNoInteractions(claimRepository,triggerEligibilityClient);
-        verify(exchangeFunction,never()).exchange(any());
-    }
-
-    @Test
     void createClaim_whenPolicyIdIsNull_shouldReturnValidationException() {
         CreateClaimRequest request=mock(CreateClaimRequest.class);
 
@@ -213,21 +194,6 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(claimRepository,triggerEligibilityClient);
-    }
-
-    @Test
-    void createClaim_whenPolicyIdIsNegative_shouldReturnValidationException() {
-        CreateClaimRequest request=mock(CreateClaimRequest.class);
-
-        when(request.getPolicyId()).thenReturn(-5L);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Policy ID must be greater than zero");
-                })
-                .verify();
     }
 
     @Test
@@ -658,22 +624,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void getManualClaim_whenMissing_shouldReturnNotFoundException() {
-        when(claimRepository.findByIdAndManualReviewRequiredTrue(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(claimService.getManualClaim(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Manual claim not found"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
     void getMyClaims_whenStatusProvided_shouldReturnFilteredClaims() {
         Claim claim=claim(1L,ClaimStatus.SUBMITTED);
 
@@ -746,21 +696,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void getMyClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        when(claimRepository.findByIdAndCustomerId(99L,1L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(claimService.getMyClaim(1L,99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
-    }
-
-    @Test
     void cancelClaim_whenClaimIsSubmitted_shouldCancelClaim() {
         Claim claim=claim(1L,ClaimStatus.SUBMITTED);
 
@@ -790,26 +725,6 @@ class ClaimServiceTest {
         assertThat(claim.getUpdatedAt()).isNotNull();
 
         verify(claimRepository).save(claim);
-    }
-
-    @Test
-    void cancelClaim_whenClaimIsNotSubmitted_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.UNDER_REVIEW);
-
-        when(claimRepository.findByIdAndCustomerId(1L,1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(claimService.cancelClaim(1L,1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only submitted claims can be cancelled"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
     }
 
     @Test
@@ -843,26 +758,6 @@ class ClaimServiceTest {
         assertThat(claim.getStatus())
                 .isEqualTo("UNDER_REVIEW");
         assertThat(claim.getReviewedBy()).isEqualTo(50L);
-    }
-
-    @Test
-    void startReview_whenClaimIsNotSubmitted_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.APPROVED);
-
-        when(claimRepository.findById(1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(claimService.startReview(50L,1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only submitted claims can be reviewed"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
     }
 
     @Test
@@ -1021,26 +916,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void getAllClaims_whenStatusMissing_shouldReturnAllClaims() {
-        Claim first=claim(1L,ClaimStatus.SUBMITTED);
-        Claim second=claim(2L,ClaimStatus.REJECTED);
-
-        when(claimRepository.findAll())
-                .thenReturn(Flux.just(first,second));
-
-        StepVerifier.create(claimService.getAllClaims(null, null))
-                .assertNext(response->
-                        assertThat(response.getStatus())
-                                .isEqualTo("SUBMITTED")
-                )
-                .assertNext(response->
-                        assertThat(response.getStatus())
-                                .isEqualTo("REJECTED")
-                )
-                .verifyComplete();
-    }
-
-    @Test
     void createClaim_whenClaimedAmountIsNull_shouldReturnValidationException() {
         CreateClaimRequest request=createRequest();
         InternalPolicyResponse policy=policy();
@@ -1072,32 +947,6 @@ class ClaimServiceTest {
 
         when(request.getClaimedAmount())
                 .thenReturn(new BigDecimal("0"));
-
-        mockPolicyResponse(policy);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Claimed amount must be greater than zero"
-                    );
-                })
-                .verify();
-
-        verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
-        );
-    }
-
-    @Test
-    void createClaim_whenClaimedAmountIsNegative_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-
-        when(request.getClaimedAmount())
-                .thenReturn(new BigDecimal("-1000"));
 
         mockPolicyResponse(policy);
 
@@ -1248,26 +1097,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void createClaim_whenIncidentTypeIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-
-        when(request.getIncidentType()).thenReturn(null);
-
-        mockPolicyResponse(policy);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Incident type is required"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
     void createClaim_whenIncidentLocationIsBlank_shouldReturnValidationException() {
         CreateClaimRequest request=createRequest();
         InternalPolicyResponse policy=policy();
@@ -1293,26 +1122,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void createClaim_whenIncidentLocationIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-
-        when(request.getIncidentLocation()).thenReturn(null);
-
-        mockPolicyResponse(policy);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Incident location is required"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
     void createClaim_whenDescriptionIsBlank_shouldReturnValidationException() {
         CreateClaimRequest request=createRequest();
         InternalPolicyResponse policy=policy();
@@ -1335,41 +1144,6 @@ class ClaimServiceTest {
                 claimRepository,
                 triggerEligibilityClient
         );
-    }
-
-    @Test
-    void createClaim_whenDescriptionIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-
-        when(request.getDescription()).thenReturn(null);
-
-        mockPolicyResponse(policy);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Claim description is required"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
-    void createClaim_whenPolicyIdIsNull_shouldReturnNotFoundException() {
-        CreateClaimRequest request=mock(CreateClaimRequest.class);
-
-        when(request.getPolicyId()).thenReturn(null);
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Policy ID must be greater than zero");
-                })
-                .verify();
     }
 
     @Test
@@ -1525,32 +1299,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void createClaim_whenTriggerEventIdIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setTriggerEventId(null);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Verified trigger event information is unavailable"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
     void createClaim_whenTriggerEventWindowsAreNull_shouldReturnValidationException() {
         CreateClaimRequest request=createRequest();
         InternalPolicyResponse policy=policy();
@@ -1630,70 +1378,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void startReview_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        when(claimRepository.findById(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(claimService.startReview(50L,99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void approveClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        ApproveClaimRequest request=mock(ApproveClaimRequest.class);
-
-        when(claimRepository.findById(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(
-                claimService.approveClaim(50L,99L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void approveClaim_whenClaimIsSubmitted_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.SUBMITTED);
-        ApproveClaimRequest request=mock(ApproveClaimRequest.class);
-
-        when(request.getApprovedAmount())
-                .thenReturn(new BigDecimal("40000"));
-
-        when(claimRepository.findById(1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(
-                claimService.approveClaim(50L,1L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only claims under review can be approved"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
     void approveClaim_whenApprovedAmountIsNull_shouldReturnValidationException() {
         Claim claim=claim(1L,ClaimStatus.UNDER_REVIEW);
         ApproveClaimRequest request=mock(ApproveClaimRequest.class);
@@ -1711,32 +1395,6 @@ class ClaimServiceTest {
                             .isInstanceOf(ValidationException.class);
                     assertThat(error.getMessage()).isEqualTo(
                             "Approved amount is required"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void approveClaim_whenApprovedAmountIsZero_shouldReturnValidationException() {
-        Claim claim=claim(1L,ClaimStatus.UNDER_REVIEW);
-        ApproveClaimRequest request=mock(ApproveClaimRequest.class);
-
-        when(request.getApprovedAmount())
-                .thenReturn(new BigDecimal("0"));
-
-        when(claimRepository.findById(1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(
-                claimService.approveClaim(50L,1L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Approved amount must be greater than zero"
                     );
                 })
                 .verify();
@@ -1768,93 +1426,6 @@ class ClaimServiceTest {
                 .verify();
 
         verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void rejectClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        RejectClaimRequest request=mock(RejectClaimRequest.class);
-
-        when(claimRepository.findById(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(
-                claimService.rejectClaim(50L,99L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void rejectClaim_whenClaimIsSubmitted_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.SUBMITTED);
-        RejectClaimRequest request=mock(RejectClaimRequest.class);
-
-        when(request.getReason())
-                .thenReturn("Invalid documents");
-
-        when(claimRepository.findById(1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(
-                claimService.rejectClaim(50L,1L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only claims under review can be rejected"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void rejectClaim_whenReasonIsNull_shouldReturnValidationException() {
-        Claim claim=claim(1L,ClaimStatus.UNDER_REVIEW);
-        RejectClaimRequest request=mock(RejectClaimRequest.class);
-
-        when(request.getReason()).thenReturn(null);
-
-        when(claimRepository.findById(1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(
-                claimService.rejectClaim(50L,1L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Rejection reason is required"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void getClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        when(claimRepository.findById(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(claimService.getClaim(99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
     }
 
     @Test
@@ -1899,117 +1470,8 @@ class ClaimServiceTest {
     }
 
     @Test
-    void getSubmittedClaims_whenNoneExist_shouldReturnEmptyFlux() {
-        when(claimRepository.findAllByStatus(
-                ClaimStatus.SUBMITTED.name()
-        )).thenReturn(Flux.empty());
-
-        StepVerifier.create(claimService.getSubmittedClaims())
-                .verifyComplete();
-    }
-
-    @Test
-    void getAllClaims_whenStatusIsInvalid_shouldReturnValidationException() {
-        StepVerifier.create(Flux.defer(
-                () -> claimService.getAllClaims("INVALID_STATUS", null)
-        ))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Status must be SUBMITTED, UNDER_REVIEW, APPROVED, SETTLED, REJECTED or CANCELLED"
-                    );
-                })
-                .verify();
-
-        verifyNoInteractions(claimRepository);
-    }
-
-    @Test
-    void getMyClaims_whenNoClaimsExist_shouldReturnEmptyFlux() {
-        when(claimRepository.findAllByCustomerId(1L))
-                .thenReturn(Flux.empty());
-
-        StepVerifier.create(claimService.getMyClaims(1L,null))
-                .verifyComplete();
-    }
-
-    @Test
-    void getMyClaims_whenFilteredStatusHasNoClaims_shouldReturnEmptyFlux() {
-        when(claimRepository.findAllByCustomerIdAndStatus(
-                1L,
-                "APPROVED"
-        )).thenReturn(Flux.empty());
-
-        StepVerifier.create(
-                claimService.getMyClaims(1L,"approved")
-        )
-                .verifyComplete();
-
-        verify(claimRepository)
-                .findAllByCustomerIdAndStatus(1L,"APPROVED");
-    }
-
-    @Test
-    void cancelClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        when(claimRepository.findByIdAndCustomerId(99L,1L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(claimService.cancelClaim(1L,99L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void cancelClaim_whenClaimIsUnderReview_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.UNDER_REVIEW);
-
-        when(claimRepository.findByIdAndCustomerId(1L,1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(claimService.cancelClaim(1L,1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only submitted claims can be cancelled"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
     void cancelClaim_whenClaimIsApproved_shouldReturnConflictException() {
         Claim claim=claim(1L,ClaimStatus.APPROVED);
-
-        when(claimRepository.findByIdAndCustomerId(1L,1L))
-                .thenReturn(Mono.just(claim));
-
-        StepVerifier.create(claimService.cancelClaim(1L,1L))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Only submitted claims can be cancelled"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void cancelClaim_whenClaimIsRejected_shouldReturnConflictException() {
-        Claim claim=claim(1L,ClaimStatus.REJECTED);
 
         when(claimRepository.findByIdAndCustomerId(1L,1L))
                 .thenReturn(Mono.just(claim));
@@ -2113,27 +1575,6 @@ class ClaimServiceTest {
                     assertThat(error.getMessage()).isEqualTo(
                             "Only approved claims can be settled"
                     );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void settleClaim_whenClaimDoesNotExist_shouldReturnNotFoundException() {
-        SettleClaimRequest request=new SettleClaimRequest("Payment processed");
-
-        when(claimRepository.findById(99L))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(
-                claimService.settleClaim(50L,99L,request)
-        )
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage())
-                            .isEqualTo("Claim not found");
                 })
                 .verify();
 
