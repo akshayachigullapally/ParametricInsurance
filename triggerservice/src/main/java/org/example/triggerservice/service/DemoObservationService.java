@@ -237,6 +237,11 @@ public class DemoObservationService{
             TriggerDefinition definition,
             org.example.triggerservice.dto.TriggerEvaluationResponse evaluationResponse
     ){
+        // A MATCHED evaluation has already created its event; reuse it instead of
+        // inserting a second event for the same evaluation.
+        if(evaluationResponse.getTriggerEventId()!=null){
+            return triggerEventRepository.findById(evaluationResponse.getTriggerEventId());
+        }
         return triggerEventRepository
                 .existsByTriggerDefinitionIdAndWindowStartAndWindowEndAndStatusNot(
                         definition.getId(),

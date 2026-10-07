@@ -1,11 +1,8 @@
 package org.example.financialservice.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import java.math.BigDecimal;
 import org.example.financialservice.dto.AuditEventRequest;
 import org.example.financialservice.dto.NotificationRequest;
 import org.junit.jupiter.api.BeforeEach;

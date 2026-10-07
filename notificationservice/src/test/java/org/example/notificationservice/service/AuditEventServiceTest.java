@@ -1,6 +1,5 @@
 package org.example.notificationservice.service;
 
-import org.example.notificationservice.dto.AuditEventResponse;
 import org.example.notificationservice.dto.InternalAuditEventRequest;
 import org.example.notificationservice.exception.ForbiddenException;
 import org.example.notificationservice.model.AuditEvent;

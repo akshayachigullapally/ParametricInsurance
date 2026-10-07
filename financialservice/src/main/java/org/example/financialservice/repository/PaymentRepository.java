@@ -13,11 +13,6 @@ public interface PaymentRepository extends ReactiveCrudRepository<Payment,Long>{
     Flux<Payment> findAllByOrderByCreatedAtDesc();
     Flux<Payment> findAllByCustomerIdOrderByCreatedAtDesc(Long customerId);
     Mono<Payment> findByIdAndCustomerId(Long id, Long customerId);
-    Mono<Boolean> existsByPolicyIdAndStatus(
-            Long policyId,
-            PaymentStatus status
-    );
-    Mono<Long> countByPolicyId(Long policyId);
     Mono<Long> countByStatus(PaymentStatus status);
     Flux<Payment> findAllByPolicyIdOrderByCreatedAtDesc(Long policyId);
     Flux<Payment> findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(Long policyId, String policyNumber);

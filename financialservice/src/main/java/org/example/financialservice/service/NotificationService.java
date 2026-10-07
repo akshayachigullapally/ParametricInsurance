@@ -269,27 +269,6 @@ public class NotificationService{
         );
     }
 
-    public Mono<Void> notifyRefundFailed(
-            Long customerId,
-            String reference,
-            BigDecimal amount,
-            String reason
-    ){
-        log.debug("Notify refund failed: customerId={}, reference={}, amount={}, reason={}",customerId,reference,amount,reason);
-        return notify(
-                customerId,
-                "REFUND_FAILED",
-                "Refund failed",
-                "Refund of "+amount+" for payment "+reference+
-                        " failed"+
-                        (reason!=null&&!reason.isBlank()
-                                ?": "+reason
-                                :""),
-                "PAYMENT",
-                null
-        );
-    }
-
     public Mono<Void> notifyReconciliationCompleted(String reference){
         log.debug("Notify reconciliation completed: reference={}",reference);
         return notifyRole(

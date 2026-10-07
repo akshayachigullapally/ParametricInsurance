@@ -15,10 +15,6 @@ public final class SecurityUtil{
                 .flatMap(SecurityUtil::parseLong);
     }
 
-    public static Mono<String> getEmail(){
-        return getAuthentication().map(Authentication::getName);
-    }
-
     public static Mono<String> getRole(){
         return getAuthentication()
                 .flatMap(authentication->Mono.justOrEmpty(authentication.getAuthorities().stream()

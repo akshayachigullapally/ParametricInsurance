@@ -54,11 +54,4 @@ public class IdempotencyService{
     ){
         return "TRIGGER_EVENT:"+definitionId+":"+windowStart+":"+windowEnd;
     }
-
-    public static String buildPolicyEvaluationKey(
-            Long policyId,
-            Long triggerEventId
-    ){
-        return "POLICY_EVALUATION:"+policyId+":"+triggerEventId;
-    }
 }

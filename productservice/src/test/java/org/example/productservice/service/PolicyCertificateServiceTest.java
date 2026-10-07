@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import org.example.productservice.client.TriggerServiceClient;
 import org.example.productservice.dto.InternalZoneResponse;
-import org.example.productservice.exception.ConflictException;
 import org.example.productservice.model.Policy;
 import org.example.productservice.model.PolicyStatus;
 import org.example.productservice.model.PolicyTriggerSnapshot;

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 class SecurityUtilTest{

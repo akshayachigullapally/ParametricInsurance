@@ -2,8 +2,6 @@ package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.triggerservice.dto.TriggerEvaluationResponse;
-import org.example.triggerservice.model.MonitorCheckpoint;
 import org.example.triggerservice.model.MonitorRun;
 import org.example.triggerservice.model.MonitorRunStatus;
 import org.example.triggerservice.model.Observation;

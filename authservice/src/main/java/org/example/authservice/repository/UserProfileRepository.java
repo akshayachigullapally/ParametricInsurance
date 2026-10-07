@@ -7,7 +7,6 @@ import reactor.core.publisher.Mono;
 
 public interface UserProfileRepository extends ReactiveCrudRepository<UserProfile,Long>{
     Mono<UserProfile> findByAuthUserId(Long authUserId);
-    Mono<Boolean> existsByAuthUserId(Long authUserId);
     Flux<UserProfile> findAllByStatus(String status);
     Flux<UserProfile> findAllByCustomerSegment(String customerSegment);
     Flux<UserProfile> findAllByStatusAndCustomerSegment(

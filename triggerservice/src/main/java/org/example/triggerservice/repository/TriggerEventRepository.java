@@ -8,7 +8,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 
 public interface TriggerEventRepository extends ReactiveCrudRepository<TriggerEvent,Long>{
-    Mono<Boolean> existsByEventReference(String eventReference);
 
     Mono<TriggerEvent> findByTriggerEvaluationId(Long triggerEvaluationId);
 

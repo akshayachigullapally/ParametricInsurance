@@ -324,12 +324,6 @@ public class NotificationService {
         return mine(true).count().map(UnreadCountResponse::new);
     }
 
-    // Ensure publishes for createFromTemplate and createForChannels also notify sink
-    public Flux<NotificationResponse> createForChannelsAndPublish(InternalNotificationRequest r) {
-        log.debug("Creating and publishing notification");
-        return createForChannels(r).doOnNext(stream::publish);
-    }
-
     public Mono<NotificationResponse> markRead(Long id) {
         return owned(id).flatMap(n -> {
             if (!n.isRead()) {
@@ -397,14 +391,6 @@ public class NotificationService {
                 .map(this::response);
     }
 
-    public Flux<NotificationResponse> allPage(int page, int size) {
-        log.debug("Fetching notifications page: page={}, size={}",page,size);
-        return SecurityUtil.requireAdmin().thenMany(repository.findAllByOrderByCreatedAtDesc())
-                .skip((long) page * size)
-                .take(size)
-                .map(this::response);
-    }
-
     public Flux<NotificationResponse> failed() {
         log.debug("Fetching failed notifications");
         return SecurityUtil.requireAdmin()
@@ -416,15 +402,6 @@ public class NotificationService {
         log.debug("Fetching notifications by type");
         return SecurityUtil.requireAdmin()
                 .thenMany(repository.findAllByTypeOrderByCreatedAtDesc(type))
-                .map(this::response);
-    }
-
-    public Flux<NotificationResponse> byTypePage(NotificationType type, int page, int size) {
-        log.debug("Fetching notifications by type page: page={}, size={}",page,size);
-        return SecurityUtil.requireAdmin()
-                .thenMany(repository.findAllByTypeOrderByCreatedAtDesc(type))
-                .skip((long) page * size)
-                .take(size)
                 .map(this::response);
     }
 

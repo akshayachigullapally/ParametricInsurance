@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 
 public interface ObservationRepository extends ReactiveCrudRepository<Observation,Long>{
-    Mono<Boolean> existsByObservationReference(String observationReference);
 
     Mono<Boolean> existsBySourceReference(String sourceReference);
 
@@ -29,11 +28,6 @@ public interface ObservationRepository extends ReactiveCrudRepository<Observatio
 
     Flux<Observation> findAllByMeasurementTypeOrderByObservedAtDesc(
             MeasurementType measurementType
-    );
-
-    Flux<Observation> findAllByMeasurementTypeAndStatusOrderByObservedAtDesc(
-            MeasurementType measurementType,
-            ObservationStatus status
     );
 
     @Query("SELECT * FROM observations "

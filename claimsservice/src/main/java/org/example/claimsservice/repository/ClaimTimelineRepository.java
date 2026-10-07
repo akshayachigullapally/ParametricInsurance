@@ -6,7 +6,6 @@ import reactor.core.publisher.Flux;
 
 public interface ClaimTimelineRepository extends ReactiveCrudRepository<ClaimTimeline,Long>{
     Flux<ClaimTimeline> findAllByClaimIdOrderByCreatedAtAsc(Long claimId);
-    Flux<ClaimTimeline> findAllByCustomerIdOrderByCreatedAtDesc(Long customerId);
     Flux<ClaimTimeline> findAllByActionByAndActionByRoleOrderByCreatedAtDesc(
             Long actionBy,String actionByRole);
 }

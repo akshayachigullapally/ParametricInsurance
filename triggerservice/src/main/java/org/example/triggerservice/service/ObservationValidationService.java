@@ -7,9 +7,6 @@ import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
 import org.example.triggerservice.exception.ValidationException;
 import org.example.triggerservice.model.LocationZone;
-import org.example.triggerservice.model.LocationZoneStatus;
-import org.example.triggerservice.model.MeasurementType;
-import org.example.triggerservice.model.MeasurementUnit;
 import org.example.triggerservice.model.Observation;
 import org.example.triggerservice.model.ObservationStatus;
 import org.example.triggerservice.repository.LocationZoneRepository;
@@ -19,8 +16,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service

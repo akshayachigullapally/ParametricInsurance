@@ -18,25 +18,6 @@ public final class SecurityUtil{
                 ));
     }
 
-    public static Mono<String> getRole(ServerRequest request){
-        return request.principal()
-                .cast(Authentication.class)
-                .flatMap(authentication->{
-                    if(authentication.getAuthorities().isEmpty()){
-                        return Mono.error(
-                                new ForbiddenException("Authenticated role is required")
-                        );
-                    }
-
-                    return Mono.just(
-                            authentication.getAuthorities()
-                                    .iterator()
-                                    .next()
-                                    .getAuthority()
-                    );
-                });
-    }
-
     private static Mono<Long> convertUserId(Object principal){
         if(principal instanceof Long value) return Mono.just(value);
         if(principal instanceof Number value) return Mono.just(value.longValue());

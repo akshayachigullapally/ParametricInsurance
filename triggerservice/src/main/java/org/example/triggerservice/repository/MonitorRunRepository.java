@@ -10,6 +10,4 @@ public interface MonitorRunRepository extends ReactiveCrudRepository<MonitorRun,
     Flux<MonitorRun> findAllByOrderByStartedAtDesc();
 
     Mono<MonitorRun> findTopByStatusOrderByStartedAtDesc(MonitorRunStatus status);
-
-    Flux<MonitorRun> findAllByStatusOrderByStartedAtDesc(MonitorRunStatus status);
 }

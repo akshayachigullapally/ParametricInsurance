@@ -1,11 +1,8 @@
 package org.example.notificationservice.service;
 
 import org.example.notificationservice.dto.InternalNotificationRequest;
-import org.example.notificationservice.dto.MessageResponse;
 import org.example.notificationservice.dto.NotificationQuery;
-import org.example.notificationservice.dto.NotificationResponse;
 import org.example.notificationservice.dto.SendFromTemplateRequest;
-import org.example.notificationservice.dto.UnreadCountResponse;
 import org.example.notificationservice.exception.ForbiddenException;
 import org.example.notificationservice.exception.NotFoundException;
 import org.example.notificationservice.exception.ValidationException;

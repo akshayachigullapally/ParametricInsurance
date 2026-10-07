@@ -7,5 +7,4 @@ import reactor.core.publisher.Mono;
 
 public interface NotificationTemplateDataRepository extends ReactiveCrudRepository<DefaultTemplate, Long> {
     Mono<DefaultTemplate> findByNotificationType(NotificationType type);
-    Mono<Long> countByNotificationType(NotificationType type);
 }

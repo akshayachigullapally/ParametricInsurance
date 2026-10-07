@@ -9,13 +9,6 @@ import reactor.core.publisher.Mono;
 public interface QuoteRepository extends ReactiveCrudRepository<Quote,Long>{
     Flux<Quote> findAllByCustomerIdOrderByCreatedAtDesc(Long customerId);
     Mono<Quote> findByIdAndCustomerId(Long id, Long customerId);
-    Mono<Quote> findByQuoteReference(String quoteReference);
-    Mono<Boolean> existsByCustomerIdAndProductIdAndLocationZoneIdAndStatus(
-            Long customerId,
-            Long productId,
-            Long locationZoneId,
-            QuoteStatus status
-    );
     Mono<Quote> findByPolicyIdAndStatus(
             Long policyId,
             QuoteStatus status

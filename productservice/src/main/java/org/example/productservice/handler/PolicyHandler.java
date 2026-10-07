@@ -3,7 +3,6 @@ package org.example.productservice.handler;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
-import org.example.productservice.dto.InternalPolicyResponse;
 import org.example.productservice.dto.CreateCustomPolicyRequest;
 import org.example.productservice.dto.CreatePolicyRequest;
 import org.example.productservice.dto.PolicyDecisionRequest;

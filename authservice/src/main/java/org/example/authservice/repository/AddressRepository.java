@@ -7,7 +7,5 @@ import reactor.core.publisher.Mono;
 
 public interface AddressRepository extends ReactiveCrudRepository<Address,Long>{
     Flux<Address> findAllByUserProfileId(Long userProfileId);
-    Mono<Address> findByIdAndUserProfileId(Long id,Long userProfileId);
     Mono<Address> findByUserProfileIdAndPrimaryAddressTrue(Long userProfileId);
-    Mono<Void> deleteAllByUserProfileId(Long userProfileId);
 }

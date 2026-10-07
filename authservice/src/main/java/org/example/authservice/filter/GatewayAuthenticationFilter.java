@@ -1,7 +1,6 @@
 package org.example.authservice.filter;
 
 import lombok.extern.slf4j.Slf4j;
-import lombok.RequiredArgsConstructor;
 import org.example.authservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;

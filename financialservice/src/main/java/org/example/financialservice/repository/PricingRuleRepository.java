@@ -10,15 +10,6 @@ public interface PricingRuleRepository extends ReactiveCrudRepository<PricingRul
     Flux<PricingRule> findAllByOrderByCreatedAtDesc();
     Flux<PricingRule> findAllByProductIdOrderByCreatedAtDesc(Long productId);
     Flux<PricingRule> findAllByStatusOrderByCreatedAtDesc(PricingRuleStatus status);
-    Mono<Boolean> existsByProductIdAndLocationZoneIdAndStatus(
-            Long productId,
-            Long locationZoneId,
-            PricingRuleStatus status
-    );
-    Mono<Boolean> existsByProductIdAndLocationZoneIdIsNullAndStatus(
-            Long productId,
-            PricingRuleStatus status
-    );
     Flux<PricingRule> findAllByProductIdAndStatus(
             Long productId,
             PricingRuleStatus status

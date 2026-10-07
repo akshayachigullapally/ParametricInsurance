@@ -7,5 +7,4 @@ import reactor.core.publisher.Mono;
 
 public interface NotificationPreferenceRepository extends ReactiveCrudRepository<NotificationPreference, Long> {
     Mono<NotificationPreference> findByUserIdAndNotificationType(Long userId, NotificationType type);
-    Mono<NotificationPreference> findByCustomerIdAndNotificationType(Long customerId, NotificationType type);
 }

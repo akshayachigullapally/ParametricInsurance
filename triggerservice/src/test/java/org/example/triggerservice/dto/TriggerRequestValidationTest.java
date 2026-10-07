@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 /** Checks the request validation rules declared on the DTOs. */

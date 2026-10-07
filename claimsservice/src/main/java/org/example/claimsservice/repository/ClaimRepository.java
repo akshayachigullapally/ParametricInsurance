@@ -7,17 +7,10 @@ import reactor.core.publisher.*;
 import java.time.LocalDate;
 
 public interface ClaimRepository extends ReactiveCrudRepository<Claim,Long>{
-    Mono<Claim> findByClaimNumber(String claimNumber);
-    Mono<Boolean> existsByClaimNumber(String claimNumber);
     Flux<Claim> findAllByCustomerId(Long customerId);
     Flux<Claim> findAllByCustomerIdAndStatus(Long customerId,String status);
     Flux<Claim> findAllByStatus(String status);
     Mono<Claim> findByIdAndCustomerId(Long id,Long customerId);
-    Mono<Boolean> existsByCustomerIdAndPolicyIdAndStatus(
-            Long customerId,
-            Long policyId,
-            String status
-    );
     Mono<Boolean> existsByCustomerIdAndPolicyIdAndTriggerEventIdAndStatusNot(
             Long customerId,
             Long policyId,

@@ -1,9 +1,7 @@
 package org.example.claimsservice.service;
 
-import org.example.claimsservice.dto.PolicyTriggerEligibilityResponse;
 import org.example.claimsservice.exception.DependentServiceException;
 import org.example.claimsservice.exception.NotFoundException;
-import org.example.claimsservice.util.GatewayHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;

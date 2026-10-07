@@ -31,6 +31,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -318,9 +320,8 @@ class TriggerServiceFlowTest{
         assertThat(map(HttpMethod.GET,"/api/triggers/events/"+eventId,null).get("status")).isNotEqualTo("REJECTED");
     }
 
-    // A reading below the threshold: recorded, validated and evaluated, no event.
     @Test
-    void demoObservationIsRecordedValidatedAndEvaluated(){
+    void demoObservationRunsTheWholePipeline(){
         Map<String,Object> definition=definition("P2_KOCHI_CENTRAL_RIVER_LEVEL");
         Map<String,Object> body=new LinkedHashMap<>();
         body.put("productId",2);
@@ -345,6 +346,16 @@ class TriggerServiceFlowTest{
         body.put("measurementUnit","METER");
         body.put("productId",1);
         send(HttpMethod.POST,"/api/triggers/demo/observations",body).expectStatus().isBadRequest();
+
+        // Above the 5 m threshold: one event is created, verified and claimed.
+        body.put("productId",2);
+        body.put("observedValue",6.5);
+        body.put("sourceReference","demo-gauge-2");
+        body.put("observedAt",LocalDateTime.now().minusMinutes(1).toString());
+        Map<String,Object> matched=map(HttpMethod.POST,"/api/triggers/demo/observations",body);
+        assertThat(matched.toString()).contains("MATCHED").doesNotContain("NOT_MATCHED");
+        assertThat(list(HttpMethod.GET,"/api/triggers/events/definition/"+definition.get("id"),null)).hasSize(1);
+        verify(claimsClient,atLeastOnce()).createClaimsFromTriggerEvent(any());
     }
 
     @Test

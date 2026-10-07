@@ -9,3 +9,6 @@ out/
 
 # Local H2 database (exceeds GitHub 100MB limit)
 triggerservice/data/triggerdb.mv.db
+
+# H2 error logs
+*.trace.db

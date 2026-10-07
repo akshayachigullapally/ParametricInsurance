@@ -91,10 +91,4 @@ public interface TriggerDefinitionRepository extends ReactiveCrudRepository<Trig
             Long productId,
             TriggerDefinitionStatus status
     );
-
-    Flux<TriggerDefinition> findAllByLocationZoneIdAndMeasurementTypeAndStatus(
-            Long locationZoneId,
-            MeasurementType measurementType,
-            TriggerDefinitionStatus status
-    );
 }

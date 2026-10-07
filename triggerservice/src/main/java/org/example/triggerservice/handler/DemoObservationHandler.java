@@ -3,7 +3,6 @@ package org.example.triggerservice.handler;
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.util.RequestValidationUtil;
 import org.example.triggerservice.dto.DemoObservationRequest;
-import org.example.triggerservice.dto.DemoObservationResponse;
 import org.example.triggerservice.exception.ForbiddenException;
 import org.example.triggerservice.exception.ValidationException;
 import org.example.triggerservice.service.DemoObservationService;
