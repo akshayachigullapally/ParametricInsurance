@@ -115,15 +115,7 @@ public class DefaultPricingRuleProvisioner{
                         product.getProductId(),
                         product.getProductCode()
                 ))
-                .flatMap(saved->notifications.audit(
-                        "PRICING_RULE_CREATED",
-                        "PRICING_RULE",
-                        saved.getId(),
-                        null,
-                        "Default pricing rule for productId="+
-                                saved.getProductId()+
-                                ",status="+saved.getStatus()
-                ));
+                .then();
     }
 
     private Mono<Void> activateSystemDraft(List<PricingRule> rules){
@@ -151,13 +143,7 @@ public class DefaultPricingRuleProvisioner{
                                     saved.getId(),
                                     saved.getProductId()
                             ))
-                            .flatMap(saved->notifications.audit(
-                                    "PRICING_RULE_STATUS_CHANGED",
-                                    "PRICING_RULE",
-                                    saved.getId(),
-                                    null,
-                                    "status="+saved.getStatus()
-                            ));
+                .then();
                 })
                 .orElse(Mono.empty());
     }

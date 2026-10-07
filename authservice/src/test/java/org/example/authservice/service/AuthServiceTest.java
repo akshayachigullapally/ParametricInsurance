@@ -35,10 +35,7 @@ class AuthServiceTest{
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtUtil jwtUtil;
     @Mock private UserProfileRepository profileRepository;
-    @Mock private RoleRepository roleRepository;
-    @Mock private UserRoleRepository userRoleRepository;
     @Mock private AddressRepository addressRepository;
-    @Mock private NotificationServiceClient notificationServiceClient;
 
     private AuthService authService;
 
@@ -46,12 +43,8 @@ class AuthServiceTest{
     void setUp(){
         authService=new AuthService(
                 userRepository,refreshTokenRepository,sessionRepository,
-                passwordEncoder,jwtUtil,profileRepository,
-                roleRepository,userRoleRepository,addressRepository,
-                notificationServiceClient
+                passwordEncoder,jwtUtil,profileRepository,addressRepository
         );
-        lenient().when(notificationServiceClient.audit(any(),any(),any(),any(),any(),any()))
-                .thenReturn(reactor.core.publisher.Mono.empty());
         ReflectionTestUtils.setField(authService,"refreshExpiration",604_800_000L);
         lenient().when(profileRepository.findByAuthUserId(any()))
                 .thenReturn(Mono.empty());
@@ -114,13 +107,10 @@ class AuthServiceTest{
     @Test
     void register_whenEmailIsNew_shouldCreateUserProfileTokensAndSession(){
         RegisterRequest request=mock(RegisterRequest.class);
-        Role customerRole=Role.builder().id(1L).name("ROLE_CUSTOMER").build();
 
         when(request.getEmail()).thenReturn("  AKSHAYA@TEST.COM  ");
         when(request.getPassword()).thenReturn("Password@123");
         when(request.getFullName()).thenReturn("  Akshaya Chigullapally  ");
-        when(roleRepository.findByName("ROLE_CUSTOMER"))
-                .thenReturn(Mono.just(customerRole));
         when(userRepository.existsByEmailIgnoreCase("akshaya@test.com"))
                 .thenReturn(Mono.just(false));
         when(passwordEncoder.encode("Password@123"))
@@ -130,12 +120,6 @@ class AuthServiceTest{
                     UserCredential user=invocation.getArgument(0);
                     user.setId(1L);
                     return Mono.just(user);
-                });
-        when(userRoleRepository.save(any(UserRole.class)))
-                .thenAnswer(invocation->{
-                    UserRole ur=invocation.getArgument(0);
-                    ur.setId(1L);
-                    return Mono.just(ur);
                 });
         when(profileRepository.save(any(UserProfile.class)))
                 .thenAnswer(invocation->{
@@ -184,8 +168,6 @@ class AuthServiceTest{
                 .isEqualTo("encoded-password");
         assertThat(userCaptor.getValue().getEnabled()).isTrue();
 
-        verify(roleRepository).findByName("ROLE_CUSTOMER");
-        verify(userRoleRepository).save(any(UserRole.class));
 
         ArgumentCaptor<UserProfile> profileCaptor=
                 ArgumentCaptor.forClass(UserProfile.class);
@@ -211,11 +193,8 @@ class AuthServiceTest{
     @Test
     void register_whenEmailAlreadyExists_shouldReturnConflictException(){
         RegisterRequest request=mock(RegisterRequest.class);
-        Role customerRole=Role.builder().id(1L).name("ROLE_CUSTOMER").build();
 
         when(request.getEmail()).thenReturn("Existing@Test.com");
-        when(roleRepository.findByName("ROLE_CUSTOMER"))
-                .thenReturn(Mono.just(customerRole));
         when(userRepository.existsByEmailIgnoreCase("existing@test.com"))
                 .thenReturn(Mono.just(true));
 
@@ -505,77 +484,6 @@ class AuthServiceTest{
     }
 
     @Test
-    void getSessions_whenActiveExist_shouldReturnSessionResponses(){
-        Session first=session(true);
-        first.setId(10L);
-        first.setDeviceName("Chrome");
-        Session second=session(true);
-        second.setId(20L);
-        second.setDeviceName("Mobile");
-
-        when(sessionRepository.findAllByUserIdAndActiveTrue(1L))
-                .thenReturn(Flux.just(first,second));
-
-        StepVerifier.create(authService.getSessions(1L))
-                .assertNext(response->{
-                    assertThat(response.getId()).isEqualTo(10L);
-                    assertThat(response.getDeviceName()).isEqualTo("Chrome");
-                    assertThat(response.getActive()).isTrue();
-                })
-                .assertNext(response->{
-                    assertThat(response.getId()).isEqualTo(20L);
-                    assertThat(response.getDeviceName()).isEqualTo("Mobile");
-                    assertThat(response.getActive()).isTrue();
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void revokeSession_whenExists_shouldDeactivateAndRevokeToken(){
-        Session session=session(true);
-        RefreshToken token=refreshToken(
-                false,LocalDateTime.now().plusDays(1));
-
-        when(sessionRepository.findByIdAndUserId(10L,1L))
-                .thenReturn(Mono.just(session));
-        when(sessionRepository.save(session))
-                .thenReturn(Mono.just(session));
-        when(refreshTokenRepository.findById(100L))
-                .thenReturn(Mono.just(token));
-        when(refreshTokenRepository.save(token))
-                .thenReturn(Mono.just(token));
-
-        StepVerifier.create(authService.revokeSession(1L,10L))
-                .assertNext(response->assertThat(response.getMessage())
-                        .isEqualTo("Session revoked successfully"))
-                .verifyComplete();
-
-        assertThat(session.getActive()).isFalse();
-        assertThat(session.getLastAccessedAt()).isNotNull();
-        assertThat(token.getRevoked()).isTrue();
-    }
-
-    @Test
-    void revokeSession_whenNoRefreshToken_shouldOnlyDeactivate(){
-        Session session=session(true);
-        session.setRefreshTokenId(null);
-
-        when(sessionRepository.findByIdAndUserId(10L,1L))
-                .thenReturn(Mono.just(session));
-        when(sessionRepository.save(session))
-                .thenReturn(Mono.just(session));
-
-        StepVerifier.create(authService.revokeSession(1L,10L))
-                .assertNext(response->assertThat(response.getMessage())
-                        .isEqualTo("Session revoked successfully"))
-                .verifyComplete();
-
-        assertThat(session.getActive()).isFalse();
-        verify(refreshTokenRepository,never()).findById(anyLong());
-        verify(refreshTokenRepository,never()).save(any());
-    }
-
-    @Test
     void login_whenDeviceAndIpAreBlank_shouldStoreDefaults(){
         LoginRequest request=mock(LoginRequest.class);
         UserCredential user=user(true);
@@ -635,5 +543,44 @@ class AuthServiceTest{
                 .deviceName("Chrome").ipAddress("127.0.0.1")
                 .active(active).createdAt(now)
                 .lastAccessedAt(now).build();
+    }
+
+    @Test
+    void login_whenUserDoesNotExist_shouldReturnAuthenticationException(){
+        LoginRequest request=mock(LoginRequest.class);
+        when(request.getEmail()).thenReturn("missing@test.com");
+        when(userRepository.findByEmailIgnoreCase("missing@test.com"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(
+                authService.login(request,"Chrome","127.0.0.1"))
+                .expectErrorSatisfies(error->{
+                    assertThat(error)
+                            .isInstanceOf(AuthenticationException.class);
+                    assertThat(error.getMessage())
+                            .isEqualTo("Invalid email or password");
+                })
+                .verify();
+
+        verify(passwordEncoder,never()).matches(anyString(),anyString());
+        verify(refreshTokenRepository,never()).save(any());
+    }
+
+    @Test
+    void refresh_whenTokenDoesNotExist_shouldReturnAuthException(){
+        RefreshTokenRequest request=mock(RefreshTokenRequest.class);
+        when(request.getRefreshToken()).thenReturn("missing-token");
+        when(refreshTokenRepository.findByToken("missing-token"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(
+                authService.refresh(request,"Chrome","127.0.0.1"))
+                .expectErrorSatisfies(error->{
+                    assertThat(error)
+                            .isInstanceOf(AuthenticationException.class);
+                    assertThat(error.getMessage())
+                            .isEqualTo("Invalid refresh token");
+                })
+                .verify();
     }
 }

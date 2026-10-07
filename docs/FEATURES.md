@@ -39,15 +39,14 @@ Most examples follow the same story:
 13. [Premium payments](#13-premium-payments)
 14. [Payouts](#14-payouts)
 15. [Notifications](#15-notifications)
-16. [Audit log and activity](#16-audit-log-and-activity)
-17. [Dashboards](#17-dashboards)
-18. [User management (admin)](#18-user-management-admin)
-19. [Look, feel and usability](#19-look-feel-and-usability)
-20. [Background jobs (run on their own)](#20-background-jobs-run-on-their-own)
-21. [Platform and technical features](#21-platform-and-technical-features)
-22. [Demo data loaded at start-up](#22-demo-data-loaded-at-start-up)
-23. [Features available through the API only](#23-features-available-through-the-api-only)
-24. [Quick reference: status lifecycles](#24-quick-reference-status-lifecycles)
+16. [Dashboards](#16-dashboards)
+17. [User management (admin)](#17-user-management-admin)
+18. [Look, feel and usability](#18-look-feel-and-usability)
+19. [Background jobs (run on their own)](#19-background-jobs-run-on-their-own)
+20. [Platform and technical features](#20-platform-and-technical-features)
+21. [Demo data loaded at start-up](#21-demo-data-loaded-at-start-up)
+22. [Features available through the API only](#22-features-available-through-the-api-only)
+23. [Quick reference: status lifecycles](#23-quick-reference-status-lifecycles)
 
 ---
 
@@ -75,7 +74,7 @@ Most examples follow the same story:
 | Auth Service | 8081 | Accounts, login, profiles |
 | Product Service | 8082 | Products, policies, thresholds, certificates |
 | Claims Service | 8083 | Claims, evidence files, claim timeline |
-| Notification Service | 8085 | Notifications, live updates, audit log |
+| Notification Service | 8085 | Notifications and live updates |
 | Trigger Service | 8087 | Zones, perils, weather readings, trigger events |
 | Financial Service | 8088 | Prices, quotes, payments, payouts, receipts |
 
@@ -190,7 +189,7 @@ There is also a lower-level "enabled" flag on every login account; a disabled on
 **Example.** "Maximum temperature of 45 °C or more within 3 days" instead of "MAX TEMPERATURE ≥ 45 CELSIUS 72h".
 
 ### 5.3 Change a threshold (with history)
-**What it is.** On **Product thresholds** the admin changes the advertised threshold. Every change is saved in a **change history** (old → new, who, when) and also written to the audit log.
+**What it is.** On **Product thresholds** the admin changes the advertised threshold. Every change is saved in a **change history** (old → new, who, when).
 **Example.** Admin changes WEATHER-001 from 150 mm to 200 mm. The history shows "150 → 200".
 
 ### 5.4 Snapshot protection (your contract never changes)
@@ -361,7 +360,7 @@ Bars turn **amber** at 80% of the threshold and **red** when it is crossed.
 **Example.** Rainfall 132 mm vs a 156 mm trigger shows "85% of trigger" in amber with the status "Approaching threshold".
 
 ### 11.3 Update the current value (admin)
-**What it is.** In that panel the admin clicks **Update value** on a measurement. The new value is recorded for **every active zone** and kept for **1 hour**, then the live feed takes over again. A "Set by admin" tag shows on the value. If the value crosses any policy threshold, **automatic claims are created**, just like the trigger simulator. The value is checked first: no negatives (except temperature) and no percentages over 100. Every change is written to the audit log.
+**What it is.** In that panel the admin clicks **Update value** on a measurement. The new value is recorded for **every active zone** and kept for **1 hour**, then the live feed takes over again. A "Set by admin" tag shows on the value. If the value crosses any policy threshold, **automatic claims are created**, just like the trigger simulator. The value is checked first: no negatives (except temperature) and no percentages over 100.
 **Example.** Admin sets Rainfall to 160 mm. A toast says "⚡ Trigger fired: WEATHER-001 — 2 automatic claims created, 1 unpaid policy skipped".
 
 ### 11.4 Trigger simulator (admin)
@@ -527,27 +526,16 @@ The date must be inside the policy period. A claims officer reviews it.
 
 ---
 
-## 16. Audit log and activity
+## 16. Dashboards
 
-### 16.1 Audit log (admin)
-**What it is.** Every important action is recorded: who did it, their role, what happened, on which record, and when. Changes also show **before → after** values. You can search and filter by record type, role and user.
-**Example.** "Admin changed threshold of WEATHER-001: Threshold 150 mm → 200 mm."
-
-### 16.2 My activity
-**What it is.** Every user has an *Activity* page listing their own actions, with an "Only my actions" filter.
-
----
-
-## 17. Dashboards
-
-### 17.1 Customer dashboard
+### 16.1 Customer dashboard
 **What it is.**
 - Greeting and quick actions.
 - Totals: active policies, sum insured, claims submitted, premiums paid, payouts received.
 - Recent policies (clickable, with paid / payment-due tags) and recent claims (clickable).
 - A "Live monitoring active" note.
 
-### 17.2 Underwriter dashboard
+### 16.2 Underwriter dashboard
 **What it is.**
 - Totals: pending applications, active policies, premium in force, approval rate.
 - The application queue and a review checklist.
@@ -555,80 +543,80 @@ The date must be inside the policy period. A claims officer reviews it.
 
 **Example.** Approval rate: 8 approved and 2 rejected gives **80.0%**.
 
-### 17.3 Claims officer dashboard
+### 16.3 Claims officer dashboard
 **What it is.** Claims to review, manual claims, total claimed, average claim, the live trigger-engine widget and the settlement rules.
 
-### 17.4 Admin dashboard
+### 16.4 Admin dashboard
 **What it is.** Registered users, active policies, live products and total payouts, plus tiles linking to every admin area and the product catalogue.
 
-### 17.5 Financial metrics
+### 16.5 Financial metrics
 **What it is.** Totals for premiums collected and payouts paid, and counts of quotes, payments and payouts by status, shown on the admin dashboard.
 
 ---
 
-## 18. User management (admin)
+## 17. User management (admin)
 
-### 18.1 Users list
+### 17.1 Users list
 **What it is.** Every user with role, segment, contact, location and join date. You can search by name, email, role, phone or location, and filter by status or segment.
 
-### 18.2 Change a user's status
-**What it is.** Set a profile to **Active, Inactive or Suspended**, after a confirmation dialog that explains the effect. The change is audited (old → new). **Inactive and Suspended users are signed out and cannot log in** (see 2.7); **Active** lets them sign in again. The status can also be used as a filter.
+### 17.2 Change a user's status
+**What it is.** Set a profile to **Active, Inactive or Suspended**, after a confirmation dialog that explains the effect. **Inactive and Suspended users are signed out and cannot log in** (see 2.7); **Active** lets them sign in again. The status can also be used as a filter.
 **Example.** Admin suspends a customer. The dialog says "They will be signed out and cannot sign in until an admin makes them active again."
 
-### 18.3 User detail
+### 17.3 User detail
 **What it is.** One customer's record: profile, address, all their policies and all their claims.
 
 ---
 
-## 19. Look, feel and usability
+## 18. Look, feel and usability
 
-### 19.1 In-app dialogs (no browser pop-ups)
+### 18.1 In-app dialogs (no browser pop-ups)
 **What it is.** All confirmations and questions use styled dialogs instead of the browser's "localhost says…" box. They have a blurred background, red buttons for dangerous actions, and close with Esc or a click outside.
 **Example.** "Archive this product? It will no longer be available to customers."
 
-### 19.2 Toast messages
+### 18.2 Toast messages
 **What it is.** Small pop-ups at the top right confirm success or explain errors. They close on their own after a few seconds.
 
-### 19.3 Status badges
+### 18.3 Status badges
 **What it is.** Coloured pills with a dot and readable text: green for good, amber for in progress, red for rejected or failed.
 **Example.** "● Under review" instead of `UNDER_REVIEW`.
 
-### 19.4 Indian money and date format
+### 18.4 Indian money and date format
 **What it is.** Amounts use Indian grouping everywhere, and dates are written day-month-year.
 **Example.** ₹1,50,000 (not ₹150000). 2 Oct 2026.
 
-### 19.5 Page titles in the browser tab
+### 18.5 Page titles in the browser tab
 **What it is.** Each page has its own tab title.
 **Example.** "My claims · ClimateSure".
 
-### 19.6 Open new pages at the top
+### 18.6 Open new pages at the top
 **What it is.** Opening a new page starts at the top. The back button returns you to where you were.
 
-### 19.7 Custom illustration
+### 18.7 Custom illustration
 **What it is.** A hand-made SVG weather scene on the landing page and the dashboard banners, with a pulsing sensor ring.
 
-### 19.8 Loading, empty and error states
+### 18.8 Loading, empty and error states
 **What it is.** Every list shows a spinner while loading, a friendly message when empty (with a next step) and a clear error message if something fails.
 
-### 19.9 Search, filters and pagination
+### 18.9 Search, filters and pagination
 **What it is.** Most lists can be searched and filtered (by status, role, segment, state and so on). Long lists are split into pages.
 
-### 19.10 Tables that fit the screen
+### 18.10 Tables that fit the screen
 **What it is.** Compact table spacing, with related columns merged so wide tables fit without side-scrolling.
 **Example.** "₹1,00,000 / Approved ₹1,00,000" sits in one *Amount* column.
 
-### 19.11 Works on phones
+### 18.11 Works on phones
 **What it is.** Layouts adapt to small screens: cards stack, menus collapse and the measurement panel becomes one column.
 
-### 19.12 Reduced motion
+### 18.12 Reduced motion
 **What it is.** For users who ask their device for less motion, animations are switched off.
 
-### 19.13 Header navigation by role
+### 18.13 Header navigation by role
 **What it is.** Each role gets its own menu, with a "More" drop-down for extra pages (Reference data, Finance, Operations) and an account menu.
 
 ---
 
-## 20. Background jobs (run on their own)
+## 19. Background jobs (run on their own)
 
 | Job | When | What it does | Example |
 |---|---|---|---|
@@ -647,52 +635,52 @@ The date must be inside the policy period. A claims officer reviews it.
 
 ---
 
-## 21. Platform and technical features
+## 20. Platform and technical features
 
-### 21.1 Microservices with their own databases
+### 20.1 Microservices with their own databases
 **What it is.** Each service has its own H2 database file and can be run on its own. Services never share tables.
 
-### 21.2 API Gateway as the single door
+### 20.2 API Gateway as the single door
 **What it is.** The browser only talks to the gateway on port 8080. The gateway checks the login token, removes any fake identity headers sent by the browser, adds trusted user and role headers and a secret gateway key, and forwards the request.
 **Example.** Someone sends `X-Authenticated-Role: ROLE_ADMIN` from the browser. The gateway strips it.
 
-### 21.3 Services trust only the gateway
+### 20.3 Services trust only the gateway
 **What it is.** Every service rejects requests without the secret gateway key. Each service also has its own role rules, and anything not listed is denied.
 
-### 21.4 Service discovery (Eureka)
+### 20.4 Service discovery (Eureka)
 **What it is.** Services register by name and call each other by name (e.g. `CLAIMS-SERVICE`), not by fixed address.
 
-### 21.5 Internal service-to-service APIs
+### 20.5 Internal service-to-service APIs
 **What it is.** Paths under `/internal/...` are only for service-to-service calls. For example: the trigger service asks the product service for active policies, and the claims service asks the financial service whether a premium is paid.
 
-### 21.6 Reactive, non-blocking backend
+### 20.6 Reactive, non-blocking backend
 **What it is.** The backend uses Spring WebFlux and R2DBC, so many requests are handled with few threads.
 
-### 21.7 CORS
+### 20.7 CORS
 **What it is.** The gateway allows the Angular app's address to call the API from the browser.
 
-### 21.8 Request logging and logs
+### 20.8 Request logging and logs
 **What it is.** The gateway logs every request. Each service writes rolling log files.
 
-### 21.9 Health checks
+### 20.9 Health checks
 **What it is.** Each service has an actuator health endpoint, reachable through the gateway.
 **Example.** `http://localhost:8080/trigger/actuator/health` returns `UP`.
 
-### 21.10 Uniform error messages
+### 20.10 Uniform error messages
 **What it is.** Every error comes back in the same JSON shape (status, message, path), and the frontend shows the message to the user.
 
-### 21.11 Money stored exactly
+### 20.11 Money stored exactly
 **What it is.** Amounts use exact decimals (`BigDecimal`), rounded to 2 places.
 
-### 21.12 PDF generation
+### 20.12 PDF generation
 **What it is.** A built-in PDF writer creates policy certificates and payout receipts.
 
-### 21.13 Automated tests
+### 20.13 Automated tests
 **What it is.** Unit and integration tests cover the backend (JUnit, Mockito, StepVerifier) and the frontend (Vitest).
 
 ---
 
-## 22. Demo data loaded at start-up
+## 21. Demo data loaded at start-up
 
 | What | Details |
 |---|---|
@@ -708,14 +696,12 @@ Customers are not pre-loaded; they register themselves.
 
 ---
 
-## 23. Features available through the API only
+## 22. Features available through the API only
 
 These work in the backend but have no screen yet. They can be shown with an API client such as Postman.
 
 | Feature | What it does |
 |---|---|
-| Sessions | List your logged-in devices and sign one out (`/api/auth/sessions`) |
-| Deactivate account | Customer closes their own profile (`DELETE /api/users/me`); they are signed out and cannot log in again |
 | Observations | Record raw readings, then validate or reject them one by one or all at once |
 | Monitor runs | See each automatic scan and start one by hand |
 | Trigger definitions and evaluations | View, create and evaluate per-zone trigger definitions |
@@ -727,7 +713,7 @@ These work in the backend but have no screen yet. They can be shown with an API 
 
 ---
 
-## 24. Quick reference: status lifecycles
+## 23. Quick reference: status lifecycles
 
 | Item | Lifecycle |
 |---|---|

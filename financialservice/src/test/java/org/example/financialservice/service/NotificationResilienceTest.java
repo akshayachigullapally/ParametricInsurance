@@ -61,11 +61,7 @@ class NotificationResilienceTest{
         when(paymentRepository.findAllByPolicyIdAndPolicyNumberOrderByCreatedAtDesc(7L,"POL-7"))
                 .thenReturn(Flux.just(payment));
 
-        // Every audit/notification attempt fails
-        when(notificationClient.sendAuditEvent(any()))
-                .thenReturn(Mono.error(
-                        new RuntimeException("notification down")
-                ));
+        // Every notification attempt fails
         when(notificationClient.sendNotification(any()))
                 .thenReturn(Mono.error(
                         new RuntimeException("notification down")

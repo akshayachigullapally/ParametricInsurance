@@ -45,7 +45,7 @@ management:
 info:
   application:
     name: CityShield Notification Service
-    description: Notifications, delivery and audit event service
+    description: Notifications and delivery service
     version: 1.0.0
 
 logging:

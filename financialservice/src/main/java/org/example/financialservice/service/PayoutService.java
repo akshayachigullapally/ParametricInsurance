@@ -75,14 +75,6 @@ public class PayoutService{
                             claim.getClaimNumber(),claim.getApprovedAmount());
                     return payoutRepository.save(payout);
                 })
-                .flatMap(saved->notifications.audit(
-                        "PAYOUT_CREATED",
-                        "PAYOUT",
-                        saved.getId(),
-                        null,
-                        "claimId="+saved.getClaimId()+
-                                ",amount="+saved.getAmount()
-                ).thenReturn(saved))
                 .flatMap(this::disburse)
                 .map(this::response);
     }
@@ -156,14 +148,7 @@ public class PayoutService{
         payout.setRetryCount(payout.getRetryCount()+1);
         log.info("Retrying payout {} (retry {})",
                 payout.getPayoutReference(),payout.getRetryCount());
-        return notifications.audit(
-                        "PAYOUT_RETRY",
-                        "PAYOUT",
-                        payout.getId(),
-                        null,
-                        "payoutReference="+payout.getPayoutReference()+
-                                ",retryCount="+payout.getRetryCount())
-                .then(disburse(payout));
+        return disburse(payout);
     }
 
     /**
@@ -184,15 +169,6 @@ public class PayoutService{
                 payout.getPayoutReference(),payout.getExternalReference());
 
         return payoutRepository.save(payout)
-                .flatMap(saved->notifications.audit(
-                        "PAYOUT_SUCCESS",
-                        "PAYOUT",
-                        saved.getId(),
-                        null,
-                        "payoutReference="+saved.getPayoutReference()+
-                                ",transfer="+saved.getExternalReference()+
-                                " (automatic)"
-                ).thenReturn(saved))
                 .flatMap(saved->bestEffort(
                         notifications.notifyPayoutProcessed(
                                 saved.getCustomerId(),

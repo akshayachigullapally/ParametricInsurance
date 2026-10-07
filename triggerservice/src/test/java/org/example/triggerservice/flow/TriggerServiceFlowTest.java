@@ -62,7 +62,6 @@ class TriggerServiceFlowTest{
     void setUp() throws InterruptedException{
         admin=client("ROLE_ADMIN");
         when(notificationClient.sendNotification(any())).thenReturn(Mono.empty());
-        when(notificationClient.sendAuditEvent(any())).thenReturn(Mono.empty());
         when(internalNotificationClient.createInternalNotification(any())).thenReturn(Mono.empty());
         when(productClient.notifyVerifiedTriggerEvent(any(),any())).thenReturn(Mono.empty());
         when(productClient.hasActivePoliciesForZone(anyLong())).thenReturn(Mono.just(false));

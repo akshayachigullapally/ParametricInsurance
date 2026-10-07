@@ -15,7 +15,6 @@ public class NotificationRouter {
     @Bean
     RouterFunction<ServerResponse> notificationRoutes(
             NotificationHandler n,
-            AuditEventHandler a,
             NotificationTemplateHandler t,
             NotificationPreferenceHandler p,
             DeliveryAttemptHandler d) {
@@ -23,13 +22,11 @@ public class NotificationRouter {
         return RouterFunctions.route()
                 // Internal endpoints (gateway key only)
                 .POST("/internal/notifications", accept(org.springframework.http.MediaType.APPLICATION_JSON), n::create)
-                .POST("/internal/audit-events", accept(org.springframework.http.MediaType.APPLICATION_JSON), a::create)
 
                 // User-facing notification endpoints
                 .GET("/api/notifications/me", n::mine)
                 .GET("/api/notifications/me/unread", n::unread)
                 .GET("/api/notifications/me/unread-count", n::count)
-                .GET("/api/notifications/audit/me", a::mine)
                 .GET("/api/notifications/me/stream", n::stream)
                 .PUT("/api/notifications/{notificationId}/read", n::read)
                 .PUT("/api/notifications/me/read-all", n::readAll)
@@ -59,7 +56,6 @@ public class NotificationRouter {
                 .PUT("/api/notifications/admin/{notificationId}/read", n::adminRead)
                 .DELETE("/api/notifications/admin/{notificationId}", n::adminDelete)
                 .GET("/api/notifications/admin/failed", n::failed)
-                .GET("/api/notifications/admin/audit", a::all)
                 .POST("/api/notifications/admin/batch", accept(org.springframework.http.MediaType.APPLICATION_JSON), n::batch)
 
                 .build();

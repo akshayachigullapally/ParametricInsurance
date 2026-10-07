@@ -182,8 +182,6 @@ Rules that need stored data (ownership, limits, duplicates, status order) cannot
 | | recipient ids | optional, greater than 0 |
 | | recipientRole | optional, max 50 |
 | | maxRetries | optional, 0–10 |
-| Audit event (internal) | eventType | required, max 100 |
-| | entityType | required, max 50 |
 | Send from template | templateCode | required, max 50 |
 | | recipient ids / role / maxRetries | as above |
 | Batch send | notifications | 1–500 items, each checked as above |

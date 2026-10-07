@@ -28,10 +28,6 @@ public class AuthRouter{
                         .GET("/me",
                                 RequestPredicates.accept(MediaType.APPLICATION_JSON),
                                 handler::me)
-                        .GET("/sessions",
-                                RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                                handler::sessions)
-                        .DELETE("/sessions/{sessionId}",handler::revokeSession)
                 )
                 .build();
     }

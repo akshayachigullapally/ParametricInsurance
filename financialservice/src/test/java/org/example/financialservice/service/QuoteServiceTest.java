@@ -3,7 +3,6 @@ package org.example.financialservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
@@ -57,13 +56,6 @@ class QuoteServiceTest{
                 .thenReturn(Mono.just(ACTIVE_PRODUCT));
         when(triggerServiceClient.requireActiveZone(anyLong()))
                 .thenReturn(Mono.empty());
-        when(notifications.audit(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyString()
-        )).thenReturn(Mono.empty());
         when(notifications.notifyQuoteCreated(
                 any(),any(),any(),any()
         )).thenReturn(Mono.empty());

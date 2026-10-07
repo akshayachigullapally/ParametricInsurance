@@ -123,15 +123,6 @@ public class PaymentService{
                                     );
                         })
                 )
-                .flatMap(saved->notifications.audit(
-                        "PAYMENT_SUCCESS",
-                        "PAYMENT",
-                        saved.getId(),
-                        saved.getCustomerId(),
-                        "paymentReference="+
-                                saved.getPaymentReference()+
-                                ",transaction="+saved.getExternalReference()
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyPaymentSuccess(
                                 saved.getCustomerId(),
@@ -205,14 +196,6 @@ public class PaymentService{
 
                     return paymentRepository.save(payment);
                 })
-                .flatMap(saved->notifications.audit(
-                        "PAYMENT_REFUNDED",
-                        "PAYMENT",
-                        saved.getId(),
-                        null,
-                        "paymentReference="+
-                                saved.getPaymentReference()
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyPaymentRefunded(
                                 saved.getCustomerId(),

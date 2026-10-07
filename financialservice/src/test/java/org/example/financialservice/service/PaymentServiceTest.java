@@ -70,13 +70,6 @@ class PaymentServiceTest{
         notifications=mock(NotificationService.class);
         financialTransactions=mock(FinancialTransactionService.class);
 
-        when(notifications.audit(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyString()
-        )).thenReturn(Mono.empty());
         when(financialTransactions.recordPayment(
                 any(),any(),any(),any(),any(),anyString()
         )).thenReturn(Mono.empty());

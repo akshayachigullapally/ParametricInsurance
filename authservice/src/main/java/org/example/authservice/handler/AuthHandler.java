@@ -61,22 +61,6 @@ public class AuthHandler{
                         .bodyValue(response));
     }
 
-    public Mono<ServerResponse> sessions(ServerRequest request){
-        return currentUserId(request)
-                .flatMap(userId->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(authService.getSessions(userId),SessionResponse.class));
-    }
-
-    public Mono<ServerResponse> revokeSession(ServerRequest request){
-        return parseSessionId(request)
-                .flatMap(sessionId->currentUserId(request)
-                        .flatMap(userId->authService.revokeSession(userId,sessionId)))
-                .flatMap(response->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
-    }
-
     private <T> Mono<T> readAndValidate(ServerRequest request,Class<T> type){
         return request.bodyToMono(type)
                 .switchIfEmpty(Mono.error(

@@ -98,8 +98,6 @@ class ClaimServiceTest {
                 .thenReturn(Mono.empty());
         when(notificationService.notifyClaimPendingReview(anyLong(),any()))
                 .thenReturn(Mono.empty());
-        when(notificationService.audit(any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
         when(financialServiceClient.isPremiumPaid(anyLong(),any()))
                 .thenReturn(Mono.just(true));
 

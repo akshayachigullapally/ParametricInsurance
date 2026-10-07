@@ -62,10 +62,6 @@ public class PerilService{
 
                     return perilRepository.save(peril);
                 })
-                .flatMap(saved->notificationService.audit(
-                        "PERIL_CREATED","PERIL",saved.getId(),userId,
-                        "Created peril "+saved.getPerilName()+" ("+saved.getPerilCode()+")"
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -84,10 +80,6 @@ public class PerilService{
                             peril.setUpdatedAt(LocalDateTime.now());
                             return perilRepository.save(peril);
                         }))
-                .flatMap(saved->notificationService.audit(
-                        "PERIL_UPDATED","PERIL",saved.getId(),userId,
-                        "Updated peril "+saved.getPerilName()+" ("+saved.getPerilCode()+")"
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -104,10 +96,6 @@ public class PerilService{
                     peril.setUpdatedAt(LocalDateTime.now());
                     return perilRepository.save(peril);
                 })
-                .flatMap(saved->notificationService.audit(
-                        "PERIL_STATUS_CHANGED","PERIL",saved.getId(),userId,
-                        "Changed status of peril "+saved.getPerilCode()+" to "+saved.getStatus()
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -120,10 +108,6 @@ public class PerilService{
                     peril.setUpdatedAt(LocalDateTime.now());
                     return perilRepository.save(peril);
                 })
-                .flatMap(saved->notificationService.audit(
-                        "PERIL_ARCHIVED","PERIL",saved.getId(),userId,
-                        "Archived peril "+saved.getPerilCode()
-                ))
                 .then();
     }
 

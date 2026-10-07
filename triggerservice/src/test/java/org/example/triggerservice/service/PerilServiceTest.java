@@ -6,7 +6,6 @@ import org.example.triggerservice.model.Peril;
 import org.example.triggerservice.model.PerilStatus;
 import org.example.triggerservice.repository.PerilRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -18,7 +17,6 @@ import reactor.test.StepVerifier;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,12 +24,6 @@ class PerilServiceTest {
     @Mock private PerilRepository perilRepository;
     @Mock private NotificationService notificationService;
     @InjectMocks private PerilService perilService;
-
-    @BeforeEach
-    void stubAudit(){
-        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
-    }
 
     @Test
     void getActive_shouldReturnActivePerils() {

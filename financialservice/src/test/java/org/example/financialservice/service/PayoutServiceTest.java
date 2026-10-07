@@ -51,13 +51,6 @@ class PayoutServiceTest{
         notifications=mock(NotificationService.class);
         financialTransactions=mock(FinancialTransactionService.class);
 
-        when(notifications.audit(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyString()
-        )).thenReturn(Mono.empty());
         when(financialTransactions.recordPayout(
                 any(),any(),any(),any(),any(),anyString()
         )).thenReturn(Mono.empty());

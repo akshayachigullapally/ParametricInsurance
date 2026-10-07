@@ -1,6 +1,5 @@
 package org.example.claimsservice.service;
 
-import org.example.claimsservice.dto.AuditEventRequest;
 import org.example.claimsservice.dto.NotificationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,13 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +29,6 @@ class NotificationServiceTest{
     void setUp(){
         service=new NotificationService(client);
         lenient().when(client.sendNotification(any())).thenReturn(Mono.empty());
-        lenient().when(client.sendAuditEvent(any())).thenReturn(Mono.empty());
     }
 
     private NotificationRequest sentNotification(Supplier<Mono<Void>> call){
@@ -99,33 +93,5 @@ class NotificationServiceTest{
         when(client.sendNotification(any())).thenReturn(Mono.error(new IllegalStateException("down")));
 
         StepVerifier.create(service.notifyClaimPendingReview(10L,"CLM-1")).verifyComplete();
-    }
-
-    private AuditEventRequest sentAudit(Mono<Void> call){
-        StepVerifier.create(call).verifyComplete();
-        ArgumentCaptor<AuditEventRequest> captor=ArgumentCaptor.forClass(AuditEventRequest.class);
-        verify(client).sendAuditEvent(captor.capture());
-        return captor.getValue();
-    }
-
-    @Test
-    void audit_shouldUseSignedInUserInsteadOfPassedId(){
-        UsernamePasswordAuthenticationToken officer=new UsernamePasswordAuthenticationToken(
-                "50",null,List.of(new SimpleGrantedAuthority("ROLE_CLAIMS_OFFICER")));
-
-        AuditEventRequest request=sentAudit(service.audit("CLAIM_APPROVED","CLAIM",10L,999L,"Approved")
-                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(officer)));
-
-        assertThat(request.getActorUserId()).isEqualTo(50L);
-        assertThat(request.getActorRole()).isEqualTo("ROLE_CLAIMS_OFFICER");
-        assertThat(request.getEventType()).isEqualTo("CLAIM_APPROVED");
-        assertThat(request.getEntityId()).isEqualTo(10L);
-    }
-
-    @Test
-    void audit_whenClientFails_shouldSwallowError(){
-        when(client.sendAuditEvent(any())).thenReturn(Mono.error(new IllegalStateException("down")));
-
-        StepVerifier.create(service.audit("CLAIM_APPROVED","CLAIM",10L,1L,"Approved")).verifyComplete();
     }
 }

@@ -8,7 +8,6 @@ import org.example.authservice.dto.*;
 import org.example.authservice.exception.AuthenticationException;
 import org.example.authservice.exception.ConflictException;
 import org.example.authservice.exception.NotFoundException;
-import org.example.authservice.exception.ValidationException;
 import org.example.authservice.model.*;
 import org.example.authservice.repository.*;
 import org.example.authservice.util.JwtUtil;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,16 +24,15 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService{
+    private static final String CUSTOMER_ROLE="ROLE_CUSTOMER";
+
     private final UserCredentialRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserProfileRepository profileRepository;
-    private final RoleRepository roleRepository;
-    private final UserRoleRepository userRoleRepository;
     private final AddressRepository addressRepository;
-    private final NotificationServiceClient notificationServiceClient;
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpiration;
@@ -46,26 +43,17 @@ public class AuthService{
 
         String email=normalizeEmail(request.getEmail());
 
-        return roleRepository.findByName("ROLE_CUSTOMER")
-                .switchIfEmpty(Mono.error(new ValidationException(
-                        "Default customer role not found in database"
-                )))
-                .flatMap(role->userRepository.existsByEmailIgnoreCase(email)
-                        .flatMap(exists->{
-                            if(exists){
-                                return Mono.error(
-                                        new ConflictException("Email is already registered")
-                                );
-                            }
-                            return createUser(request,email,role);
-                        })
-                        .flatMap(user->createUserRole(user.getId(),role.getId())
-                                .then(createInitialProfile(user))
-                                .then(createTokens(user,deviceName,ipAddress)))
-                )
-                .flatMap(response->auditUser(
-                        "USER_REGISTERED",response,"Registered a new account"
-                ).thenReturn(response))
+        return userRepository.existsByEmailIgnoreCase(email)
+                .flatMap(exists->{
+                    if(exists){
+                        return Mono.error(
+                                new ConflictException("Email is already registered")
+                        );
+                    }
+                    return createUser(request,email);
+                })
+                .flatMap(user->createInitialProfile(user)
+                        .then(createTokens(user,deviceName,ipAddress)))
                 .doOnNext(response->log.info("New user registered userId={}",
                         response.getUser().getId()));
 
@@ -96,12 +84,6 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .flatMap(user->validateUserForLogin(user,request.getPassword()))
                 .flatMap(this::requireActiveProfile)
                 .flatMap(user->createTokens(user,deviceName,ipAddress))
-                .flatMap(response->auditUser(
-                        "USER_LOGIN",response,
-                        "Signed in"+(deviceName!=null&&!deviceName.isBlank()
-                                ?" from "+deviceName
-                                :"")
-                ).thenReturn(response))
                 .doOnNext(response->log.info("User logged in userId={} role={}",
                         response.getUser().getId(),response.getUser().getRole()));
 
@@ -149,9 +131,7 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .flatMap(token->revokeRefreshToken(token)
                         .then(deactivateSessionByRefreshToken(token.getId()))
                 )
-                .then(notificationServiceClient.audit(
-                        "USER_LOGOUT","USER",userId,userId,null,"Signed out"
-                ))
+                .then()
                 .doOnSuccess(ignored->log.info("User logged out userId={}",userId))
                 .thenReturn(MessageResponse.builder()
                         .message("Logged out successfully")
@@ -176,62 +156,20 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                         })));
     }
 
-    public Flux<SessionResponse> getSessions(Long userId){
-        log.debug("Get sessions [auth]: userId={}",userId);
-        return sessionRepository.findAllByUserIdAndActiveTrue(userId)
-                .map(this::toSessionResponse);
-    }
-
-    @Transactional
-    public Mono<MessageResponse> revokeSession(Long userId,Long sessionId){
-        return sessionRepository.findByIdAndUserId(sessionId,userId)
-                .switchIfEmpty(Mono.error(
-                        new NotFoundException("Session not found")
-                ))
-                .flatMap(session->{
-                    session.setActive(false);
-                    session.setLastAccessedAt(LocalDateTime.now());
-
-                    Mono<Void> revokeToken=session.getRefreshTokenId()==null
-                            ?Mono.empty()
-                            :refreshTokenRepository.findById(
-                                    session.getRefreshTokenId())
-                            .flatMap(this::revokeRefreshToken)
-                            .then();
-
-                    return sessionRepository.save(session)
-                            .then(revokeToken);
-                })
-                .doOnSuccess(ignored->log.info(
-                        "Session {} revoked for userId={}",sessionId,userId))
-                .thenReturn(MessageResponse.builder()
-                        .message("Session revoked successfully")
-                        .build());
-    }
-
-    private Mono<UserCredential> createUser(RegisterRequest request,
-                                             String email,Role role){
+    private Mono<UserCredential> createUser(RegisterRequest request,String email){
         LocalDateTime now=LocalDateTime.now();
 
         UserCredential user=UserCredential.builder()
                 .fullName(request.getFullName().trim())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(role.getName())
+                .role(CUSTOMER_ROLE)
                 .enabled(true)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
 
         return userRepository.save(user);
-    }
-
-    private Mono<Void> createUserRole(Long userId,Long roleId){
-        UserRole userRole=UserRole.builder()
-                .userId(userId)
-                .roleId(roleId)
-                .build();
-        return userRoleRepository.save(userRole).then();
     }
 
     private Mono<UserCredential> validateUserForLogin(UserCredential user,
@@ -400,17 +338,6 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 .build();
     }
 
-    private SessionResponse toSessionResponse(Session session){
-        return SessionResponse.builder()
-                .id(session.getId())
-                .deviceName(session.getDeviceName())
-                .ipAddress(session.getIpAddress())
-                .active(session.getActive())
-                .createdAt(session.getCreatedAt())
-                .lastAccessedAt(session.getLastAccessedAt())
-                .build();
-    }
-
     private String generateRefreshToken(){
         return UUID.randomUUID()+"."+UUID.randomUUID();
     }
@@ -431,13 +358,4 @@ public Mono<AuthResponse> login(LoginRequest request,String deviceName,
                 ?ipAddress.substring(0,100):ipAddress;
     }
 
-    private Mono<Void> auditUser(String eventType,AuthResponse response,String description){
-        UserResponse user=response.getUser();
-        if(user==null||user.getId()==null){
-            return Mono.empty();
-        }
-        return notificationServiceClient.audit(
-                eventType,"USER",user.getId(),user.getId(),user.getRole(),description
-        );
-    }
 }

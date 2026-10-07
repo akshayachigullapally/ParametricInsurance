@@ -1,6 +1,5 @@
 package org.example.financialservice.service;
 
-import org.example.financialservice.util.AuditDiff;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -72,13 +71,6 @@ public class PricingRuleService{
 
                     return repository.save(rule);
                 })
-                .flatMap(saved->notifications.audit(
-                        "PRICING_RULE_CREATED",
-                        "PRICING_RULE",
-                        saved.getId(),
-                        saved.getCreatedBy(),
-                        pricingDetails(saved)
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyPricingRuleCreated(
                                 saved.getCreatedBy(),
@@ -142,7 +134,6 @@ public class PricingRuleService{
                                 );
                             }
 
-                            java.util.Map<String,Object> before=auditFields(rule);
 
                             rule.setProductId(request.getProductId());
                             rule.setBaseAnnualRate(
@@ -167,19 +158,7 @@ public class PricingRuleService{
                             rule.setUpdatedBy(actor);
                             rule.setUpdatedAt(LocalDateTime.now());
 
-                            return repository.save(rule)
-                                    .flatMap(saved->{
-                                        AuditDiff diff=AuditDiff.of(before,auditFields(saved));
-                                        return notifications.auditChange(
-                                                "PRICING_RULE_UPDATED",
-                                                "PRICING_RULE",
-                                                saved.getId(),
-                                                saved.getUpdatedBy(),
-                                                pricingDetails(saved),
-                                                diff.before(),
-                                                diff.after()
-                                        ).thenReturn(saved);
-                                    });
+                            return repository.save(rule);
                         })
                 )
                 .flatMap(saved->notifications
@@ -222,15 +201,6 @@ public class PricingRuleService{
                 .flatMap(saved->saved.getStatus()==PricingRuleStatus.ACTIVE
                         ?supersedeCurrentRules(saved).thenReturn(saved)
                         :Mono.just(saved))
-                .flatMap(saved->notifications.auditChange(
-                        "PRICING_RULE_STATUS_CHANGED",
-                        "PRICING_RULE",
-                        saved.getId(),
-                        saved.getUpdatedBy(),
-                        "status="+saved.getStatus(),
-                        "Status: "+oldStatus.get(),
-                        "Status: "+saved.getStatus()
-                ).thenReturn(saved))
                 .map(this::response);
     }
 
@@ -260,14 +230,7 @@ public class PricingRuleService{
                     existing.setStatus(PricingRuleStatus.INACTIVE);
                     existing.setUpdatedBy(activated.getUpdatedBy());
                     existing.setUpdatedAt(LocalDateTime.now());
-                    return repository.save(existing)
-                            .flatMap(retired->notifications.audit(
-                                    "PRICING_RULE_SUPERSEDED",
-                                    "PRICING_RULE",
-                                    retired.getId(),
-                                    activated.getUpdatedBy(),
-                                    "Replaced by pricing rule "+activated.getId()
-                            ));
+                    return repository.save(existing);
                 })
                 .then();
     }
@@ -299,13 +262,6 @@ public class PricingRuleService{
                             return repository.save(rule);
                         })
                 )
-                .flatMap(saved->notifications.audit(
-                        "PRICING_RULE_ARCHIVED",
-                        "PRICING_RULE",
-                        saved.getId(),
-                        saved.getUpdatedBy(),
-                        "status="+saved.getStatus()
-                ).thenReturn(saved))
                 .map(this::response);
     }
 
@@ -439,12 +395,6 @@ public class PricingRuleService{
                 );
     }
 
-    private String pricingDetails(PricingRule rule){
-        return "productId="+rule.getProductId()+
-                ",zoneId="+rule.getLocationZoneId()+
-                ",status="+rule.getStatus();
-    }
-
     private PricingRuleResponse response(PricingRule rule){
         return PricingRuleResponse.builder()
                 .id(rule.getId())
@@ -464,17 +414,4 @@ public class PricingRuleService{
                 .build();
     }
 
-    /** Rule fields shown in the audit log as before/after values. */
-    private java.util.Map<String,Object> auditFields(PricingRule rule){
-        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
-        fields.put("Product",rule.getProductId());
-        fields.put("Zone",rule.getLocationZoneId()==null?"All zones":rule.getLocationZoneId());
-        fields.put("Annual rate",rule.getBaseAnnualRate());
-        fields.put("Minimum premium",rule.getMinimumPremium());
-        fields.put("Term factor",rule.getTermFactor());
-        fields.put("Location factor",rule.getLocationFactor());
-        fields.put("Effective from",rule.getEffectiveFrom());
-        fields.put("Effective to",rule.getEffectiveTo());
-        return fields;
-    }
 }

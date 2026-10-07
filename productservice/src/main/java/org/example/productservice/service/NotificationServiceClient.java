@@ -1,7 +1,6 @@
 package org.example.productservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.productservice.dto.AuditEventRequest;
 import org.example.productservice.dto.NotificationRequest;
 import org.example.productservice.util.GatewayHeaders;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,17 +28,6 @@ public class NotificationServiceClient {
         log.debug("Send notification");
         return webClient.post()
                 .uri("/internal/notifications")
-                .bodyValue(request)
-                .retrieve()
-                .toBodilessEntity()
-                .then()
-                .retryWhen(TEMPORARY_FAILURE_RETRY);
-    }
-
-    public Mono<Void> sendAuditEvent(AuditEventRequest request) {
-        log.debug("Send audit event");
-        return webClient.post()
-                .uri("/internal/audit-events")
                 .bodyValue(request)
                 .retrieve()
                 .toBodilessEntity()

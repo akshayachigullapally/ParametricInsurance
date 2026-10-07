@@ -26,7 +26,6 @@ public class UserProfileService{
     private final UserCredentialRepository userRepository;
     private final UserProfileRepository profileRepository;
     private final AddressRepository addressRepository;
-    private final NotificationServiceClient notificationServiceClient;
     private final RefreshTokenRepository refreshTokenRepository;
     private final SessionRepository sessionRepository;
 
@@ -51,11 +50,7 @@ public class UserProfileService{
                                             profile,
                                             request.getAddress()
                                     ).then(buildUserResponse(savedUser,profile))));
-                })
-                .flatMap(response->notificationServiceClient.audit(
-                        "PROFILE_UPDATED","USER",authUserId,authUserId,
-                        "ROLE_CUSTOMER","Updated profile details"
-                ).thenReturn(response));
+                });
     }
 
     public Mono<UserResponse> getMyProfile(Long authUserId){
@@ -67,28 +62,6 @@ public class UserProfileService{
                                 "User profile is not completed"
                         )))
                         .flatMap(profile->buildUserResponse(user,profile)));
-    }
-
-    @Transactional
-    public Mono<MessageResponse> deactivateProfile(Long authUserId){
-        return profileRepository.findByAuthUserId(authUserId)
-                .switchIfEmpty(Mono.error(new NotFoundException(
-                        "User profile not found"
-                )))
-                .flatMap(profile->{
-                    log.info("Profile deactivated by userId={}",authUserId);
-                    profile.setStatus(UserStatus.INACTIVE.name());
-                    profile.setUpdatedAt(LocalDateTime.now());
-                    return profileRepository.save(profile)
-                            .flatMap(saved->signOutEverywhere(authUserId).thenReturn(saved));
-                })
-                .flatMap(saved->notificationServiceClient.audit(
-                        "PROFILE_DEACTIVATED","USER",authUserId,authUserId,
-                        null,"Deactivated own profile"
-                ))
-                .thenReturn(MessageResponse.builder()
-                        .message("Profile deactivated successfully")
-                        .build());
     }
 
     public Flux<UserResponse> getAllUsers(String status,String segment){
@@ -157,13 +130,7 @@ public class UserProfileService{
                             return profileRepository.save(profile)
                                     .flatMap(savedProfile->signOut
                                             .then(buildUserResponse(user,savedProfile))
-                                    )
-                                    .flatMap(response->notificationServiceClient.auditChange(
-                                            "USER_STATUS_CHANGED","USER",authUserId,null,null,
-                                            "Changed status of user "+response.getEmail()+" to "+status,
-                                            "Status: "+oldStatus,
-                                            "Status: "+status
-                                    ).thenReturn(response));
+                                    );
                         }));
     }
 

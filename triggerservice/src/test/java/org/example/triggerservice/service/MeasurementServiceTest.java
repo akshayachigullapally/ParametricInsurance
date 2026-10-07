@@ -73,8 +73,6 @@ class MeasurementServiceTest{
     void setUp(){
         when(idempotencyService.isDuplicate("KEY-1")).thenReturn(Mono.just(false));
         when(idempotencyService.record(anyString(),anyString(),any())).thenReturn(Mono.empty());
-        when(notificationService.audit(anyString(),anyString(),any(),any(),anyString()))
-                .thenReturn(Mono.empty());
         when(productTriggerClient.getProduct(1L)).thenReturn(Mono.just(InternalProductConfig.builder()
                 .productId(1L)
                 .productCode("WEATHER-001")
@@ -179,8 +177,6 @@ class MeasurementServiceTest{
                 .thenReturn(Flux.just(LocationZone.builder().id(1L).build(),LocationZone.builder().id(2L).build()));
         when(observationRepository.save(any(Observation.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
-                .thenReturn(Mono.empty());
 
         StepVerifier.create(service.recordManualReading(
                         ManualReadingRequest.builder().measurementType("rainfall").value(new BigDecimal("160")).build(),
@@ -202,8 +198,6 @@ class MeasurementServiceTest{
             assertThat(observation.getObservedValue()).isEqualByComparingTo("160");
         });
         assertThat(saved.getAllValues()).extracting(Observation::getLocationZoneId).containsExactlyInAnyOrder(1L,2L);
-        verify(notificationService).auditChange(eq("MEASUREMENT_VALUE_UPDATED"),eq("MEASUREMENT"),any(),eq(1L),
-                anyString(),eq("0.11"),eq("160"));
     }
 
     @Test
@@ -213,8 +207,6 @@ class MeasurementServiceTest{
                 .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
         when(observationRepository.save(any(Observation.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
-                .thenReturn(Mono.empty());
         when(idempotencyService.isDuplicate(anyString())).thenReturn(Mono.just(false));
         when(productTriggerClient.getActivePolicies(1L,1L)).thenReturn(Flux.just(policy(100L,true),policy(200L,false)));
         when(claimsServiceClient.createClaimsFromTriggerEvent(any()))
@@ -245,8 +237,6 @@ class MeasurementServiceTest{
                 .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
         when(observationRepository.save(any(Observation.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
-                .thenReturn(Mono.empty());
         when(idempotencyService.isDuplicate(anyString())).thenReturn(Mono.just(false));
         when(productTriggerClient.getActivePolicies(1L,1L)).thenReturn(Flux.just(policy(100L,true)));
 
@@ -291,8 +281,6 @@ class MeasurementServiceTest{
                 .thenReturn(Flux.just(LocationZone.builder().id(1L).build()));
         when(observationRepository.save(any(Observation.class)))
                 .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-        when(notificationService.auditChange(anyString(),anyString(),any(),any(),anyString(),any(),any()))
-                .thenReturn(Mono.empty());
 
         StepVerifier.create(service.recordManualReading(
                         ManualReadingRequest.builder().measurementType("TEMPERATURE").value(new BigDecimal("-4")).build(),1L,30))

@@ -92,10 +92,6 @@ public class ClaimDocumentService{
                             .concatMap(file->store(customerId,claimId,file))
                             .collectList();
                 })
-                .flatMap(saved->notificationService.audit(
-                                "CLAIM_DOCUMENTS_UPLOADED","CLAIM",claimId,customerId,
-                                saved.size()+" evidence file(s) uploaded")
-                        .thenReturn(saved))
                 .map(saved->saved.stream().map(this::toResponse).toList());
     }
 

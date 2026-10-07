@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
@@ -38,16 +37,6 @@ class PricingRuleServiceTest{
         triggerServiceClient=mock(TriggerServiceClient.class);
         notifications=mock(NotificationService.class);
 
-        when(notifications.auditChange(
-                anyString(),anyString(),any(),any(),anyString(),any(),any()
-        )).thenReturn(Mono.empty());
-        when(notifications.audit(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyString()
-        )).thenReturn(Mono.empty());
         when(notifications.notifyPricingRuleCreated(
                 any(),any(),any()
         )).thenReturn(Mono.empty());

@@ -82,15 +82,6 @@ public class MeasurementService{
                             .build()));
                 }
                 return processNewMeasurement(request,recordedBy,now)
-                        .flatMap(result->notificationService.audit(
-                                "MEASUREMENT_RECORDED","PRODUCT",result.getProductId(),recordedBy,
-                                "Recorded current measurement "+result.getCurrentValue()+
-                                        " for product "+result.getProductCode()+
-                                        " in zone "+result.getLocationZoneId()+
-                                        (result.getTriggerEventReference()!=null
-                                                ?" (created trigger event "+result.getTriggerEventReference()+")"
-                                                :" (no trigger)")
-                        ).thenReturn(result))
                         .flatMap(result->{
                         if(result.getTriggerEventId()==null){
                             return idempotencyService.record(request.getIdempotencyKey(),"CURRENT_MEASUREMENT_NO_MATCH",null)
@@ -386,14 +377,7 @@ public class MeasurementService{
                                 return Mono.error(new ValidationException(
                                         "There are no active zones to record the reading for"));
                             }
-                            String label=type.name().replace('_',' ').toLowerCase(java.util.Locale.ROOT);
-                            return notificationService.auditChange(
-                                            "MEASUREMENT_VALUE_UPDATED","MEASUREMENT",null,userId,
-                                            "Set current "+label+" to "+value.toPlainString()+" in "+zoneCount+" zone(s)",
-                                            previous.map(java.math.BigDecimal::toPlainString).orElse(null),
-                                            value.toPlainString())
-                                    .onErrorResume(error->Mono.empty())
-                                    .then(triggerProducts(type,value,request.getProductIds(),zoneIds,userId,now))
+                            return triggerProducts(type,value,request.getProductIds(),zoneIds,userId,now)
                                     .map(results->ManualReadingResponse.builder()
                                             .measurementType(type)
                                             .measurementUnit(unit)

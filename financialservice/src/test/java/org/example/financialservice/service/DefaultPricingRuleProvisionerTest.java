@@ -2,7 +2,6 @@ package org.example.financialservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,13 +31,6 @@ class DefaultPricingRuleProvisionerTest{
         productServiceClient=mock(ProductServiceClient.class);
         NotificationService notifications=mock(NotificationService.class);
 
-        when(notifications.audit(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyString()
-        )).thenReturn(Mono.empty());
         when(repository.save(any(PricingRule.class)))
                 .thenAnswer(invocation->{
                     PricingRule rule=invocation.getArgument(0);

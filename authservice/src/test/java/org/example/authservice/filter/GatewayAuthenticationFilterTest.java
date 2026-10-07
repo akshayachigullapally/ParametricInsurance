@@ -135,4 +135,25 @@ class GatewayAuthenticationFilterTest{
                 .assertNext(body->assertThat(body).contains("Invalid authenticated customer id"))
                 .verifyComplete();
     }
+
+    @Test
+    void publicAuthPath_shouldSkipGatewayCheck(){
+        RecordingChain chain=new RecordingChain();
+        MockServerWebExchange exchange=exchange(MockServerHttpRequest.post("/api/auth/login"));
+
+        StepVerifier.create(filter.filter(exchange,chain)).verifyComplete();
+
+        assertThat(chain.called).isTrue();
+        assertThat(exchange.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
+    void actuatorHealth_shouldSkipGatewayCheck(){
+        RecordingChain chain=new RecordingChain();
+
+        StepVerifier.create(filter.filter(exchange(MockServerHttpRequest.get("/actuator/health")),chain))
+                .verifyComplete();
+
+        assertThat(chain.called).isTrue();
+    }
 }

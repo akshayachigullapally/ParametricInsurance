@@ -15,7 +15,6 @@ public class UserRouter{
                         .PUT("/me",
                                 RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                                 handler::saveMyProfile)
-                        .DELETE("/me",handler::deactivateMyProfile)
                         .GET("",handler::getAllUsers)
                         .GET("/{userId}",handler::getUser)
                         .PUT("/{userId}/status",

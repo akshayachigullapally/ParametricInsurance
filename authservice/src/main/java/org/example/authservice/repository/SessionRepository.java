@@ -6,6 +6,5 @@ import reactor.core.publisher.*;
 
 public interface SessionRepository extends ReactiveCrudRepository<Session,Long>{
     Flux<Session> findAllByUserIdAndActiveTrue(Long userId);
-    Mono<Session> findByIdAndUserId(Long id,Long userId);
     Mono<Session> findByRefreshTokenId(Long refreshTokenId);
 }

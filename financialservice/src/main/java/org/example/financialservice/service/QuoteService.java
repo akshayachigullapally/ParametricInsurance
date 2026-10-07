@@ -113,13 +113,6 @@ public class QuoteService{
                             return quoteRepository.save(quote);
                         })
                 )
-                .flatMap(saved->notifications.audit(
-                        "QUOTE_CREATED",
-                        "QUOTE",
-                        saved.getId(),
-                        saved.getCustomerId(),
-                        "productId="+saved.getProductId()
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyQuoteCreated(
                                 saved.getCustomerId(),
@@ -240,13 +233,6 @@ public class QuoteService{
 
                     return quoteRepository.save(quote);
                 })
-                .flatMap(saved->notifications.audit(
-                        "QUOTE_ACCEPTED",
-                        "QUOTE",
-                        saved.getId(),
-                        saved.getCustomerId(),
-                        "quoteReference="+saved.getQuoteReference()
-                ).thenReturn(saved))
                 .map(this::response);
     }
 
@@ -289,13 +275,6 @@ public class QuoteService{
 
                     return quoteRepository.save(quote);
                 })
-                .flatMap(saved->notifications.audit(
-                        "QUOTE_CANCELLED",
-                        "QUOTE",
-                        saved.getId(),
-                        saved.getCustomerId(),
-                        "quoteReference="+saved.getQuoteReference()
-                ).thenReturn(saved))
                 .map(this::response);
     }
 
@@ -401,13 +380,6 @@ public class QuoteService{
                                 return quoteRepository.save(quote);
                             });
                 })
-                .flatMap(saved->notifications.audit(
-                        "QUOTE_CONSUMED",
-                        "QUOTE",
-                        saved.getId(),
-                        null,
-                        "policyId="+saved.getPolicyId()
-                ).thenReturn(saved))
                 .flatMap(saved->notifications
                         .notifyQuoteConsumed(
                                 saved.getCustomerId(),

@@ -80,10 +80,6 @@ class PolicyServiceTest{
                 .thenReturn(Mono.empty());
         lenient().when(zoneUnderwritingService.checkCanSell(any(),any(),any()))
                 .thenReturn(Mono.empty());
-        lenient().when(notificationService.auditChange(any(),any(),any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
-        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
     }
 
     @Test

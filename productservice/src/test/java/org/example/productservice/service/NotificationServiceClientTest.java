@@ -1,6 +1,5 @@
 package org.example.productservice.service;
 
-import org.example.productservice.dto.AuditEventRequest;
 import org.example.productservice.dto.NotificationRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class NotificationServiceClientTest{
 
     @Test
-    void retriesTemporaryOutagesAndSendsToTheInternalEndpoints(){
+    void retriesTemporaryOutagesOfTheNotificationService(){
         List<String> paths=new ArrayList<>();
         AtomicInteger calls=new AtomicInteger();
         NotificationServiceClient client=new NotificationServiceClient(WebClient.builder().exchangeFunction(request->{
@@ -27,8 +26,7 @@ class NotificationServiceClientTest{
         }),"internal-key");
 
         StepVerifier.create(client.sendNotification(NotificationRequest.builder().type("POLICY_APPROVED").build())).verifyComplete();
-        StepVerifier.create(client.sendAuditEvent(AuditEventRequest.builder().eventType("POLICY_APPROVED").build())).verifyComplete();
 
-        assertThat(paths).containsExactly("/internal/notifications","/internal/notifications","/internal/audit-events");
+        assertThat(paths).containsExactly("/internal/notifications","/internal/notifications");
     }
 }

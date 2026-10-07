@@ -46,15 +46,6 @@ public class JwtUtil{
                 .getPayload();
     }
 
-    public boolean isValid(String token){
-        try{
-            getClaims(token);
-            return true;
-        }catch(JwtException|IllegalArgumentException e){
-            return false;
-        }
-    }
-
     public Long getUserId(String token){
         return Long.valueOf(getClaims(token).getSubject());
     }
@@ -65,11 +56,6 @@ public class JwtUtil{
 
     public String getRole(String token){
         return getClaims(token).get("role",String.class);
-    }
-
-    public Long getCustomerId(String token){
-        Number value=getClaims(token).get("customerId",Number.class);
-        return value==null?null:value.longValue();
     }
 
     public long getExpirationSeconds(){

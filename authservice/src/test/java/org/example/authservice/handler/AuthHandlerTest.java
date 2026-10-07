@@ -18,12 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.reactive.function.server.ServerRequest;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -385,86 +383,7 @@ class AuthHandlerTest {
 
     // ======================== sessions ========================
 
-    @Test
-    void sessions_whenAuthenticated_shouldReturn200() {
-        SessionResponse first = SessionResponse.builder()
-                .id(10L).deviceName("Chrome").ipAddress("127.0.0.1").active(true)
-                .createdAt(LocalDateTime.now()).lastAccessedAt(LocalDateTime.now())
-                .build();
-        when(authService.getSessions(1L)).thenReturn(Flux.just(first));
-
-        ServerRequest request = authenticatedRequestNoBody(1L);
-
-        StepVerifier.create(authHandler.sessions(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
     // ======================== revokeSession ========================
-
-    @Test
-    void revokeSession_whenValidSessionId_shouldReturn200() {
-        MessageResponse response = MessageResponse.builder()
-                .message("Session revoked successfully").build();
-        when(authService.revokeSession(1L, 10L)).thenReturn(Mono.just(response));
-
-        ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "10");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
-    @Test
-    void revokeSession_whenSessionIdIsZero_shouldReturnValidationException() {
-        ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "0");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(((ValidationException) error).getErrors()).containsExactly("Session id must be positive");
-                })
-                .verify();
-    }
-
-    @Test
-    void revokeSession_whenSessionIdIsNotANumber_shouldReturnValidationException() {
-        ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "abc");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ValidationException.class);
-                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid session id");
-                })
-                .verify();
-    }
-
-    @Test
-    void revokeSession_whenNotAuthenticated_shouldReturnAuthenticationException() {
-        ServerRequest request = unauthenticatedRequestWithPathVar("sessionId", "10");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(AuthenticationException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
-                })
-                .verify();
-    }
-
-    @Test
-    void revokeSession_whenSessionNotFound_shouldPropagateNotFoundException() {
-        when(authService.revokeSession(1L, 99L))
-                .thenReturn(Mono.error(new NotFoundException("Session not found")));
-
-        ServerRequest request = authenticatedRequestWithPathVar(1L, "sessionId", "99");
-
-        StepVerifier.create(authHandler.revokeSession(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("Session not found");
-                })
-                .verify();
-    }
 
     // ======================== mock builders ========================
 
@@ -690,5 +609,57 @@ class AuthHandlerTest {
                 .id(1L).fullName("Test User").email("test@test.com")
                 .role("ROLE_CUSTOMER").enabled(true)
                 .build();
+    }
+
+    @Test
+    void register_whenBodyIsEmpty_shouldReturnValidationException() {
+        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
+
+        StepVerifier.create(authHandler.register(request))
+                .expectError(ValidationException.class)
+                .verify();
+    }
+
+    @Test
+    void refresh_whenBodyIsEmpty_shouldReturnValidationException() {
+        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
+
+        StepVerifier.create(authHandler.refresh(request))
+                .expectError(ValidationException.class)
+                .verify();
+    }
+
+    @Test
+    void login_whenBodyIsEmpty_shouldReturnValidationException() {
+        ServerRequest request = emptyBodyRequest("Chrome", "127.0.0.1");
+
+        StepVerifier.create(authHandler.login(request))
+                .expectError(ValidationException.class)
+                .verify();
+    }
+
+    @Test
+    void me_whenNotAuthenticated_shouldReturnAuthenticationException() {
+        ServerRequest request = unauthenticatedRequestNoBody();
+
+        StepVerifier.create(authHandler.me(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(AuthenticationException.class);
+                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
+                })
+                .verify();
+    }
+
+    @Test
+    void logout_whenNotAuthenticated_shouldReturnAuthenticationException() {
+        ServerRequest request = unauthenticatedRequestWithBody(
+                RefreshTokenRequest.builder().refreshToken("refresh-token").build());
+
+        StepVerifier.create(authHandler.logout(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(AuthenticationException.class);
+                    assertThat(error.getMessage()).isEqualTo("Authentication is required");
+                })
+                .verify();
     }
 }

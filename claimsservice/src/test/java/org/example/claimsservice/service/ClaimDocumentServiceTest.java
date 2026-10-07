@@ -2,8 +2,6 @@ package org.example.claimsservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +42,6 @@ class ClaimDocumentServiceTest{
         claimRepository=mock(ClaimRepository.class);
         documentRepository=mock(ClaimDocumentRepository.class);
         NotificationService notifications=mock(NotificationService.class);
-        when(notifications.audit(anyString(),anyString(),anyLong(),anyLong(),anyString()))
-                .thenReturn(Mono.empty());
         when(documentRepository.save(any(ClaimDocument.class)))
                 .thenAnswer(invocation->{
                     ClaimDocument document=invocation.getArgument(0);

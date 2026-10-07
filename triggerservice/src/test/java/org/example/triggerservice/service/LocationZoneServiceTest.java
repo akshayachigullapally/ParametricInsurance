@@ -8,7 +8,6 @@ import org.example.triggerservice.model.LocationZone;
 import org.example.triggerservice.model.LocationZoneStatus;
 import org.example.triggerservice.repository.LocationZoneRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,14 +29,6 @@ class LocationZoneServiceTest {
     @Mock private NotificationService notificationService;
     @Mock private ProductTriggerClient productTriggerClient;
     @InjectMocks private LocationZoneService locationZoneService;
-
-    @BeforeEach
-    void stubAudit(){
-        lenient().when(notificationService.auditChange(any(),any(),any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
-        lenient().when(notificationService.audit(any(),any(),any(),any(),any()))
-                .thenReturn(Mono.empty());
-    }
 
     @Test
     void getAll_whenStateIsProvided_shouldReturnActiveStateZones() {
@@ -200,7 +191,7 @@ class LocationZoneServiceTest {
     }
 
     @Test
-    void updateAlert_raise_shouldPauseSalesAndAuditOffToOn() {
+    void updateAlert_raise_shouldPauseSales() {
         LocationZone zone=zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE);
         when(locationZoneRepository.findById(1L)).thenReturn(Mono.just(zone));
         when(locationZoneRepository.save(any(LocationZone.class)))
@@ -216,10 +207,6 @@ class LocationZoneServiceTest {
                 })
                 .verifyComplete();
 
-        verify(notificationService).auditChange("ZONE_ALERT_RAISED","LOCATION_ZONE",1L,9L,
-                "Raised weather alert for Hyderabad (HYD)",
-                "Weather alert: OFF",
-                "Weather alert: ON (Cyclone warning)");
     }
 
     @Test
@@ -256,7 +243,7 @@ class LocationZoneServiceTest {
     }
 
     @Test
-    void updateExposureCap_shouldStoreCapAndAuditBeforeAfter() {
+    void updateExposureCap_shouldStoreCap() {
         when(locationZoneRepository.findById(1L))
                 .thenReturn(Mono.just(zone(1L,"HYD","Hyderabad",LocationZoneStatus.ACTIVE)));
         when(locationZoneRepository.save(any(LocationZone.class)))
@@ -266,10 +253,6 @@ class LocationZoneServiceTest {
                 .assertNext(result->assertThat(result.getMaxExposure()).isEqualByComparingTo("50000000"))
                 .verifyComplete();
 
-        verify(notificationService).auditChange("ZONE_EXPOSURE_CAP_CHANGED","LOCATION_ZONE",1L,9L,
-                "Changed exposure cap of Hyderabad (HYD)",
-                "Exposure cap: No cap",
-                "Exposure cap: ₹50000000");
     }
 
     @Test

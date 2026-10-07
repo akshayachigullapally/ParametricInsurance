@@ -1,6 +1,5 @@
 package org.example.claimsservice.service;
 
-import org.example.claimsservice.dto.AuditEventRequest;
 import org.example.claimsservice.dto.NotificationRequest;
 import org.example.claimsservice.util.GatewayHeaders;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ class NotificationServiceClientTest{
     }
 
     @Test
-    void sendsNotificationsAndAuditEventsWithTheInternalKey(){
+    void sendsNotificationsWithTheInternalKey(){
         List<ClientRequest> requests=new ArrayList<>();
         NotificationServiceClient client=client(request->{
             requests.add(request);
@@ -34,12 +33,9 @@ class NotificationServiceClientTest{
 
         StepVerifier.create(client.sendNotification(NotificationRequest.builder().type("CLAIM_SUBMITTED").build()))
                 .verifyComplete();
-        StepVerifier.create(client.sendAuditEvent(AuditEventRequest.builder().eventType("CLAIM_APPROVED").build()))
-                .verifyComplete();
 
         assertThat(requests).extracting(r->r.url().toString()).containsExactly(
-                "http://NOTIFICATION-SERVICE/internal/notifications",
-                "http://NOTIFICATION-SERVICE/internal/audit-events");
+                "http://NOTIFICATION-SERVICE/internal/notifications");
         assertThat(requests).allSatisfy(r->
                 assertThat(r.headers().getFirst(GatewayHeaders.GATEWAY_KEY)).isEqualTo("internal-key"));
     }

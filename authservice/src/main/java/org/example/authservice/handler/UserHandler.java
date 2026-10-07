@@ -36,14 +36,6 @@ public class UserHandler{
                         .bodyValue(response));
     }
 
-    public Mono<ServerResponse> deactivateMyProfile(ServerRequest request){
-        return SecurityUtil.getUserId(request)
-                .flatMap(userProfileService::deactivateProfile)
-                .flatMap(response->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
-    }
-
     public Mono<ServerResponse> getAllUsers(ServerRequest request){
         String status=request.queryParam("status").orElse(null);
         String segment=request.queryParam("segment").orElse(null);

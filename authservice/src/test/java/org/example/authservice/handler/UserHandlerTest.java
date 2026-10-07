@@ -133,46 +133,6 @@ class UserHandlerTest {
 
     // ======================== deactivateMyProfile ========================
 
-    @Test
-    void deactivateMyProfile_whenAuthenticated_shouldReturn200() {
-        MessageResponse response = MessageResponse.builder()
-                .message("Profile deactivated successfully").build();
-        when(userProfileService.deactivateProfile(1L)).thenReturn(Mono.just(response));
-
-        ServerRequest request = authenticatedRequestNoBody(1L);
-
-        StepVerifier.create(userHandler.deactivateMyProfile(request))
-                .assertNext(ex -> assertThat(ex.statusCode()).isEqualTo(HttpStatus.OK))
-                .verifyComplete();
-    }
-
-    @Test
-    void deactivateMyProfile_whenNotAuthenticated_shouldReturnForbiddenException() {
-        ServerRequest request = unauthenticatedRequestNoBody();
-
-        StepVerifier.create(userHandler.deactivateMyProfile(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(ForbiddenException.class);
-                    assertThat(error.getMessage()).isEqualTo("Authenticated user is required");
-                })
-                .verify();
-    }
-
-    @Test
-    void deactivateMyProfile_whenProfileNotFound_shouldPropagateNotFoundException() {
-        when(userProfileService.deactivateProfile(99L))
-                .thenReturn(Mono.error(new NotFoundException("User profile not found")));
-
-        ServerRequest request = authenticatedRequestNoBody(99L);
-
-        StepVerifier.create(userHandler.deactivateMyProfile(request))
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(NotFoundException.class);
-                    assertThat(error.getMessage()).isEqualTo("User profile not found");
-                })
-                .verify();
-    }
-
     // ======================== getAllUsers ========================
 
     @Test
@@ -505,5 +465,46 @@ class UserHandlerTest {
                 .addresses(List.of())
                 .createdAt(LocalDateTime.now())
                 .build();
+    }
+
+    @Test
+    void updateStatus_whenUserIdIsNotANumber_shouldReturnValidationException() {
+        ServerRequest request = requestWithPathVarAndBody(
+                "userId", "abc",
+                UpdateUserStatusRequest.builder().status("ACTIVE").build());
+
+        StepVerifier.create(userHandler.updateStatus(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(ValidationException.class);
+                    assertThat(((ValidationException) error).getErrors()).containsExactly("Invalid user id");
+                })
+                .verify();
+    }
+
+    @Test
+    void getMyProfile_whenNotAuthenticated_shouldReturnForbiddenException() {
+        ServerRequest request = unauthenticatedRequestNoBody();
+
+        StepVerifier.create(userHandler.getMyProfile(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(ForbiddenException.class);
+                    assertThat(error.getMessage()).isEqualTo("Authenticated user is required");
+                })
+                .verify();
+    }
+
+    @Test
+    void getUser_whenUserNotFound_shouldPropagateNotFoundException() {
+        when(userProfileService.getUser(99L))
+                .thenReturn(Mono.error(new NotFoundException("User not found")));
+
+        ServerRequest request = requestWithPathVar("userId", "99");
+
+        StepVerifier.create(userHandler.getUser(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(NotFoundException.class);
+                    assertThat(error.getMessage()).isEqualTo("User not found");
+                })
+                .verify();
     }
 }

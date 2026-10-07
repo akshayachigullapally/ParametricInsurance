@@ -150,4 +150,25 @@ class GatewayAuthenticationFilterTest {
         assertThat(exchange.getResponse().getHeaders().get("Content-Type"))
                 .contains("application/json");
     }
+
+    @Test
+    void filter_actuatorInfo_bypassesAuth() {
+        MockServerWebExchange exchange = createExchange("/actuator/info", null, null, null, null);
+
+        StepVerifier.create(filter.filter(exchange, chain))
+                .verifyComplete();
+
+        verify(chain).filter(exchange);
+    }
+
+    @Test
+    void filter_actuatorHealth_bypassesAuth() {
+        MockServerWebExchange exchange = createExchange("/actuator/health", null, null, null, null);
+
+        StepVerifier.create(filter.filter(exchange, chain))
+                .verifyComplete();
+
+        verify(chain).filter(exchange);
+        assertThat(exchange.getResponse().getStatusCode()).isNull();
+    }
 }

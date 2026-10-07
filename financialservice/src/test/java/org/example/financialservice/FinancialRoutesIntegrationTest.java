@@ -92,8 +92,6 @@ class FinancialRoutesIntegrationTest{
                         .status("APPROVED")
                         .approvedAmount(new BigDecimal("5000.00"))
                         .build()));
-        when(notificationServiceClient.sendAuditEvent(any()))
-                .thenReturn(Mono.empty());
         when(notificationServiceClient.sendNotification(any()))
                 .thenReturn(Mono.empty());
     }

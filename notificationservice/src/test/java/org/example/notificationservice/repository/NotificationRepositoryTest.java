@@ -56,4 +56,83 @@ class NotificationRepositoryTest {
                 .assertNext(n -> assertThat(n.isRead()).isFalse())
                 .verifyComplete();
     }
+
+    @Test
+    void shouldSaveAndFindById() {
+        Notification notification = buildNotification(1L, 100L, "ROLE_USER",
+                false, DeliveryStatus.DELIVERED, LocalDateTime.now());
+
+        Notification saved = repository.save(notification).block();
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getNotificationReference()).startsWith("NTF-");
+
+        StepVerifier.create(repository.findById(saved.getId()))
+                .assertNext(n -> {
+                    assertThat(n.getRecipientUserId()).isEqualTo(1L);
+                    assertThat(n.getRecipientCustomerId()).isEqualTo(100L);
+                    assertThat(n.getRecipientRole()).isEqualTo("ROLE_USER");
+                    assertThat(n.isRead()).isFalse();
+                    assertThat(n.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldDeleteById() {
+        Notification saved = repository.save(
+                buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, LocalDateTime.now())
+        ).block();
+
+        repository.deleteById(saved.getId()).block();
+
+        StepVerifier.create(repository.findById(saved.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByRecipientUserIdOrderByCreatedAtDesc() {
+        LocalDateTime now = LocalDateTime.now();
+        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(2))).block();
+        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
+        repository.save(buildNotification(2L, null, null, false, DeliveryStatus.DELIVERED, now)).block();
+
+        StepVerifier.create(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L))
+                .expectNextCount(2)
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc() {
+        LocalDateTime now = LocalDateTime.now();
+        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
+        repository.save(buildNotification(1L, null, null, true, DeliveryStatus.DELIVERED, now)).block();
+
+        StepVerifier.create(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L))
+                .assertNext(n -> assertThat(n.isRead()).isFalse())
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByRecipientRoleOrderByCreatedAtDesc() {
+        LocalDateTime now = LocalDateTime.now();
+        repository.save(buildNotification(null, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
+        repository.save(buildNotification(null, null, "ROLE_USER", false, DeliveryStatus.DELIVERED, now)).block();
+
+        StepVerifier.create(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_ADMIN"))
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc() {
+        LocalDateTime now = LocalDateTime.now();
+        repository.save(buildNotification(null, null, "ROLE_USER", false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
+        repository.save(buildNotification(null, null, "ROLE_USER", true, DeliveryStatus.DELIVERED, now)).block();
+
+        StepVerifier.create(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER"))
+                .assertNext(n -> assertThat(n.isRead()).isFalse())
+                .verifyComplete();
+    }
 }

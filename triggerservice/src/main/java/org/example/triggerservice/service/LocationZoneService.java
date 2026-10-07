@@ -2,7 +2,6 @@ package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.ZoneAlertRequest;
-import org.example.triggerservice.util.AuditDiff;
 import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
 import org.example.triggerservice.client.ProductTriggerClient;
@@ -145,10 +144,6 @@ public class LocationZoneService{
 
                     return locationZoneRepository.save(zone);
                 })
-                .flatMap(saved->notificationService.audit(
-                        "ZONE_CREATED","LOCATION_ZONE",saved.getId(),userId,
-                        "Created location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")"
-                ).thenReturn(saved))
                 .map(this::toResponse);
     }
 
@@ -175,7 +170,6 @@ public class LocationZoneService{
                                         );
                                     }
 
-                                    java.util.Map<String,Object> before=auditFields(zone);
 
                                     zone.setZoneCode(request.getZoneCode());
                                     zone.setZoneName(request.getZoneName());
@@ -189,15 +183,7 @@ public class LocationZoneService{
                                     zone.setUpdatedBy(userId);
                                     zone.setUpdatedAt(LocalDateTime.now());
 
-                                    return locationZoneRepository.save(zone)
-                                            .flatMap(saved->{
-                                                AuditDiff diff=AuditDiff.of(before,auditFields(saved));
-                                                return notificationService.auditChange(
-                                                        "ZONE_UPDATED","LOCATION_ZONE",saved.getId(),userId,
-                                                        "Updated location zone "+saved.getZoneName()+" ("+saved.getZoneCode()+")",
-                                                        diff.before(),diff.after()
-                                                ).thenReturn(saved);
-                                            });
+                                    return locationZoneRepository.save(zone);
                                 })
                 )
                 .map(this::toResponse);
@@ -234,13 +220,7 @@ public class LocationZoneService{
                     zone.setUpdatedBy(userId);
                     zone.setUpdatedAt(LocalDateTime.now());
 
-                    return locationZoneRepository.save(zone)
-                            .flatMap(saved->notificationService.auditChange(
-                                    "ZONE_STATUS_CHANGED","LOCATION_ZONE",saved.getId(),userId,
-                                    "Changed status of location zone "+saved.getZoneCode()+" to "+saved.getStatus(),
-                                    "Status: "+oldStatus,
-                                    "Status: "+saved.getStatus()
-                            ).thenReturn(saved));
+                    return locationZoneRepository.save(zone);
                 })
                 .map(this::toResponse);
     }
@@ -264,10 +244,6 @@ public class LocationZoneService{
                                     return locationZoneRepository.save(zone);
                                 })
                 )
-                .flatMap(saved->notificationService.audit(
-                        "ZONE_ARCHIVED","LOCATION_ZONE",saved.getId(),userId,
-                        "Archived location zone "+saved.getZoneCode()
-                ))
                 .then();
     }
 
@@ -393,22 +369,13 @@ public class LocationZoneService{
                     if(!raise&&!wasRaised){
                         return Mono.error(new ConflictException("Location zone has no active weather alert"));
                     }
-                    String before=alertText(zone);
                     LocalDateTime now=LocalDateTime.now();
                     zone.setWeatherAlert(raise);
                     zone.setAlertMessage(raise?message:null);
                     zone.setAlertRaisedAt(raise?(wasRaised?zone.getAlertRaisedAt():now):null);
                     zone.setUpdatedBy(userId);
                     zone.setUpdatedAt(now);
-                    return locationZoneRepository.save(zone)
-                            .flatMap(saved->notificationService.auditChange(
-                                    raise?"ZONE_ALERT_RAISED":"ZONE_ALERT_CLEARED",
-                                    "LOCATION_ZONE",saved.getId(),userId,
-                                    (raise?"Raised weather alert for ":"Cleared weather alert for ")
-                                            +saved.getZoneName()+" ("+saved.getZoneCode()+")",
-                                    before,
-                                    alertText(saved)
-                            ).thenReturn(saved));
+                    return locationZoneRepository.save(zone);
                 })
                 .map(this::toResponse);
     }
@@ -422,42 +389,11 @@ public class LocationZoneService{
 
         return findAvailableZone(zoneId)
                 .flatMap(zone->{
-                    BigDecimal previous=zone.getMaxExposure();
                     zone.setMaxExposure(maxExposure);
                     zone.setUpdatedBy(userId);
                     zone.setUpdatedAt(LocalDateTime.now());
-                    return locationZoneRepository.save(zone)
-                            .flatMap(saved->notificationService.auditChange(
-                                    "ZONE_EXPOSURE_CAP_CHANGED","LOCATION_ZONE",saved.getId(),userId,
-                                    "Changed exposure cap of "+saved.getZoneName()+" ("+saved.getZoneCode()+")",
-                                    "Exposure cap: "+capText(previous),
-                                    "Exposure cap: "+capText(maxExposure)
-                            ).thenReturn(saved));
+                    return locationZoneRepository.save(zone);
                 })
                 .map(this::toResponse);
-    }
-
-    private static String alertText(LocationZone zone){
-        return Boolean.TRUE.equals(zone.getWeatherAlert())
-                ?"Weather alert: ON ("+zone.getAlertMessage()+")"
-                :"Weather alert: OFF";
-    }
-
-    private static String capText(BigDecimal cap){
-        return cap==null?"No cap":"₹"+cap.stripTrailingZeros().toPlainString();
-    }
-
-    private java.util.Map<String,Object> auditFields(LocationZone zone){
-        java.util.Map<String,Object> fields=new java.util.LinkedHashMap<>();
-        fields.put("Code",zone.getZoneCode());
-        fields.put("Name",zone.getZoneName());
-        fields.put("Country",zone.getCountry());
-        fields.put("State",zone.getState());
-        fields.put("District",zone.getDistrict());
-        fields.put("Postal code",zone.getPostalCode());
-        fields.put("Latitude",zone.getLatitude());
-        fields.put("Longitude",zone.getLongitude());
-        fields.put("Radius (km)",zone.getRadiusKm());
-        return fields;
     }
 }
