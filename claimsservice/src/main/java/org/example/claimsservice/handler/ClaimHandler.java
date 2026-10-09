@@ -108,15 +108,6 @@ public class ClaimHandler{
                 .flatMap(response->ServerResponse.ok().bodyValue(response));
     }
 
-        public Mono<ServerResponse> createInternalClaim(ServerRequest request){
-                return request.bodyToMono(CreateClaimRequest.class)
-                                .switchIfEmpty(Mono.error(new org.example.claimsservice.exception.ValidationException("Request body is required")))
-                        .flatMap(body->claimService.createInternalClaim(body))
-                                .flatMap(response->ServerResponse.status(HttpStatus.CREATED)
-                                                .contentType(MediaType.APPLICATION_JSON)
-                                                .bodyValue(response));
-        }
-
         public Mono<ServerResponse> createClaimsFromTriggerEvent(ServerRequest request){
                 return request.bodyToMono(org.example.claimsservice.dto.ClaimCreationRequest.class)
                         .switchIfEmpty(Mono.error(new org.example.claimsservice.exception.ValidationException("Request body is required")))

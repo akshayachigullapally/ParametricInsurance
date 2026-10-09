@@ -11,7 +11,6 @@ import org.example.claimsservice.dto.RejectClaimRequest;
 import org.example.claimsservice.dto.SettleClaimRequest;
 import org.example.claimsservice.dto.InternalPolicyResponse;
 import org.example.claimsservice.dto.InternalClaimResponse;
-import org.example.claimsservice.dto.PolicyTriggerEligibilityResponse;
 import org.example.claimsservice.exception.ConflictException;
 import org.example.claimsservice.exception.DependentServiceException;
 import org.example.claimsservice.exception.ForbiddenException;
@@ -49,7 +48,6 @@ public class ClaimService{
     private final ClaimRepository claimRepository;
     private final ClaimTimelineRepository claimTimelineRepository;
     private final WebClient.Builder webClientBuilder;
-    private final TriggerEligibilityClient triggerEligibilityClient;
     private final NotificationService notificationService;
     private final FinancialServiceClient financialServiceClient;
 
@@ -66,29 +64,8 @@ public class ClaimService{
                                 ?Mono.just(policy)
                                 :Mono.error(new ValidationException(
                                         "Premium for this policy has not been paid; pay it before filing a claim"))))
-                .flatMap(policy->{
-                    if(isManualException(request)){
-                        return createManualExceptionClaim(
-                                customerId,request,policy
-                        );
-                    }
-
-                    return validateTriggerEligibility(policy,customerId)
-                            .flatMap(eligibility->{
-                                validateIncidentAgainstTrigger(request,eligibility);
-
-                                return validateNoDuplicateTriggerClaim(
-                                        customerId,
-                                        policy.getId(),
-                                        eligibility.getTriggerEventId()
-                                ).then(saveAutomaticClaim(
-                                        customerId,
-                                        request,
-                                        policy,
-                                        eligibility
-                                ));
-                            });
-                })
+                // Customers file manual claims; automatic claims come from the trigger engine.
+                .flatMap(policy->createManualExceptionClaim(customerId,request,policy))
                 .map(this::toResponse)
                 .flatMap(resp -> notifySubmitted(
                         customerId,
@@ -313,41 +290,6 @@ public class ClaimService{
                 .doOnNext(response->log.info("Trigger event {} processed: created={} failed={}",
                         request.getTriggerEventId(),response.getClaimsCreated(),response.getClaimsFailed()));
     }
-    
-        @Transactional
-        public Mono<InternalClaimResponse> createInternalClaim(CreateClaimRequest request){
-            log.info("Create internal claim");
-                return getPolicy(request.getPolicyId())
-                                .flatMap(policy -> {
-                                        if(policy.getId()==null){
-                                                return Mono.error(new ValidationException("Policy information is incomplete"));
-                                        }
-
-                                        if(!"ACTIVE".equalsIgnoreCase(policy.getStatus())){
-                                                return Mono.error(new ValidationException("Policy must be ACTIVE to create an automatic claim"));
-                                        }
-
-                                        return triggerEligibilityClient.getEligibility(policy.getId())
-                                                        .flatMap(eligibility -> {
-                                                                if(!eligibility.isEligible()){
-                                                                        return Mono.error(new ValidationException("Policy is not eligible for trigger-based claim: "+eligibility.getEligibilityReason()));
-                                                                }
-
-                                                                Long customerId = policy.getCustomerId();
-
-                                                                return validateNoDuplicateTriggerClaim(
-                                                                                customerId,
-                                                                                policy.getId(),
-                                                                                eligibility.getTriggerEventId()
-                                                                ).then(saveAutomaticClaim(
-                                                                                customerId,
-                                                                                request,
-                                                                                policy,
-                                                                                eligibility
-                                                                )).map(this::toInternalResponse);
-                                                        });
-                                });
-                        }
 
     @Transactional
     public Mono<ClaimResponse> startReview(Long reviewerId,Long claimId){
@@ -744,87 +686,6 @@ public class ClaimService{
         }
     }
 
-    private Mono<PolicyTriggerEligibilityResponse> validateTriggerEligibility(
-            InternalPolicyResponse policy,
-            Long authenticatedCustomerId
-    ){
-        return triggerEligibilityClient.getEligibility(policy.getId())
-                .flatMap(eligibility->{
-                    if(eligibility.getPolicyId()==null||
-                            !eligibility.getPolicyId().equals(
-                                    policy.getId()
-                            )){
-                        return Mono.error(new ValidationException(
-                                "Trigger eligibility does not match the selected policy"
-                        ));
-                    }
-
-                    if(eligibility.getCustomerId()==null||
-                            !eligibility.getCustomerId().equals(
-                                    authenticatedCustomerId
-                            )){
-                        return Mono.error(new ForbiddenException(
-                                "Trigger eligibility does not belong to the authenticated customer"
-                        ));
-                    }
-
-                    if(!eligibility.isEligible()){
-                        String reason=eligibility.getEligibilityReason();
-
-                        if(reason==null||reason.isBlank()){
-                            reason="No verified trigger event applies to this policy";
-                        }
-
-                        return Mono.error(new ValidationException(
-                                "Claim is not eligible: "+reason
-                        ));
-                    }
-
-                    if(eligibility.getTriggerEventId()==null||
-                            eligibility.getTriggerEventReference()==null||
-                            eligibility.getTriggerEventReference().isBlank()){
-                        return Mono.error(new ValidationException(
-                                "Verified trigger event information is unavailable"
-                        ));
-                    }
-
-                    return Mono.just(eligibility);
-                });
-    }
-
-    private void validateIncidentAgainstTrigger(
-            CreateClaimRequest request,
-            PolicyTriggerEligibilityResponse eligibility
-    ){
-        if(eligibility.getEventWindowStart()==null||
-                eligibility.getEventWindowEnd()==null){
-            throw new ValidationException(
-                    "Trigger event coverage period is unavailable"
-            );
-        }
-
-        LocalDate incidentDate=request.getIncidentDate();
-        LocalDate eventStart=eligibility
-                .getEventWindowStart()
-                .toLocalDate();
-        LocalDate eventEnd=eligibility
-                .getEventWindowEnd()
-                .toLocalDate();
-
-        if(incidentDate.isBefore(eventStart)||
-                incidentDate.isAfter(eventEnd)){
-            throw new ValidationException(
-                    "Incident date must fall within the verified trigger event period"
-            );
-        }
-    }
-
-    private boolean isManualException(CreateClaimRequest request){
-        return request.getClaimSource()!=null&&
-                ClaimSource.MANUAL_EXCEPTION.name()
-                        .equalsIgnoreCase(request.getClaimSource().trim());
-    }
-
     private Mono<Claim> createManualExceptionClaim(
             Long customerId,
             CreateClaimRequest request,
@@ -866,29 +727,6 @@ public class ClaimService{
                     if(exists){
                         return Mono.error(new ConflictException(
                                 "A manual claim already exists for this policy and incident date"
-                        ));
-                    }
-
-                    return Mono.empty();
-                });
-    }
-
-    private Mono<Void> validateNoDuplicateTriggerClaim(
-            Long customerId,
-            Long policyId,
-            Long triggerEventId
-    ){
-        return claimRepository
-                .existsByCustomerIdAndPolicyIdAndTriggerEventIdAndStatusNot(
-                        customerId,
-                        policyId,
-                        triggerEventId,
-                        ClaimStatus.CANCELLED
-                )
-                .flatMap(exists->{
-                    if(exists){
-                        return Mono.error(new ConflictException(
-                                "A claim already exists for this policy and trigger event"
                         ));
                     }
 
@@ -948,65 +786,6 @@ public class ClaimService{
                         customerId,
                         "CUSTOMER",
                         "Customer reported a missed trigger event for manual review"
-                ).thenReturn(saved));
-    }
-
-    private Mono<Claim> saveAutomaticClaim(
-            Long customerId,
-            CreateClaimRequest request,
-            InternalPolicyResponse policy,
-            PolicyTriggerEligibilityResponse eligibility
-    ){
-        LocalDateTime now=LocalDateTime.now();
-
-        Claim claim=Claim.builder()
-                .claimNumber(generateClaimNumber())
-                .customerId(customerId)
-                .policyId(policy.getId())
-                .policyNumber(policy.getPolicyNumber())
-                .productId(policy.getProductId())
-                .triggerEventId(eligibility.getTriggerEventId())
-                .triggerEventReference(
-                        eligibility.getTriggerEventReference()
-                )
-                .triggerDefinitionId(
-                        eligibility.getTriggerDefinitionId()
-                )
-                .perilId(eligibility.getPerilId())
-                .locationZoneId(eligibility.getLocationZoneId())
-                .incidentType(
-                        request.getIncidentType()
-                                .trim()
-                                .toUpperCase(Locale.ROOT)
-                )
-                .incidentDate(request.getIncidentDate())
-                .incidentLocation(
-                        request.getIncidentLocation().trim()
-                )
-                .description(request.getDescription().trim())
-                .claimedAmount(request.getClaimedAmount())
-                .status(ClaimStatus.SUBMITTED.name())
-                .claimSource(ClaimSource.AUTO_TRIGGERED.name())
-                .manualReviewRequired(false)
-                .triggerDetectionStatus(
-                        TriggerDetectionStatus.DETECTED.name()
-                )
-                .customerConfirmedLoss(true)
-                .createdFromTriggerEvent(true)
-                .payoutRequested(false)
-                .submittedAt(now)
-                .updatedAt(now)
-                .build();
-
-        return claimRepository.save(claim)
-                .flatMap(saved->recordTimeline(
-                        saved,
-                        null,
-                        ClaimStatus.SUBMITTED.name(),
-                        "CLAIM_SUBMITTED",
-                        customerId,
-                        "CUSTOMER",
-                        "Customer submitted claim"
                 ).thenReturn(saved));
     }
 

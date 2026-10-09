@@ -3,7 +3,6 @@ package org.example.claimsservice.service;
 import org.example.claimsservice.dto.ApproveClaimRequest;
 import org.example.claimsservice.dto.CreateClaimRequest;
 import org.example.claimsservice.dto.InternalPolicyResponse;
-import org.example.claimsservice.dto.PolicyTriggerEligibilityResponse;
 import org.example.claimsservice.dto.RejectClaimRequest;
 import org.example.claimsservice.dto.SettleClaimRequest;
 import org.example.claimsservice.exception.ConflictException;
@@ -55,9 +54,6 @@ class ClaimServiceTest {
     private ClaimTimelineRepository claimTimelineRepository;
 
     @Mock
-    private TriggerEligibilityClient triggerEligibilityClient;
-
-    @Mock
     private NotificationService notificationService;
 
     @Mock
@@ -77,7 +73,6 @@ class ClaimServiceTest {
                 claimRepository,
                 claimTimelineRepository,
                 webClientBuilder,
-                triggerEligibilityClient,
                 notificationService,
                 financialServiceClient
         );
@@ -109,75 +104,6 @@ class ClaimServiceTest {
     }
 
     @Test
-    void createClaim_whenRequestIsValid_shouldCreateClaim() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        when(claimRepository
-                .existsByCustomerIdAndPolicyIdAndTriggerEventIdAndStatusNot(
-                        1L,
-                        100L,
-                        500L,
-                        ClaimStatus.CANCELLED
-                ))
-                .thenReturn(Mono.just(false));
-
-        when(claimRepository.save(any(Claim.class)))
-                .thenAnswer(invocation->{
-                    Claim claim=invocation.getArgument(0);
-                    claim.setId(1L);
-                    return Mono.just(claim);
-                });
-
-        when(claimTimelineRepository.save(any(ClaimTimeline.class)))
-                .thenAnswer(invocation->{
-                    ClaimTimeline timeline=invocation.getArgument(0);
-                    timeline.setId(1L);
-                    return Mono.just(timeline);
-                });
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .assertNext(response->{
-                    assertThat(response.getId()).isEqualTo(1L);
-                    assertThat(response.getClaimNumber())
-                            .startsWith("CLM-");
-                    assertThat(response.getCustomerId()).isEqualTo(1L);
-                    assertThat(response.getPolicyId()).isEqualTo(100L);
-                    assertThat(response.getPolicyNumber())
-                            .isEqualTo("POL-100");
-                    assertThat(response.getTriggerEventId()).isEqualTo(500L);
-                    assertThat(response.getIncidentType())
-                            .isEqualTo("FLOOD");
-                    assertThat(response.getIncidentLocation())
-                            .isEqualTo("Hyderabad");
-                    assertThat(response.getClaimedAmount())
-                            .isEqualByComparingTo("50000");
-                    assertThat(response.getStatus())
-                            .isEqualTo("SUBMITTED");
-                })
-                .verifyComplete();
-
-        ArgumentCaptor<Claim> captor=
-                ArgumentCaptor.forClass(Claim.class);
-
-        verify(claimRepository).save(captor.capture());
-
-        Claim savedClaim=captor.getValue();
-
-        assertThat(savedClaim.getCustomerId()).isEqualTo(1L);
-        assertThat(savedClaim.getPolicyId()).isEqualTo(100L);
-        assertThat(savedClaim.getTriggerEventId()).isEqualTo(500L);
-        assertThat(savedClaim.getIncidentType()).isEqualTo("FLOOD");
-        assertThat(savedClaim.getStatus()).isEqualTo("SUBMITTED");
-    }
-
-    @Test
     void createClaim_whenPolicyIdIsNull_shouldReturnValidationException() {
         CreateClaimRequest request=mock(CreateClaimRequest.class);
 
@@ -191,7 +117,7 @@ class ClaimServiceTest {
                 })
                 .verify();
 
-        verifyNoInteractions(claimRepository,triggerEligibilityClient);
+        verifyNoInteractions(claimRepository);
     }
 
     @Test
@@ -212,8 +138,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -236,8 +161,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -262,8 +186,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -288,8 +211,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -314,115 +236,12 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
     @Test
-    void createClaim_whenTriggerIsNotEligible_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setEligible(false);
-        eligibility.setEligibilityReason(
-                "Rainfall threshold not reached"
-        );
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Claim is not eligible: Rainfall threshold not reached"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenIncidentIsOutsideTriggerWindow_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setEventWindowStart(
-                LocalDate.now().minusDays(10).atStartOfDay()
-        );
-
-        eligibility.setEventWindowEnd(
-                LocalDate.now().minusDays(5).atTime(23,59)
-        );
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Incident date must fall within the verified trigger event period"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenDuplicateExists_shouldReturnConflictException() {
-        CreateClaimRequest request=createRequest();
-
-        mockPolicyResponse(policy());
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility()));
-
-        when(claimRepository
-                .existsByCustomerIdAndPolicyIdAndTriggerEventIdAndStatusNot(
-                        anyLong(),
-                        anyLong(),
-                        anyLong(),
-                        any(ClaimStatus.class)
-                ))
-                .thenReturn(Mono.just(true));
-
-        when(claimRepository.save(any(Claim.class)))
-                .thenReturn(Mono.just(
-                        Claim.builder().id(1L).claimNumber("CLM-TEST").build()
-                ));
-
-        when(claimTimelineRepository.save(any(ClaimTimeline.class)))
-                .thenAnswer(invocation->{
-                    ClaimTimeline timeline=invocation.getArgument(0);
-                    timeline.setId(1L);
-                    return Mono.just(timeline);
-                });
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ConflictException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "A claim already exists for this policy and trigger event"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
-    void createManualClaim_whenValid_shouldSubmitDirectlyWithoutEligibilityCheck() {
+    void createManualClaim_whenValid_shouldSubmitDirectly() {
         CreateClaimRequest request=manualRequest();
         InternalPolicyResponse policy=policy();
 
@@ -475,8 +294,6 @@ class ClaimServiceTest {
                 })
                 .verifyComplete();
 
-        verifyNoInteractions(triggerEligibilityClient);
-
         ArgumentCaptor<Claim> captor=
                 ArgumentCaptor.forClass(Claim.class);
 
@@ -516,8 +333,6 @@ class ClaimServiceTest {
                     );
                 })
                 .verify();
-
-        verifyNoInteractions(triggerEligibilityClient);
         verify(claimRepository,never()).save(any());
     }
 
@@ -538,8 +353,6 @@ class ClaimServiceTest {
                     );
                 })
                 .verify();
-
-        verifyNoInteractions(triggerEligibilityClient);
         verify(claimRepository,never()).save(any());
     }
 
@@ -579,8 +392,6 @@ class ClaimServiceTest {
                     );
                 })
                 .verify();
-
-        verifyNoInteractions(triggerEligibilityClient);
     }
 
     @Test
@@ -933,8 +744,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -959,8 +769,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -984,8 +793,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1010,8 +818,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1036,8 +843,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1064,8 +870,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1089,8 +894,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1114,8 +918,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1139,8 +942,7 @@ class ClaimServiceTest {
                 .verify();
 
         verifyNoInteractions(
-                claimRepository,
-                triggerEligibilityClient
+                claimRepository
         );
     }
 
@@ -1187,189 +989,6 @@ class ClaimServiceTest {
                             .isInstanceOf(DependentServiceException.class);
                     assertThat(error.getMessage()).isEqualTo(
                             "Product service is currently unavailable"
-                    );
-                })
-                .verify();
-    }
-
-    @Test
-    void createClaim_whenTriggerEligibilityPolicyIdMismatch_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setPolicyId(999L);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Trigger eligibility does not match the selected policy"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEligibilityCustomerIdMismatch_shouldReturnForbiddenException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setCustomerId(2L);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ForbiddenException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Trigger eligibility does not belong to the authenticated customer"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEventReferenceIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setTriggerEventReference(null);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Verified trigger event information is unavailable"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEventReferenceIsBlank_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setTriggerEventReference("  ");
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Verified trigger event information is unavailable"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEventWindowsAreNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setEventWindowStart(null);
-        eligibility.setEventWindowEnd(null);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Trigger event coverage period is unavailable"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEligibilityReasonIsNull_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setEligible(false);
-        eligibility.setEligibilityReason(null);
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Claim is not eligible: No verified trigger event applies to this policy"
-                    );
-                })
-                .verify();
-
-        verify(claimRepository,never()).save(any());
-    }
-
-    @Test
-    void createClaim_whenTriggerEligibilityReasonIsBlank_shouldReturnValidationException() {
-        CreateClaimRequest request=createRequest();
-        InternalPolicyResponse policy=policy();
-        PolicyTriggerEligibilityResponse eligibility=eligibility();
-
-        eligibility.setEligible(false);
-        eligibility.setEligibilityReason("  ");
-
-        mockPolicyResponse(policy);
-
-        when(triggerEligibilityClient.getEligibility(100L))
-                .thenReturn(Mono.just(eligibility));
-
-        StepVerifier.create(claimService.createClaim(1L,request))
-                .expectErrorSatisfies(error->{
-                    assertThat(error)
-                            .isInstanceOf(ValidationException.class);
-                    assertThat(error.getMessage()).isEqualTo(
-                            "Claim is not eligible: No verified trigger event applies to this policy"
                     );
                 })
                 .verify();
@@ -1721,31 +1340,6 @@ class ClaimServiceTest {
         );
 
         return policy;
-    }
-
-    private PolicyTriggerEligibilityResponse eligibility() {
-        PolicyTriggerEligibilityResponse eligibility=
-                new PolicyTriggerEligibilityResponse();
-
-        eligibility.setPolicyId(100L);
-        eligibility.setCustomerId(1L);
-        eligibility.setEligible(true);
-        eligibility.setEligibilityReason(
-                "Verified trigger event found"
-        );
-        eligibility.setTriggerEventId(500L);
-        eligibility.setTriggerEventReference("TRG-500");
-        eligibility.setTriggerDefinitionId(600L);
-        eligibility.setPerilId(700L);
-        eligibility.setLocationZoneId(800L);
-        eligibility.setEventWindowStart(
-                LocalDate.now().minusDays(2).atStartOfDay()
-        );
-        eligibility.setEventWindowEnd(
-                LocalDate.now().atTime(23,59,59)
-        );
-
-        return eligibility;
     }
 
     private Claim claim(Long id,ClaimStatus status) {

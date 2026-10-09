@@ -11,12 +11,6 @@ public interface ClaimRepository extends ReactiveCrudRepository<Claim,Long>{
     Flux<Claim> findAllByCustomerIdAndStatus(Long customerId,String status);
     Flux<Claim> findAllByStatus(String status);
     Mono<Claim> findByIdAndCustomerId(Long id,Long customerId);
-    Mono<Boolean> existsByCustomerIdAndPolicyIdAndTriggerEventIdAndStatusNot(
-            Long customerId,
-            Long policyId,
-            Long triggerEventId,
-            ClaimStatus status
-    );
         Mono<Boolean> existsByPolicyIdAndTriggerEventId(Long policyId,Long triggerEventId);
 
     Mono<Boolean> existsByCustomerIdAndPolicyIdAndIncidentDateAndStatusNot(

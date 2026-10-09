@@ -71,7 +71,6 @@ public class SecurityConfig{
                                 "/internal/claims/**"
                         ).permitAll()
                         .pathMatchers(HttpMethod.POST,
-                                "/internal/claims",
                                 "/internal/claims/from-trigger-event"
                         ).permitAll()
                         .pathMatchers(HttpMethod.PUT,
