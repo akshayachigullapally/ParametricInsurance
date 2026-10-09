@@ -49,7 +49,6 @@ class NotificationRoutesIntegrationTest {
         body.put("relatedEntityId", 41L);
         body.put("correlationId", "TEV-2026-00041");
         body.put("idempotencyKey", idempotencyKey);
-        body.put("deliveryChannel", "IN_APP");
         return body;
     }
 
@@ -73,7 +72,7 @@ class NotificationRoutesIntegrationTest {
     }
 
     @Test
-    void internalCreate_validKey_createsDeliveredNotification() {
+    void internalCreate_validKey_createsNotification() {
         client.post().uri("/internal/notifications")
                 .header(INTERNAL_KEY_HEADER, INTERNAL_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -83,10 +82,8 @@ class NotificationRoutesIntegrationTest {
                 .expectBody()
                 .jsonPath("$.id").isNotEmpty()
                 .jsonPath("$.type").isEqualTo("TRIGGER_EVENT_VERIFIED")
-                .jsonPath("$.deliveryChannel").isEqualTo("IN_APP")
-                .jsonPath("$.deliveryStatus").isEqualTo("DELIVERED")
                 .jsonPath("$.read").isEqualTo(false)
-                .jsonPath("$.correlationId").isEqualTo("TEV-2026-00041");
+                .jsonPath("$.relatedEntityId").isEqualTo(41);
     }
 
     @Test

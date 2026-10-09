@@ -181,15 +181,6 @@ Rules that need stored data (ownership, limits, duplicates, status order) cannot
 | | message | required, max 1000 |
 | | recipient ids | optional, greater than 0 |
 | | recipientRole | optional, max 50 |
-| | maxRetries | optional, 0–10 |
-| Send from template | templateCode | required, max 50 |
-| | recipient ids / role / maxRetries | as above |
-| Batch send | notifications | 1–500 items, each checked as above |
-| Template | templateCode | required, max 50 |
-| | notificationType | required |
-| | titleTemplate | required, max 150 |
-| | messageTemplate | required, max 1000 |
-| Preferences | notificationType | required |
 
 ### 1.9 Business rules checked inside the services
 

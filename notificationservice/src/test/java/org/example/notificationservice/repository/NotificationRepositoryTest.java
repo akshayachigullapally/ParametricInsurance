@@ -1,7 +1,5 @@
 package org.example.notificationservice.repository;
 
-import org.example.notificationservice.model.DeliveryChannel;
-import org.example.notificationservice.model.DeliveryStatus;
 import org.example.notificationservice.model.Notification;
 import org.example.notificationservice.model.NotificationType;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +28,7 @@ class NotificationRepositoryTest {
     }
 
     private Notification buildNotification(Long userId, Long customerId, String role,
-                                           boolean read, DeliveryStatus status, LocalDateTime createdAt) {
+                                           boolean read, LocalDateTime createdAt) {
         return Notification.builder()
                 .notificationReference("NTF-" + System.nanoTime())
                 .recipientUserId(userId)
@@ -40,8 +38,6 @@ class NotificationRepositoryTest {
                 .title("Test Title")
                 .message("Test Message")
                 .read(read)
-                .deliveryChannel(DeliveryChannel.IN_APP)
-                .deliveryStatus(status)
                 .createdAt(createdAt)
                 .build();
     }
@@ -49,8 +45,8 @@ class NotificationRepositoryTest {
     @Test
     void findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(buildNotification(null, 100L, null, false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
-        repository.save(buildNotification(null, 100L, null, true, DeliveryStatus.DELIVERED, now)).block();
+        repository.save(buildNotification(null, 100L, null, false, now.minusHours(1))).block();
+        repository.save(buildNotification(null, 100L, null, true, now)).block();
 
         StepVerifier.create(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(100L))
                 .assertNext(n -> assertThat(n.isRead()).isFalse())
@@ -60,7 +56,7 @@ class NotificationRepositoryTest {
     @Test
     void shouldSaveAndFindById() {
         Notification notification = buildNotification(1L, 100L, "ROLE_USER",
-                false, DeliveryStatus.DELIVERED, LocalDateTime.now());
+                false, LocalDateTime.now());
 
         Notification saved = repository.save(notification).block();
 
@@ -74,7 +70,6 @@ class NotificationRepositoryTest {
                     assertThat(n.getRecipientCustomerId()).isEqualTo(100L);
                     assertThat(n.getRecipientRole()).isEqualTo("ROLE_USER");
                     assertThat(n.isRead()).isFalse();
-                    assertThat(n.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
                 })
                 .verifyComplete();
     }
@@ -82,7 +77,7 @@ class NotificationRepositoryTest {
     @Test
     void shouldDeleteById() {
         Notification saved = repository.save(
-                buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, LocalDateTime.now())
+                buildNotification(1L, null, null, false, LocalDateTime.now())
         ).block();
 
         repository.deleteById(saved.getId()).block();
@@ -94,9 +89,9 @@ class NotificationRepositoryTest {
     @Test
     void findAllByRecipientUserIdOrderByCreatedAtDesc() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(2))).block();
-        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
-        repository.save(buildNotification(2L, null, null, false, DeliveryStatus.DELIVERED, now)).block();
+        repository.save(buildNotification(1L, null, null, false, now.minusHours(2))).block();
+        repository.save(buildNotification(1L, null, null, false, now.minusHours(1))).block();
+        repository.save(buildNotification(2L, null, null, false, now)).block();
 
         StepVerifier.create(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L))
                 .expectNextCount(2)
@@ -106,8 +101,8 @@ class NotificationRepositoryTest {
     @Test
     void findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(buildNotification(1L, null, null, false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
-        repository.save(buildNotification(1L, null, null, true, DeliveryStatus.DELIVERED, now)).block();
+        repository.save(buildNotification(1L, null, null, false, now.minusHours(1))).block();
+        repository.save(buildNotification(1L, null, null, true, now)).block();
 
         StepVerifier.create(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L))
                 .assertNext(n -> assertThat(n.isRead()).isFalse())
@@ -117,8 +112,8 @@ class NotificationRepositoryTest {
     @Test
     void findAllByRecipientRoleOrderByCreatedAtDesc() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(buildNotification(null, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
-        repository.save(buildNotification(null, null, "ROLE_USER", false, DeliveryStatus.DELIVERED, now)).block();
+        repository.save(buildNotification(null, null, "ROLE_ADMIN", false, now.minusHours(1))).block();
+        repository.save(buildNotification(null, null, "ROLE_USER", false, now)).block();
 
         StepVerifier.create(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_ADMIN"))
                 .expectNextCount(1)
@@ -128,8 +123,8 @@ class NotificationRepositoryTest {
     @Test
     void findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc() {
         LocalDateTime now = LocalDateTime.now();
-        repository.save(buildNotification(null, null, "ROLE_USER", false, DeliveryStatus.DELIVERED, now.minusHours(1))).block();
-        repository.save(buildNotification(null, null, "ROLE_USER", true, DeliveryStatus.DELIVERED, now)).block();
+        repository.save(buildNotification(null, null, "ROLE_USER", false, now.minusHours(1))).block();
+        repository.save(buildNotification(null, null, "ROLE_USER", true, now)).block();
 
         StepVerifier.create(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER"))
                 .assertNext(n -> assertThat(n.isRead()).isFalse())

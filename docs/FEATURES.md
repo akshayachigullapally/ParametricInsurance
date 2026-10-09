@@ -512,17 +512,11 @@ The date must be inside the policy period. A claims officer reviews it.
 ### 15.3 Notifications page
 **What it is.** The full list with an unread filter, mark read, mark all read and delete. Customers and staff each have their own page.
 
-### 15.4 Notification preferences
-**What it is.** Customers choose how they want to be told: **In-app, Email or SMS**. Email and SMS are simulated and logged.
-
-### 15.5 Admin notifications page
+### 15.4 Admin notifications page
 **What it is.** Every notification on the platform, with search by title, message or recipient, plus mark read and delete.
 
-### 15.6 Delivery tracking and retry
-**What it is.** Each send attempt is stored. Failed deliveries are retried every 5 minutes, and old read or failed notifications are cleaned up after 90 days.
-
-### 15.7 Templates and broadcast (API)
-**What it is.** Message templates can be created, edited, activated or deactivated, and messages can be sent to many users at once (batch).
+### 15.5 Cleanup
+**What it is.** Notifications are in-app only (no email or SMS). Read notifications older than 90 days are removed automatically.
 
 ---
 
@@ -630,8 +624,7 @@ The date must be inside the policy period. A claims officer reviews it.
 | Payout sweep | 30 s after start, then every 5 min | Pays waiting payouts and retries failed ones (max 3) | — |
 | Reconciliation | Daily 03:30 | Checks every payment and payout has a ledger entry | "10 checked, 0 mismatches" |
 | Default price rules | Every 60 s | Gives any new product a default price rule | — |
-| Notification retry | Every 5 min | Re-sends failed deliveries | — |
-| Notification cleanup | Daily 03:00 | Removes read or failed items older than 90 days | — |
+| Notification cleanup | Daily 03:00 | Removes read items older than 90 days | — |
 
 ---
 
@@ -690,7 +683,6 @@ The date must be inside the policy period. A claims officer reviews it.
 | Perils | Excess rainfall, Drought, Flood, Extreme temperature, High wind, Cyclone |
 | Demo policies | Two active sample policies in Hyderabad Central (WEATHER-001 ₹1,50,000 and FLOOD-001 ₹2,50,000) |
 | Price rules | Default rule per product, by category |
-| Notification templates | Default message templates |
 
 Customers are not pre-loaded; they register themselves.
 
@@ -707,8 +699,6 @@ These work in the backend but have no screen yet. They can be shown with an API 
 | Trigger definitions and evaluations | View, create and evaluate per-zone trigger definitions |
 | Trigger event workflow | Move an event through validation → verified / rejected → processed |
 | Demo observation and simulation | Record a demo reading and evaluate it, or generate readings that cross a threshold |
-| Notification templates and batch send | Manage templates and broadcast to many users |
-| Delivery attempts | See every send attempt of a notification |
 | Policy history and snapshot | Read a policy's status history and its locked trigger |
 
 ---

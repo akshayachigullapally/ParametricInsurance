@@ -24,12 +24,5 @@ public class NotificationResponse {
     private Long relatedEntityId;
     private Boolean read;
     private LocalDateTime readAt;
-    private String deliveryChannel;
-    private String deliveryStatus;
-    private Integer retryCount;
-    private Integer maxRetries;
-    private String correlationId;
-    private String idempotencyKey;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

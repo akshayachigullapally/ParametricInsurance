@@ -14,12 +14,10 @@ public class InternalNotificationRequest {
     private Long recipientCustomerId;
     private String recipientRole;
     private String type;
-    private String notificationType;
     private String title;
     private String message;
     private String relatedEntityType;
     private Long relatedEntityId;
     private String correlationId;
     private String idempotencyKey;
-    private String deliveryChannel;
 }

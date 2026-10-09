@@ -1,34 +1,31 @@
 package org.example.notificationservice.service;
 
 import org.example.notificationservice.dto.InternalNotificationRequest;
-import org.example.notificationservice.dto.NotificationQuery;
-import org.example.notificationservice.dto.SendFromTemplateRequest;
+import org.example.notificationservice.dto.NotificationResponse;
 import org.example.notificationservice.exception.ForbiddenException;
 import org.example.notificationservice.exception.NotFoundException;
 import org.example.notificationservice.exception.ValidationException;
-import org.example.notificationservice.model.DeliveryAttempt;
-import org.example.notificationservice.model.DeliveryChannel;
-import org.example.notificationservice.model.DeliveryStatus;
 import org.example.notificationservice.model.Notification;
-import org.example.notificationservice.model.NotificationTemplate;
 import org.example.notificationservice.model.NotificationType;
+import org.example.notificationservice.model.RelatedEntityType;
 import org.example.notificationservice.repository.NotificationRepository;
 import org.example.notificationservice.util.SecurityUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,18 +36,6 @@ class NotificationServiceTest {
 
     @Mock
     private NotificationRepository repository;
-
-    @Mock
-    private NotificationTemplateService templateService;
-
-    @Mock
-    private NotificationPreferenceService preferenceService;
-
-    @Mock
-    private DeliveryAttemptService deliveryAttemptService;
-
-    @Mock
-    private NotificationDeliveryService deliveryService;
 
     @Mock
     private NotificationStream stream;
@@ -70,25 +55,22 @@ class NotificationServiceTest {
         securityUtilMock.close();
     }
 
-    private void setupSecurityContext(Long userId, Long customerId, String role) {
+    private void signedIn(Long userId, String role) {
         securityUtilMock.when(SecurityUtil::userId).thenReturn(Mono.just(userId));
-        securityUtilMock.when(SecurityUtil::customerId).thenReturn(customerId != null ? Mono.just(customerId) : Mono.empty());
         securityUtilMock.when(SecurityUtil::role).thenReturn(Mono.just(role));
     }
 
-    private void setupAdminContext() {
-        setupSecurityContext(1L, 100L, "ROLE_ADMIN");
+    private void admin() {
+        signedIn(1L, "ROLE_ADMIN");
         securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
     }
 
-    private void setupNonAdminContext() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
+    private void notAdmin() {
         securityUtilMock.when(SecurityUtil::requireAdmin)
                 .thenReturn(Mono.error(new ForbiddenException("Admin access required")));
     }
 
-    private Notification buildNotification(Long id, Long userId, Long customerId, String role,
-                                           boolean read, DeliveryStatus status) {
+    private static Notification notification(Long id, Long userId, Long customerId, String role, boolean read) {
         return Notification.builder()
                 .id(id)
                 .notificationReference("NTF-TEST-" + id)
@@ -96,249 +78,381 @@ class NotificationServiceTest {
                 .recipientCustomerId(customerId)
                 .recipientRole(role)
                 .type(NotificationType.GENERAL)
-                .title("Test Title")
-                .message("Test Message")
+                .title("Title " + id)
+                .message("Message " + id)
                 .read(read)
-                .deliveryChannel(DeliveryChannel.IN_APP)
-                .deliveryStatus(status)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now().minusMinutes(id))
                 .build();
     }
 
-    @Test
-    void create_validRequest_savesAndReturnsResponse() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
+    private static InternalNotificationRequest.InternalNotificationRequestBuilder request() {
+        return InternalNotificationRequest.builder()
                 .recipientUserId(1L)
                 .type(NotificationType.POLICY_SUBMITTED)
                 .title("Policy Submitted")
-                .message("Your policy has been submitted")
-                .build();
+                .message("Your policy has been submitted");
+    }
 
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
+    private void saveAssignsId() {
+        when(repository.save(any(Notification.class))).thenAnswer(inv -> {
+            Notification n = inv.getArgument(0);
+            if (n.getId() == null) n.setId(1L);
             return Mono.just(n);
         });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
+    }
 
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> {
-                    assertThat(response.getId()).isEqualTo(1L);
-                    assertThat(response.getNotificationReference()).startsWith("NTF-");
-                    assertThat(response.getTitle()).isEqualTo("Policy Submitted");
-                    assertThat(response.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
-                    assertThat(response.isRead()).isFalse();
+    /** Stubs the three inbox queries for user 1 / ROLE_CUSTOMER. */
+    private void inbox(boolean unreadOnly, Flux<Notification> byUser, Flux<Notification> byCustomer, Flux<Notification> byRole) {
+        if (unreadOnly) {
+            when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(byUser);
+            when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(byCustomer);
+            when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_CUSTOMER")).thenReturn(byRole);
+        } else {
+            when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(byUser);
+            when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(byCustomer);
+            when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_CUSTOMER")).thenReturn(byRole);
+        }
+    }
+
+    // ---- create ----
+
+    @Test
+    void create_validRequest_savesPublishesAndReturnsResponse() {
+        saveAssignsId();
+
+        StepVerifier.create(service.create(request().build()))
+                .assertNext(r -> {
+                    assertThat(r.getId()).isEqualTo(1L);
+                    assertThat(r.getNotificationReference()).startsWith("NTF-").hasSize(20);
+                    assertThat(r.getTitle()).isEqualTo("Policy Submitted");
+                    assertThat(r.getType()).isEqualTo(NotificationType.POLICY_SUBMITTED);
+                    assertThat(r.isRead()).isFalse();
+                    assertThat(r.getCreatedAt()).isNotNull();
                 })
                 .verifyComplete();
 
-        verify(repository, times(2)).save(any(Notification.class));
-        verify(deliveryAttemptService).recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any());
+        verify(repository).save(any(Notification.class));
+        verify(stream).publish(any(NotificationResponse.class));
     }
 
     @Test
     void create_noRecipientIdentifier_throwsValidationException() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .build();
+        StepVerifier.create(service.create(request().recipientUserId(null).build()))
+                .expectErrorMatches(e -> e instanceof ValidationException
+                        && e.getMessage().contains("recipient"))
+                .verify();
+        verifyNoInteractions(repository, stream);
+    }
 
-        StepVerifier.create(service.create(request))
+    @Test
+    void create_blankRoleOnly_throwsValidationException() {
+        StepVerifier.create(service.create(request().recipientUserId(null).recipientRole("  ").build()))
                 .expectError(ValidationException.class)
                 .verify();
     }
 
     @Test
     void create_relatedEntityIdWithoutEntityType_throwsValidationException() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .relatedEntityId(100L)
-                .build();
-
-        StepVerifier.create(service.create(request))
-                .expectError(ValidationException.class)
+        StepVerifier.create(service.create(request().relatedEntityId(5L).build()))
+                .expectErrorMatches(e -> e instanceof ValidationException
+                        && e.getMessage().contains("relatedEntityType"))
                 .verify();
     }
 
     @Test
-    void create_blankRoleIgnoredWhenOtherIdentifiersPresent() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .recipientRole("  ")
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .build();
-
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(1L))
-                .verifyComplete();
+    void create_blankTitle_throwsValidationException() {
+        StepVerifier.create(service.create(request().title("   ").build()))
+                .expectErrorMatches(e -> e.getMessage().equals("title must not be blank"))
+                .verify();
     }
 
     @Test
-    void create_roleNormalized() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .recipientRole("ADMIN")
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .build();
-
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> assertThat(response.getRecipientRole()).isEqualTo("ROLE_ADMIN"))
-                .verifyComplete();
+    void create_nullMessage_throwsValidationException() {
+        StepVerifier.create(service.create(request().message(null).build()))
+                .expectErrorMatches(e -> e.getMessage().equals("message must not be blank"))
+                .verify();
     }
 
     @Test
-    void create_roleAlreadyNormalized_noChange() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .recipientRole("ROLE_USER")
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .build();
+    void create_titleAndMessageTrimmed() {
+        saveAssignsId();
 
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> assertThat(response.getRecipientRole()).isEqualTo("ROLE_USER"))
-                .verifyComplete();
-    }
-
-    @Test
-    void mine_unreadOnlyFalse_returnsAllNotifications() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n1 = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", true, DeliveryStatus.DELIVERED);
-
-        when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(false))
-                .expectNextCount(2)
-                .verifyComplete();
-    }
-
-    @Test
-    void mine_unreadOnlyTrue_returnsOnlyUnread() {
-        setupSecurityContext(1L, -1L, "ROLE_USER");
-        Notification n1 = buildNotification(1L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1));
-        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(true))
-                .assertNext(response -> assertThat(response.isRead()).isFalse())
-                .verifyComplete();
-    }
-
-    @Test
-    void mine_mergesAndDeduplicatesNotifications() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n1 = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n2));
-        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(false))
-                .expectNextCount(2)
-                .verifyComplete();
-    }
-
-    @Test
-    void unreadCount_returnsCorrectCount() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n1 = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
-        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.unreadCount())
-                .assertNext(count -> assertThat(count.getUnreadCount()).isEqualTo(2))
-                .verifyComplete();
-    }
-
-    @Test
-    void markRead_unreadNotification_marksAsRead() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findById(1L)).thenReturn(Mono.just(n));
-        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-
-        StepVerifier.create(service.markRead(1L))
-                .assertNext(response -> {
-                    assertThat(response.isRead()).isTrue();
-                    assertThat(response.getReadAt()).isNotNull();
+        StepVerifier.create(service.create(request().title("  Hello  ").message("  World  ").build()))
+                .assertNext(r -> {
+                    assertThat(r.getTitle()).isEqualTo("Hello");
+                    assertThat(r.getMessage()).isEqualTo("World");
                 })
                 .verifyComplete();
     }
 
     @Test
-    void markRead_alreadyRead_doesNotChangeReadAt() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        LocalDateTime readAt = LocalDateTime.now().minusHours(1);
-        Notification n = buildNotification(1L, 1L, 100L, "ROLE_USER", true, DeliveryStatus.DELIVERED);
-        n.setReadAt(readAt);
+    void create_roleNormalizedWithPrefix() {
+        saveAssignsId();
 
-        when(repository.findById(1L)).thenReturn(Mono.just(n));
-        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        StepVerifier.create(service.create(request().recipientUserId(null).recipientRole("UNDERWRITER").build()))
+                .assertNext(r -> assertThat(r.getRecipientRole()).isEqualTo("ROLE_UNDERWRITER"))
+                .verifyComplete();
+    }
+
+    @Test
+    void create_roleAlreadyPrefixed_unchanged() {
+        saveAssignsId();
+
+        StepVerifier.create(service.create(request().recipientRole("ROLE_ADMIN").build()))
+                .assertNext(r -> assertThat(r.getRecipientRole()).isEqualTo("ROLE_ADMIN"))
+                .verifyComplete();
+    }
+
+    @Test
+    void create_blankRoleWithUser_storesNullRole() {
+        saveAssignsId();
+
+        StepVerifier.create(service.create(request().recipientRole(" ").build()))
+                .assertNext(r -> assertThat(r.getRecipientRole()).isNull())
+                .verifyComplete();
+    }
+
+    @Test
+    void create_customerOnlyRecipient_isAccepted() {
+        saveAssignsId();
+
+        StepVerifier.create(service.create(request().recipientUserId(null).recipientCustomerId(7L).build()))
+                .assertNext(r -> assertThat(r.getRecipientCustomerId()).isEqualTo(7L))
+                .verifyComplete();
+    }
+
+    @Test
+    void create_relatedEntityAndCorrelationStored() {
+        saveAssignsId();
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+
+        StepVerifier.create(service.create(request()
+                        .relatedEntityType(RelatedEntityType.CLAIM).relatedEntityId(9L)
+                        .correlationId("corr-1").build()))
+                .assertNext(r -> {
+                    assertThat(r.getRelatedEntityType()).isEqualTo(RelatedEntityType.CLAIM);
+                    assertThat(r.getRelatedEntityId()).isEqualTo(9L);
+                })
+                .verifyComplete();
+
+        verify(repository).save(saved.capture());
+        assertThat(saved.getValue().getCorrelationId()).isEqualTo("corr-1");
+        assertThat(saved.getValue().getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void create_newIdempotencyKey_savesTrimmedKey() {
+        when(repository.findFirstByIdempotencyKey("key-1")).thenReturn(Mono.empty());
+        saveAssignsId();
+        ArgumentCaptor<Notification> saved = ArgumentCaptor.forClass(Notification.class);
+
+        StepVerifier.create(service.create(request().idempotencyKey("  key-1 ").build()))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        verify(repository).save(saved.capture());
+        assertThat(saved.getValue().getIdempotencyKey()).isEqualTo("key-1");
+        verify(stream).publish(any(NotificationResponse.class));
+    }
+
+    @Test
+    void create_duplicateIdempotencyKey_returnsExistingWithoutSavingOrPublishing() {
+        when(repository.findFirstByIdempotencyKey("key-1"))
+                .thenReturn(Mono.just(notification(42L, 1L, null, null, false)));
+
+        StepVerifier.create(service.create(request().idempotencyKey("key-1").build()))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(42L))
+                .verifyComplete();
+
+        verify(repository, never()).save(any());
+        verifyNoInteractions(stream);
+    }
+
+    @Test
+    void create_blankIdempotencyKey_skipsLookup() {
+        saveAssignsId();
+
+        StepVerifier.create(service.create(request().idempotencyKey("   ").build()))
+                .expectNextCount(1)
+                .verifyComplete();
+
+        verify(repository, never()).findFirstByIdempotencyKey(any());
+    }
+
+    @Test
+    void create_concurrentDuplicateKey_returnsRowSavedByOtherRequest() {
+        when(repository.findFirstByIdempotencyKey("key-1"))
+                .thenReturn(Mono.empty())
+                .thenReturn(Mono.just(notification(43L, 1L, null, null, false)));
+        when(repository.save(any(Notification.class))).thenReturn(Mono.error(new DuplicateKeyException("dup")));
+
+        StepVerifier.create(service.create(request().idempotencyKey("key-1").build()))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(43L))
+                .verifyComplete();
+
+        verifyNoInteractions(stream);
+    }
+
+    // ---- inbox ----
+
+    @Test
+    void mine_returnsUserCustomerAndRoleNotificationsNewestFirst() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(false,
+                Flux.just(notification(3L, 1L, null, null, false)),
+                Flux.just(notification(1L, null, 1L, null, true)),
+                Flux.just(notification(2L, null, null, "ROLE_CUSTOMER", false)));
+
+        StepVerifier.create(service.mine(false))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(1L))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(2L))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(3L))
+                .verifyComplete();
+    }
+
+    @Test
+    void mine_deduplicatesNotificationsMatchingSeveralWays() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        Notification both = notification(5L, 1L, 1L, "ROLE_CUSTOMER", false);
+        inbox(false, Flux.just(both), Flux.just(both), Flux.just(both));
+
+        StepVerifier.create(service.mine(false))
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void mine_roleNotificationForSomeoneElse_isHidden() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(false, Flux.empty(), Flux.empty(),
+                Flux.just(notification(6L, 99L, null, "ROLE_CUSTOMER", false),
+                        notification(7L, null, 98L, "ROLE_CUSTOMER", false)));
+
+        StepVerifier.create(service.mine(false)).verifyComplete();
+    }
+
+    @Test
+    void mine_unreadOnly_usesUnreadQueries() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(true, Flux.just(notification(1L, 1L, null, null, false)), Flux.empty(), Flux.empty());
+
+        StepVerifier.create(service.mine(true))
+                .assertNext(r -> assertThat(r.isRead()).isFalse())
+                .verifyComplete();
+
+        verify(repository, never()).findAllByRecipientUserIdOrderByCreatedAtDesc(any());
+    }
+
+    @Test
+    void unreadCount_countsUnreadInbox() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(true,
+                Flux.just(notification(1L, 1L, null, null, false), notification(2L, 1L, null, null, false)),
+                Flux.empty(),
+                Flux.just(notification(3L, null, null, "ROLE_CUSTOMER", false)));
+
+        StepVerifier.create(service.unreadCount())
+                .assertNext(r -> assertThat(r.getUnreadCount()).isEqualTo(3L))
+                .verifyComplete();
+    }
+
+    @Test
+    void unreadCount_emptyInbox_isZero() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(true, Flux.empty(), Flux.empty(), Flux.empty());
+
+        StepVerifier.create(service.unreadCount())
+                .assertNext(r -> assertThat(r.getUnreadCount()).isZero())
+                .verifyComplete();
+    }
+
+    // ---- live stream ----
+
+    @Test
+    void stream_deliversOnlyNotificationsForCurrentUser() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        Sinks.Many<NotificationResponse> sink = Sinks.many().multicast().directBestEffort();
+        when(stream.asFlux()).thenReturn(sink.asFlux());
+
+        StepVerifier.create(service.stream())
+                .then(() -> {
+                    sink.tryEmitNext(NotificationResponse.builder().id(1L).recipientUserId(1L).build());
+                    sink.tryEmitNext(NotificationResponse.builder().id(2L).recipientUserId(2L).build());
+                    sink.tryEmitNext(NotificationResponse.builder().id(3L).recipientCustomerId(1L).build());
+                    sink.tryEmitNext(NotificationResponse.builder().id(4L).recipientRole("ROLE_CUSTOMER").build());
+                    sink.tryEmitNext(NotificationResponse.builder().id(5L).recipientRole("ROLE_ADMIN").build());
+                    sink.tryEmitNext(NotificationResponse.builder().id(6L).recipientUserId(9L).recipientRole("ROLE_CUSTOMER").build());
+                    sink.tryEmitComplete();
+                })
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(1L))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(3L))
+                .assertNext(r -> assertThat(r.getId()).isEqualTo(4L))
+                .verifyComplete();
+    }
+
+    // ---- mark read ----
+
+    @Test
+    void markRead_unreadNotification_marksAsRead() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, 1L, null, null, false)));
+        saveAssignsId();
 
         StepVerifier.create(service.markRead(1L))
-                .assertNext(response -> assertThat(response.getReadAt()).isEqualTo(readAt))
+                .assertNext(r -> {
+                    assertThat(r.isRead()).isTrue();
+                    assertThat(r.getReadAt()).isNotNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void markRead_alreadyRead_doesNotSaveAgain() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, 1L, null, null, true)));
+
+        StepVerifier.create(service.markRead(1L))
+                .assertNext(r -> assertThat(r.isRead()).isTrue())
+                .verifyComplete();
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void markRead_roleBroadcast_allowedForThatRole() {
+        signedIn(1L, "ROLE_UNDERWRITER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, null, null, "ROLE_UNDERWRITER", false)));
+        saveAssignsId();
+
+        StepVerifier.create(service.markRead(1L))
+                .assertNext(r -> assertThat(r.isRead()).isTrue())
+                .verifyComplete();
+    }
+
+    @Test
+    void markRead_customerNotification_allowedForThatUser() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, null, 1L, null, false)));
+        saveAssignsId();
+
+        StepVerifier.create(service.markRead(1L))
+                .assertNext(r -> assertThat(r.isRead()).isTrue())
                 .verifyComplete();
     }
 
     @Test
     void markRead_notFound_throwsNotFoundException() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        when(repository.findById(99L)).thenReturn(Mono.empty());
+        when(repository.findById(1L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(service.markRead(99L))
+        StepVerifier.create(service.markRead(1L))
                 .expectError(NotFoundException.class)
                 .verify();
     }
 
     @Test
     void markRead_notOwned_throwsForbiddenException() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n = buildNotification(1L, 2L, 200L, "ROLE_OTHER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findById(1L)).thenReturn(Mono.just(n));
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, 2L, null, null, false)));
 
         StepVerifier.create(service.markRead(1L))
                 .expectError(ForbiddenException.class)
@@ -346,123 +460,85 @@ class NotificationServiceTest {
     }
 
     @Test
-    void markAllRead_marksAllUnreadAsRead() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n1 = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        Notification n2 = buildNotification(2L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
+    void markRead_roleBroadcastForAnotherRole_throwsForbiddenException() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, null, null, "ROLE_ADMIN", false)));
 
-        when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2));
-        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-
-        StepVerifier.create(service.markAllRead())
-                .assertNext(response -> assertThat(response.getMessage()).contains("2 notification(s) marked as read"))
-                .verifyComplete();
-    }
-
-    @Test
-    void markAllRead_includesRoleBroadcastsAndCustomerNotifications() {
-        setupSecurityContext(1L, 100L, "ROLE_ADMIN");
-        Notification direct = buildNotification(1L, 1L, null, null, false, DeliveryStatus.DELIVERED);
-        Notification asCustomer = buildNotification(2L, null, 1L, null, false, DeliveryStatus.DELIVERED);
-        Notification broadcast = buildNotification(3L, null, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED);
-        Notification someoneElses = buildNotification(4L, 9L, null, "ROLE_ADMIN", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findAllByRecipientUserIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(direct));
-        when(repository.findAllByRecipientCustomerIdAndReadFalseOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(asCustomer));
-        when(repository.findAllByRecipientRoleAndReadFalseOrderByCreatedAtDesc("ROLE_ADMIN"))
-                .thenReturn(Flux.just(broadcast, someoneElses));
-        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-
-        StepVerifier.create(service.markAllRead())
-                .assertNext(response -> assertThat(response.getMessage()).contains("3 notification(s) marked as read"))
-                .verifyComplete();
-
-        assertThat(direct.isRead()).isTrue();
-        assertThat(asCustomer.isRead()).isTrue();
-        assertThat(broadcast.isRead()).isTrue();
-        assertThat(someoneElses.isRead()).isFalse();
-    }
-
-    @Test
-    void adminMarkRead_marksAnyNotification() {
-        setupSecurityContext(1L, null, "ROLE_ADMIN");
-        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
-        Notification other = buildNotification(7L, 99L, null, null, false, DeliveryStatus.DELIVERED);
-        when(repository.findById(7L)).thenReturn(Mono.just(other));
-        when(repository.save(any(Notification.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-
-        StepVerifier.create(service.adminMarkRead(7L))
-                .assertNext(response -> assertThat(response.isRead()).isTrue())
-                .verifyComplete();
-    }
-
-    @Test
-    void adminMarkRead_requiresAdmin() {
-        setupSecurityContext(1L, 100L, "ROLE_CUSTOMER");
-        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.error(new org.example.notificationservice.exception.ForbiddenException("Admin access required")));
-
-        StepVerifier.create(service.adminMarkRead(7L))
-                .expectError(org.example.notificationservice.exception.ForbiddenException.class)
+        StepVerifier.create(service.markRead(1L))
+                .expectError(ForbiddenException.class)
                 .verify();
     }
 
     @Test
-    void adminDelete_deletesAnyNotification() {
-        setupSecurityContext(1L, null, "ROLE_ADMIN");
-        securityUtilMock.when(SecurityUtil::requireAdmin).thenReturn(Mono.empty());
-        Notification other = buildNotification(7L, 99L, null, null, false, DeliveryStatus.DELIVERED);
-        when(repository.findById(7L)).thenReturn(Mono.just(other));
-        when(repository.delete(other)).thenReturn(Mono.empty());
+    void markAllRead_marksEveryUnreadInboxItem() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(true,
+                Flux.just(notification(1L, 1L, null, null, false)),
+                Flux.just(notification(2L, null, 1L, null, false)),
+                Flux.just(notification(3L, null, null, "ROLE_CUSTOMER", false)));
+        saveAssignsId();
 
-        StepVerifier.create(service.adminDelete(7L))
-                .assertNext(response -> assertThat(response.getMessage()).isEqualTo("Notification deleted"))
+        StepVerifier.create(service.markAllRead())
+                .assertNext(r -> assertThat(r.getMessage()).isEqualTo("3 notification(s) marked as read"))
                 .verifyComplete();
+
+        verify(repository, times(3)).save(any(Notification.class));
     }
 
     @Test
-    void delete_existingNotification_deletesSuccessfully() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
+    void markAllRead_nothingUnread_reportsZero() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        inbox(true, Flux.empty(), Flux.empty(), Flux.empty());
 
+        StepVerifier.create(service.markAllRead())
+                .assertNext(r -> assertThat(r.getMessage()).startsWith("0 "))
+                .verifyComplete();
+    }
+
+    // ---- delete ----
+
+    @Test
+    void delete_ownNotification_deletes() {
+        signedIn(1L, "ROLE_CUSTOMER");
+        Notification n = notification(1L, 1L, null, null, false);
         when(repository.findById(1L)).thenReturn(Mono.just(n));
         when(repository.delete(n)).thenReturn(Mono.empty());
 
         StepVerifier.create(service.delete(1L))
-                .assertNext(response -> assertThat(response.getMessage()).isEqualTo("Notification deleted"))
+                .assertNext(r -> assertThat(r.getMessage()).isEqualTo("Notification deleted"))
                 .verifyComplete();
+
+        verify(repository).delete(n);
     }
 
     @Test
     void delete_notFound_throwsNotFoundException() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        when(repository.findById(99L)).thenReturn(Mono.empty());
+        when(repository.findById(1L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(service.delete(99L))
+        StepVerifier.create(service.delete(1L))
                 .expectError(NotFoundException.class)
                 .verify();
     }
 
     @Test
     void delete_notOwned_throwsForbiddenException() {
-        setupSecurityContext(1L, 100L, "ROLE_USER");
-        Notification n = buildNotification(1L, 2L, 200L, "ROLE_OTHER", false, DeliveryStatus.DELIVERED);
-
-        when(repository.findById(1L)).thenReturn(Mono.just(n));
+        signedIn(1L, "ROLE_CUSTOMER");
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, 2L, null, null, false)));
 
         StepVerifier.create(service.delete(1L))
                 .expectError(ForbiddenException.class)
                 .verify();
+
+        verify(repository, never()).delete(any(Notification.class));
     }
 
-    @Test
-    void all_adminUser_returnsAllNotifications() {
-        setupAdminContext();
-        Notification n1 = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        Notification n2 = buildNotification(2L, 2L, 200L, "ROLE_ADMIN", false, DeliveryStatus.FAILED);
+    // ---- admin ----
 
-        when(repository.findAllByOrderByCreatedAtDesc()).thenReturn(Flux.just(n1, n2));
+    @Test
+    void all_admin_returnsEveryNotification() {
+        admin();
+        when(repository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(Flux.just(notification(1L, 1L, null, null, false), notification(2L, 2L, null, null, true)));
 
         StepVerifier.create(service.all())
                 .expectNextCount(2)
@@ -471,7 +547,7 @@ class NotificationServiceTest {
 
     @Test
     void all_nonAdmin_throwsForbiddenException() {
-        setupNonAdminContext();
+        notAdmin();
 
         StepVerifier.create(service.all())
                 .expectError(ForbiddenException.class)
@@ -479,254 +555,65 @@ class NotificationServiceTest {
     }
 
     @Test
-    void failed_adminUser_returnsFailedNotifications() {
-        setupAdminContext();
-        Notification n = buildNotification(1L, 1L, 100L, "ROLE_USER", false, DeliveryStatus.FAILED);
+    void adminMarkRead_marksAnyNotification() {
+        admin();
+        when(repository.findById(1L)).thenReturn(Mono.just(notification(1L, 99L, null, null, false)));
+        saveAssignsId();
 
-        when(repository.findAllByDeliveryStatusOrderByCreatedAtDesc(DeliveryStatus.FAILED))
-                .thenReturn(Flux.just(n));
-
-        StepVerifier.create(service.failed())
-                .expectNextCount(1)
+        StepVerifier.create(service.adminMarkRead(1L))
+                .assertNext(r -> assertThat(r.isRead()).isTrue())
                 .verifyComplete();
     }
 
     @Test
-    void failed_nonAdmin_throwsForbiddenException() {
-        setupNonAdminContext();
+    void adminMarkRead_notFound_throwsNotFoundException() {
+        admin();
+        when(repository.findById(1L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(service.failed())
-                .expectError(ForbiddenException.class)
+        StepVerifier.create(service.adminMarkRead(1L))
+                .expectError(NotFoundException.class)
                 .verify();
     }
 
     @Test
-    void create_defaultDeliveryChannel_whenNull() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .type(NotificationType.GENERAL)
-                .title("Test")
-                .message("Test message")
-                .deliveryChannel(null)
-                .build();
+    void adminMarkRead_nonAdmin_throwsForbiddenException() {
+        notAdmin();
 
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
+        StepVerifier.create(service.adminMarkRead(1L))
+                .expectError(ForbiddenException.class)
+                .verify();
 
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> assertThat(response.getDeliveryChannel()).isEqualTo(DeliveryChannel.IN_APP))
+        verify(repository, never()).findById(any(Long.class));
+    }
+
+    @Test
+    void adminDelete_deletesAnyNotification() {
+        admin();
+        Notification n = notification(1L, 99L, null, null, false);
+        when(repository.findById(1L)).thenReturn(Mono.just(n));
+        when(repository.delete(n)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.adminDelete(1L))
+                .assertNext(r -> assertThat(r.getMessage()).isEqualTo("Notification deleted"))
                 .verifyComplete();
     }
 
     @Test
-    void create_titleAndMessageTrimmed() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .type(NotificationType.GENERAL)
-                .title("  Trimmed Title  ")
-                .message("  Trimmed Message  ")
-                .build();
+    void adminDelete_notFound_throwsNotFoundException() {
+        admin();
+        when(repository.findById(1L)).thenReturn(Mono.empty());
 
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> {
-                    assertThat(response.getTitle()).isEqualTo("Trimmed Title");
-                    assertThat(response.getMessage()).isEqualTo("Trimmed Message");
-                })
-                .verifyComplete();
+        StepVerifier.create(service.adminDelete(1L))
+                .expectError(NotFoundException.class)
+                .verify();
     }
 
     @Test
-    void create_duplicateIdempotencyKey_returnsExistingWithoutCreatingSecondRow() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientUserId(1L)
-                .type(NotificationType.TRIGGER_EVENT_VERIFIED)
-                .title("Trigger Verified")
-                .message("Your trigger was verified")
-                .idempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25")
-                .build();
+    void adminDelete_nonAdmin_throwsForbiddenException() {
+        notAdmin();
 
-        Notification existing = buildNotification(99L, 1L, 25L, "ROLE_CUSTOMER", false, DeliveryStatus.DELIVERED);
-        existing.setIdempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25");
-
-        when(repository.findFirstByIdempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25")).thenReturn(Mono.just(existing));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(99L))
-                .verifyComplete();
-
-        verify(repository, never()).save(any(Notification.class));
-    }
-
-    @Test
-    void create_withIdempotencyKey_firstSubmission_savesAndMarksDelivered() {
-        InternalNotificationRequest request = InternalNotificationRequest.builder()
-                .recipientCustomerId(25L)
-                .type(NotificationType.TRIGGER_EVENT_VERIFIED)
-                .title("Trigger Verified")
-                .message("Your trigger was verified")
-                .idempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25")
-                .build();
-
-        when(repository.findFirstByIdempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25")).thenReturn(Mono.empty());
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            if (n.getId() == null) n.setId(7L);
-            return Mono.just(n);
-        });
-        when(deliveryAttemptService.recordAttempt(anyLong(), any(DeliveryChannel.class), any(DeliveryStatus.class), any()))
-                .thenReturn(Mono.just(DeliveryAttempt.builder().id(1L).build()));
-
-        StepVerifier.create(service.create(request))
-                .assertNext(response -> {
-                    assertThat(response.getId()).isEqualTo(7L);
-                    assertThat(response.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
-                    assertThat(response.getIdempotencyKey()).isEqualTo("TRIGGER_VERIFIED:41:CUSTOMER:25");
-                    assertThat(response.isRead()).isFalse();
-                })
-                .verifyComplete();
-
-        verify(repository).findFirstByIdempotencyKey("TRIGGER_VERIFIED:41:CUSTOMER:25");
-    }
-
-    @Test
-    void mine_createdAfterFilter_returnsOnlyNewerNotifications() {
-        setupSecurityContext(1L, -1L, "ROLE_USER");
-        LocalDateTime now = LocalDateTime.now();
-        Notification older = buildNotification(1L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        older.setCreatedAt(now.minusHours(2));
-        Notification newer = buildNotification(2L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        newer.setCreatedAt(now);
-
-        when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(newer, older));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(NotificationQuery.of(false, null, now.minusHours(1), 0, 20, false, true)))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(2L))
-                .verifyComplete();
-    }
-
-    @Test
-    void mine_sortAscending_returnsOldestFirst() {
-        setupSecurityContext(1L, -1L, "ROLE_USER");
-        LocalDateTime now = LocalDateTime.now();
-        Notification older = buildNotification(1L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        older.setCreatedAt(now.minusHours(2));
-        Notification newer = buildNotification(2L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        newer.setCreatedAt(now);
-
-        when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(newer, older));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(NotificationQuery.of(false, null, null, 0, 100, true, true)))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(1L))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(2L))
-                .verifyComplete();
-    }
-
-    @Test
-    void mine_paginatesResults() {
-        setupSecurityContext(1L, -1L, "ROLE_USER");
-        LocalDateTime now = LocalDateTime.now();
-        Notification n1 = buildNotification(1L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        n1.setCreatedAt(now);
-        Notification n2 = buildNotification(2L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        n2.setCreatedAt(now.minusHours(1));
-        Notification n3 = buildNotification(3L, 1L, null, "ROLE_USER", false, DeliveryStatus.DELIVERED);
-        n3.setCreatedAt(now.minusHours(2));
-
-        when(repository.findAllByRecipientUserIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.just(n1, n2, n3));
-        when(repository.findAllByRecipientCustomerIdOrderByCreatedAtDesc(1L)).thenReturn(Flux.empty());
-        when(repository.findAllByRecipientRoleOrderByCreatedAtDesc("ROLE_USER")).thenReturn(Flux.empty());
-
-        StepVerifier.create(service.mine(NotificationQuery.of(false, null, null, 0, 2, false, true)))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(1L))
-                .assertNext(response -> assertThat(response.getId()).isEqualTo(2L))
-                .verifyComplete();
-    }
-
-    @Test
-    void sendFromTemplate_missingVariablesRenderedSafely() {
-        SendFromTemplateRequest request = SendFromTemplateRequest.builder()
-                .notificationType(NotificationType.TRIGGER_EVENT_VERIFIED)
-                .recipientCustomerId(25L)
-                .variables(Map.of("perilName", "Rainfall", "zoneName", "Zone A"))
-                .build();
-
-        NotificationTemplate template = NotificationTemplate.builder()
-                .notificationType(NotificationType.TRIGGER_EVENT_VERIFIED)
-                .titleTemplate("Your parametric coverage has been triggered")
-                .messageTemplate("A verified {perilName} event was recorded in {zoneName}. The measured value was {observedValue} {unit}, meeting the policy threshold of {thresholdValue} {unit}.")
-                .defaultChannel(DeliveryChannel.IN_APP)
-                .active(true)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        when(templateService.getDefaultTemplate(NotificationType.TRIGGER_EVENT_VERIFIED)).thenReturn(Mono.just(template));
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            if (n.getId() == null) n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryService.dispatch(any(Notification.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(service.sendFromTemplate(request))
-                .assertNext(response -> {
-                    assertThat(response.getType()).isEqualTo(NotificationType.TRIGGER_EVENT_VERIFIED);
-                    assertThat(response.getTitle()).isEqualTo("Your parametric coverage has been triggered");
-                    assertThat(response.getMessage()).contains("A verified Rainfall event was recorded in Zone A.");
-                    assertThat(response.getMessage()).doesNotContain("{observedValue}");
-                    assertThat(response.getMessage()).doesNotContain("{thresholdValue}");
-                    assertThat(response.getMessage()).doesNotContain("null");
-                    assertThat(response.getMessage()).doesNotContain("undefined");
-                    assertThat(response.getRecipientCustomerId()).isEqualTo(25L);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void batch_withIdempotencyKey_createsSingleRow() {
-        InternalNotificationRequest one = InternalNotificationRequest.builder()
-                .recipientCustomerId(25L)
-                .type(NotificationType.PAYOUT_SUCCESS)
-                .title("Payout completed")
-                .message("The payout was completed successfully.")
-                .idempotencyKey("PAYOUT_SUCCESS:1:CUSTOMER:25")
-                .build();
-
-        when(repository.findFirstByIdempotencyKey("PAYOUT_SUCCESS:1:CUSTOMER:25")).thenReturn(Mono.empty());
-        when(repository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            if (n.getId() == null) n.setId(1L);
-            return Mono.just(n);
-        });
-        when(deliveryService.dispatch(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setDeliveryStatus(DeliveryStatus.DELIVERED);
-            return Mono.just(n);
-        });
-
-        StepVerifier.create(service.batch(List.of(one)))
-                .assertNext(response -> {
-                    assertThat(response.getDeliveryStatus()).isEqualTo(DeliveryStatus.DELIVERED);
-                    assertThat(response.getTitle()).isEqualTo("Payout completed");
-                })
-                .verifyComplete();
-
-        verify(repository).findFirstByIdempotencyKey("PAYOUT_SUCCESS:1:CUSTOMER:25");
+        StepVerifier.create(service.adminDelete(1L))
+                .expectError(ForbiddenException.class)
+                .verify();
     }
 }

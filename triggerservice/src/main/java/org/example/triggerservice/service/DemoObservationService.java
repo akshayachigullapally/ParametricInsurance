@@ -401,7 +401,6 @@ public class DemoObservationService{
                                             .relatedEntityId(result.getClaimId())
                                             .correlationId(event.getEventReference())
                                             .idempotencyKey("AUTO_CLAIM:"+result.getClaimId()+":CUSTOMER:"+customerId)
-                                            .deliveryChannel("IN_APP")
                                             .build()
                             ).subscribe();
                         }

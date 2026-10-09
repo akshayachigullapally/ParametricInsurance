@@ -2,12 +2,9 @@ package org.example.notificationservice.handler;
 
 import org.example.notificationservice.dto.InternalNotificationRequest;
 import org.example.notificationservice.dto.MessageResponse;
-import org.example.notificationservice.dto.NotificationQuery;
 import org.example.notificationservice.dto.NotificationResponse;
 import org.example.notificationservice.dto.UnreadCountResponse;
 import org.example.notificationservice.exception.ValidationException;
-import org.example.notificationservice.model.DeliveryChannel;
-import org.example.notificationservice.model.DeliveryStatus;
 import org.example.notificationservice.model.NotificationType;
 import org.example.notificationservice.model.RelatedEntityType;
 import org.example.notificationservice.service.NotificationService;
@@ -18,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,8 +49,6 @@ class NotificationHandlerTest {
                 .type(NotificationType.GENERAL)
                 .title("Test Title")
                 .message("Test Message")
-                .deliveryChannel(DeliveryChannel.IN_APP)
-                .deliveryStatus(DeliveryStatus.DELIVERED)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -70,7 +66,7 @@ class NotificationHandlerTest {
     @Test
     void mine_returnsNotifications() {
         ServerRequest request = mockGetRequest("/api/notifications/me");
-        when(service.mine(any(NotificationQuery.class))).thenReturn(Flux.just(buildResponse(1L), buildResponse(2L)));
+        when(service.mine(false)).thenReturn(Flux.just(buildResponse(1L), buildResponse(2L)));
 
         StepVerifier.create(handler.mine(request))
                 .assertNext(response -> {
@@ -169,17 +165,6 @@ class NotificationHandlerTest {
                 .verifyComplete();
     }
 
-    @Test
-    void failed_returnsFailedNotifications() {
-        ServerRequest request = mockGetRequest("/api/notifications/admin/failed");
-        when(service.failed()).thenReturn(Flux.just(buildResponse(1L)));
-
-        StepVerifier.create(handler.failed(request))
-                .assertNext(response -> {
-                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-                })
-                .verifyComplete();
-    }
 
     @Test
     void create_validRequest_returnsCreated() {
@@ -220,5 +205,37 @@ class NotificationHandlerTest {
         assertThatThrownBy(() -> handler.create(request).block())
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Title must not be blank");
+    }
+
+    @Test
+    void stream_returnsEventStream() {
+        when(service.stream()).thenReturn(Flux.just(buildResponse(1L)));
+
+        StepVerifier.create(handler.stream(mock(ServerRequest.class)))
+                .assertNext(response -> {
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
+                    assertThat(response.headers().getContentType()).isEqualTo(MediaType.TEXT_EVENT_STREAM);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void adminRead_validId_marksAsRead() {
+        ServerRequest request = mockRequestWithPathVariable("notificationId", "4");
+        when(service.adminMarkRead(4L)).thenReturn(Mono.just(buildResponse(4L)));
+
+        StepVerifier.create(handler.adminRead(request))
+                .assertNext(response -> assertThat(response.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
+    }
+
+    @Test
+    void adminDelete_validId_deletes() {
+        ServerRequest request = mockRequestWithPathVariable("notificationId", "4");
+        when(service.adminDelete(4L)).thenReturn(Mono.just(new MessageResponse("Notification deleted")));
+
+        StepVerifier.create(handler.adminDelete(request))
+                .assertNext(response -> assertThat(response.statusCode()).isEqualTo(HttpStatus.OK))
+                .verifyComplete();
     }
 }
