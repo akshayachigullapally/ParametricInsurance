@@ -137,14 +137,46 @@ class GatewayAuthenticationFilterTest{
     }
 
     @Test
-    void publicAuthPath_shouldSkipGatewayCheck(){
+    void loginThroughGateway_shouldContinueUnauthenticated(){
         RecordingChain chain=new RecordingChain();
-        MockServerWebExchange exchange=exchange(MockServerHttpRequest.post("/api/auth/login"));
+        MockServerWebExchange exchange=exchange(MockServerHttpRequest.post("/api/auth/login")
+                .header(GatewayHeaders.GATEWAY_KEY,KEY));
 
         StepVerifier.create(filter.filter(exchange,chain)).verifyComplete();
 
         assertThat(chain.called).isTrue();
+        assertThat(chain.authentication.get()).isNull();
         assertThat(exchange.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
+    void authMeAndLogout_shouldCarryTheSignedInUser(){
+        for(MockServerHttpRequest.BaseBuilder<?> request:java.util.List.of(
+                MockServerHttpRequest.get("/api/auth/me"),
+                MockServerHttpRequest.post("/api/auth/logout"))){
+            RecordingChain chain=new RecordingChain();
+            MockServerWebExchange exchange=exchange(request
+                    .header(GatewayHeaders.GATEWAY_KEY,KEY)
+                    .header(GatewayHeaders.USER_ID,"7")
+                    .header(GatewayHeaders.USER_EMAIL,"ravi@gmail.com")
+                    .header(GatewayHeaders.USER_ROLE,"ROLE_CUSTOMER"));
+
+            StepVerifier.create(filter.filter(exchange,chain)).verifyComplete();
+
+            assertThat(chain.authentication.get()).isNotNull();
+            assertThat(chain.authentication.get().getPrincipal()).isEqualTo(7L);
+        }
+    }
+
+    @Test
+    void authPathWithoutGatewayKey_shouldReturnForbidden(){
+        RecordingChain chain=new RecordingChain();
+        MockServerWebExchange exchange=exchange(MockServerHttpRequest.post("/api/auth/logout"));
+
+        StepVerifier.create(filter.filter(exchange,chain)).verifyComplete();
+
+        assertThat(chain.called).isFalse();
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test

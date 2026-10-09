@@ -38,11 +38,7 @@ public class SecurityConfig{
                                 "/api/auth/logout"
                         ).authenticated()
                         .pathMatchers(HttpMethod.GET,
-                                "/api/auth/me",
-                                "/api/auth/sessions"
-                        ).authenticated()
-                        .pathMatchers(HttpMethod.DELETE,
-                                "/api/auth/sessions/**"
+                                "/api/auth/me"
                         ).authenticated()
                         .pathMatchers(HttpMethod.GET,
                                 "/api/users/me"

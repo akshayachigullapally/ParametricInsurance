@@ -27,7 +27,10 @@ public class GatewayAuthenticationFilter implements WebFilter{
     public Mono<Void> filter(ServerWebExchange exchange,WebFilterChain chain){
         String path=exchange.getRequest().getPath().value();
 
-        if(isPublicInfrastructurePath(path)) return chain.filter(exchange);
+        // Only the service's own actuator is reachable without the gateway. /api/auth/**
+        // must go through the checks below too: logout and /me need the user's identity,
+        // and login/register/refresh (no identity) are allowed by SecurityConfig.
+        if(isActuatorPath(path)) return chain.filter(exchange);
 
         String gatewayKey=exchange.getRequest().getHeaders()
                 .getFirst(GatewayHeaders.GATEWAY_KEY);
@@ -92,10 +95,8 @@ public class GatewayAuthenticationFilter implements WebFilter{
                 );
     }
 
-    private boolean isPublicInfrastructurePath(String path){
-        return path.equals("/actuator")||
-                path.startsWith("/actuator/")||
-                path.startsWith("/api/auth/");
+    private boolean isActuatorPath(String path){
+        return path.equals("/actuator")||path.startsWith("/actuator/");
     }
 
     private Mono<Void> forbidden(ServerWebExchange exchange,String message){
