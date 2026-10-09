@@ -37,8 +37,9 @@ public class LocationZoneHandler{
                         .bodyValue(zones));
     }
 
+    // Customers can look up a single zone too: their policy page shows the zone name.
     public Mono<ServerResponse> getById(ServerRequest request){
-        return requireAnyRole(VIEW_ROLES)
+        return requireAnyRole(Set.of("ROLE_CUSTOMER","ROLE_ADMIN","ROLE_UNDERWRITER","ROLE_CLAIMS_OFFICER"))
                 .then(parseId(request,"zoneId"))
                 .flatMap(locationZoneService::getById)
                 .flatMap(response->ServerResponse.ok()
