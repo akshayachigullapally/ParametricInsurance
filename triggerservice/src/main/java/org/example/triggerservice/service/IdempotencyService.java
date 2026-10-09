@@ -46,12 +46,4 @@ public class IdempotencyService{
                                     idempotencyKey, operationType));
                 }));
     }
-
-    public static String buildTriggerEventKey(
-            Long definitionId,
-            java.time.LocalDateTime windowStart,
-            java.time.LocalDateTime windowEnd
-    ){
-        return "TRIGGER_EVENT:"+definitionId+":"+windowStart+":"+windowEnd;
-    }
 }

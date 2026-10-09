@@ -22,7 +22,6 @@ public class TriggerEventResponse{
     private String definitionCode;
     private String definitionName;
 
-    private Long triggerEvaluationId;
 
     private Long perilId;
     private String perilCode;

@@ -383,15 +383,11 @@ Bars turn **amber** at 80% of the threshold and **red** when it is crossed.
 ### 11.7 No duplicates (idempotency)
 **What it is.** Each reading is sent with a unique key. If the same reading arrives twice (double click or network retry), the first result is returned and nothing is created twice. A policy can only get one claim per event.
 
-### 11.8 Readings combined over a window
-**What it is.** The engine can combine many readings in the observation window into one number — the total, average, minimum, maximum or latest — before comparing it with the threshold. If there are too few readings, the result is "insufficient observations".
-**Example.** Readings 40, 60 and 55 mm in 24 h total **155 mm**, which is ≥ 150, so the rule is matched.
-
-### 11.9 Reading validation
+### 11.8 Reading validation
 **What it is.** Each type has allowed units and ranges, e.g. humidity 0–100%, temperature −100 to 100 °C, rainfall ≥ 0. Readings outside these are refused.
 
-### 11.10 Claims-officer "Trigger engine · Live" widget
-**What it is.** The claims dashboard shows recent trigger evaluations ("value vs threshold") so officers can see what is happening.
+### 11.9 Claims-officer "Trigger engine · Live" widget
+**What it is.** The claims dashboard shows the active trigger events ("value vs threshold") so officers can see what is happening.
 
 ---
 
@@ -617,7 +613,6 @@ The date must be inside the policy period. A claims officer reviews it.
 | Demo weather feed | Every 60 s | Adds normal sample readings for every zone | Rainfall 0.08 mm in Mumbai |
 | Admin-reading hold | Each feed run | Leaves an admin-set value alone for 1 hour | Admin's 160 mm stays until 1 h later |
 | Old reading cleanup | Hourly | Deletes demo readings older than 3 days | — |
-| Monitor scan | Every 60 s | Checks active trigger definitions against recent readings | Records "matched / not matched" |
 | Policy expiry | Daily 01:00 | Active policies past end date → Expired | Policy ended 30 Sep → Expired on 1 Oct |
 | Policy renewal | Daily 01:30 | Auto-renew applications and renewal reminders | Reminder 14 and 3 days before end |
 | Premium reminders | Daily 09:00 | "Premium due" / "overdue" notifications | — |
@@ -694,11 +689,6 @@ These work in the backend but have no screen yet. They can be shown with an API 
 
 | Feature | What it does |
 |---|---|
-| Observations | Record raw readings, then validate or reject them one by one or all at once |
-| Monitor runs | See each automatic scan and start one by hand |
-| Trigger definitions and evaluations | View, create and evaluate per-zone trigger definitions |
-| Trigger event workflow | Move an event through validation → verified / rejected → processed |
-| Demo observation and simulation | Record a demo reading and evaluate it, or generate readings that cross a threshold |
 | Policy history and snapshot | Read a policy's status history and its locked trigger |
 
 ---

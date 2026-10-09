@@ -9,30 +9,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface TriggerDefinitionRepository extends ReactiveCrudRepository<TriggerDefinition,Long>{
-    Mono<Boolean> existsByDefinitionCodeIgnoreCase(String definitionCode);
-
-    Flux<TriggerDefinition> findAllByStatusNotOrderByDefinitionNameAsc(
-            TriggerDefinitionStatus status
-    );
-
-    Flux<TriggerDefinition> findAllByStatusOrderByDefinitionNameAsc(
-            TriggerDefinitionStatus status
-    );
-
-    Flux<TriggerDefinition> findAllByPerilIdAndStatusNotOrderByDefinitionNameAsc(
-            Long perilId,
-            TriggerDefinitionStatus status
-    );
-
-    Flux<TriggerDefinition> findAllByLocationZoneIdAndStatusNotOrderByDefinitionNameAsc(
-            Long locationZoneId,
-            TriggerDefinitionStatus status
-    );
-
-    Flux<TriggerDefinition> findAllByProductIdAndStatusNotOrderByDefinitionNameAsc(
-            Long productId,
-            TriggerDefinitionStatus status
-    );
 
     @Query("""
             SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END

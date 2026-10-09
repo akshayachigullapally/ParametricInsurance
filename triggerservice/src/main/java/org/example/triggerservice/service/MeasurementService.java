@@ -8,7 +8,6 @@ import org.example.triggerservice.dto.ManualReadingResponse;
 import org.example.triggerservice.model.LocationZoneStatus;
 import org.example.triggerservice.model.ObservationSource;
 import org.example.triggerservice.model.ObservationStatus;
-import org.example.triggerservice.dto.MeasurementTypeInfo;
 import org.example.triggerservice.dto.CurrentMeasurementRequest;
 import org.example.triggerservice.dto.CurrentMeasurementResult;
 import org.example.triggerservice.dto.InternalProductConfig;
@@ -49,19 +48,8 @@ public class MeasurementService{
     private final ClaimsServiceClient claimsServiceClient;
     private final IdempotencyService idempotencyService;
     private final TriggerEventRepository triggerEventRepository;
-    private final NotificationService notificationService;
     private final TriggerDefinitionRepository triggerDefinitionRepository;
     private final PerilRepository perilRepository;
-
-    public Flux<MeasurementTypeInfo> getMeasurementTypes(){
-        log.debug("Get measurement types");
-        return Flux.fromArray(MeasurementType.values())
-                .map(type->MeasurementTypeInfo.builder()
-                        .measurementType(type)
-                        .measurementUnit(unitFor(type))
-                        .displayName(displayName(type))
-                        .build());
-    }
 
     public Mono<CurrentMeasurementResult> processCurrentMeasurement(
             CurrentMeasurementRequest request,Long recordedBy){
@@ -474,18 +462,6 @@ public class MeasurementService{
             case WIND_SPEED->MeasurementUnit.KM_PER_HOUR;
             case HUMIDITY,SOIL_MOISTURE->MeasurementUnit.PERCENTAGE;
             case OTHER->MeasurementUnit.OTHER;
-        };
-    }
-
-    private String displayName(MeasurementType measurementType){
-        return switch(measurementType){
-            case RAINFALL->"Rainfall";
-            case RIVER_LEVEL->"River Level";
-            case TEMPERATURE->"Temperature";
-            case WIND_SPEED->"Wind Speed";
-            case HUMIDITY->"Humidity";
-            case SOIL_MOISTURE->"Soil Moisture";
-            case OTHER->"Other";
         };
     }
 }

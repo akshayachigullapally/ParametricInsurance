@@ -27,8 +27,6 @@ class TriggerDefinitionRepositoryTest {
     @Autowired
     private LocationZoneRepository locationZoneRepository;
 
-    @Autowired
-    private TriggerEvaluationRepository triggerEvaluationRepository;
 
     @Autowired
     private TriggerEventRepository triggerEventRepository;
@@ -46,7 +44,6 @@ class TriggerDefinitionRepositoryTest {
         // context startup references perils/location_zones, so every FK-dependent
         // child table must be cleared first.
         triggerEventRepository.deleteAll().block();
-        triggerEvaluationRepository.deleteAll().block();
         observationRepository.deleteAll().block();
         triggerDefinitionRepository.deleteAll().block();
         perilRepository.deleteAll().block();
@@ -106,12 +103,13 @@ class TriggerDefinitionRepositoryTest {
     }
 
     @Test
-    void shouldFindAllByPerilIdAndStatusNotOrderByDefinitionNameAsc() {
-        triggerDefinitionRepository.save(createDefinition("PERIL_DEF", TriggerDefinitionStatus.DRAFT)).block();
+    void shouldFindProductDefinitionsExceptArchived() {
+        triggerDefinitionRepository.save(createDefinition("PRODUCT_DEF", TriggerDefinitionStatus.ACTIVE)).block();
+        triggerDefinitionRepository.save(createDefinition("OLD_DEF", TriggerDefinitionStatus.ARCHIVED)).block();
 
-        StepVerifier.create(triggerDefinitionRepository.findAllByPerilIdAndStatusNotOrderByDefinitionNameAsc(
-                savedPeril.getId(), TriggerDefinitionStatus.ARCHIVED))
-                .assertNext(d -> assertThat(d.getPerilId()).isEqualTo(savedPeril.getId()))
+        StepVerifier.create(triggerDefinitionRepository.findAllByProductIdAndStatusNot(
+                1L, TriggerDefinitionStatus.ARCHIVED))
+                .assertNext(d -> assertThat(d.getDefinitionCode()).isEqualTo("PRODUCT_DEF"))
                 .verifyComplete();
     }
 }

@@ -26,7 +26,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LocationZoneServiceTest {
     @Mock private LocationZoneRepository locationZoneRepository;
-    @Mock private NotificationService notificationService;
     @Mock private ProductTriggerClient productTriggerClient;
     @InjectMocks private LocationZoneService locationZoneService;
 

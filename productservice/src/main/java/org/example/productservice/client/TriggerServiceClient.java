@@ -45,17 +45,6 @@ public class TriggerServiceClient{
         return getActiveZones().collectList();
     }
 
-        public Mono<org.example.productservice.dto.PolicyTriggerEligibilityResponse> getPolicyEligibility(Long policyId){
-            log.debug("Get policy eligibility [trigger service]: policyId={}",policyId);
-                return triggerServiceWebClient.get()
-                                .uri("/internal/triggers/policy/{policyId}/eligibility", policyId)
-                                .header(GatewayHeaders.GATEWAY_KEY, internalKey)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .retrieve()
-                                .bodyToMono(org.example.productservice.dto.PolicyTriggerEligibilityResponse.class)
-                                .onErrorMap(WebClientRequestException.class, ex-> new org.example.productservice.exception.DependentServiceException("Trigger service is currently unavailable"));
-        }
-
     public Mono<InternalZoneResponse> getZoneById(Long zoneId){
         log.debug("Get zone by id [trigger service]: zoneId={}",zoneId);
         return triggerServiceWebClient.get()

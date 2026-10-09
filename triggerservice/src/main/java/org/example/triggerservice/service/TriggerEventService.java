@@ -2,7 +2,6 @@ package org.example.triggerservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.TriggerEventResponse;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.NotFoundException;
@@ -16,13 +15,9 @@ import org.example.triggerservice.repository.LocationZoneRepository;
 import org.example.triggerservice.repository.PerilRepository;
 import org.example.triggerservice.repository.TriggerDefinitionRepository;
 import org.example.triggerservice.repository.TriggerEventRepository;
-import org.example.triggerservice.service.IdempotencyService;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import java.time.LocalDateTime;
-import java.util.Locale;
 
 @Slf4j
 @Service
@@ -32,9 +27,6 @@ public class TriggerEventService{
     private final TriggerDefinitionRepository triggerDefinitionRepository;
     private final PerilRepository perilRepository;
     private final LocationZoneRepository locationZoneRepository;
-    private final IdempotencyService idempotencyService;
-    private final NotificationService notificationService;
-    private final ProductTriggerClient productTriggerClient;
 
     public Flux<TriggerEventResponse> getAll(){
         log.debug("Get all [trigger event]");
@@ -42,187 +34,9 @@ public class TriggerEventService{
                 .flatMap(this::buildResponse);
     }
 
-    public Flux<TriggerEventResponse> getByStatus(String statusValue){
-        log.debug("Get by status [trigger event]: statusValue={}",statusValue);
-        TriggerEventStatus status=parseStatus(statusValue);
-
-        return triggerEventRepository
-                .findAllByStatusOrderByDetectedAtDesc(status)
-                .flatMap(this::buildResponse);
-    }
-
-    public Flux<TriggerEventResponse> getByDefinitionId(Long definitionId){
-        log.debug("Get by definition id [trigger event]: definitionId={}",definitionId);
-        validateId(definitionId,"Trigger definition ID");
-
-        return triggerDefinitionRepository.findById(definitionId)
-                .switchIfEmpty(Mono.error(
-                        new NotFoundException("Trigger definition not found")))
-                .thenMany(triggerEventRepository
-                        .findAllByTriggerDefinitionIdOrderByDetectedAtDesc(
-                                definitionId))
-                .flatMap(this::buildResponse);
-    }
-
-    public Flux<TriggerEventResponse> getByProductId(Long productId){
-        log.debug("Get by product id [trigger event]: productId={}",productId);
-        validateId(productId,"Product ID");
-
-        return triggerEventRepository
-                .findAllByProductIdOrderByDetectedAtDesc(productId)
-                .flatMap(this::buildResponse);
-    }
-
-    public Flux<TriggerEventResponse> getByZoneId(Long zoneId){
-        log.debug("Get by zone id [trigger event]: zoneId={}",zoneId);
-        validateId(zoneId,"Location zone ID");
-
-        return locationZoneRepository.findById(zoneId)
-                .switchIfEmpty(Mono.error(
-                        new NotFoundException("Location zone not found")))
-                .thenMany(triggerEventRepository
-                        .findAllByLocationZoneIdOrderByDetectedAtDesc(zoneId))
-                .flatMap(this::buildResponse);
-    }
-
     public Mono<TriggerEventResponse> getById(Long eventId){
         log.debug("Get by id [trigger event]: eventId={}",eventId);
         return findEvent(eventId).flatMap(this::buildResponse);
-    }
-
-    public Mono<TriggerEventResponse> startValidation(
-            Long eventId,
-            Long userId
-    ){
-        log.info("Start validation [trigger event]: eventId={}, userId={}",eventId,userId);
-        return findEvent(eventId)
-                .flatMap(event->{
-                    if(event.getStatus()!=TriggerEventStatus.DETECTED){
-                        return Mono.error(new ConflictException(
-                                "Only DETECTED trigger events can start validation"));
-                    }
-
-                    event.setStatus(TriggerEventStatus.UNDER_VALIDATION);
-                    event.setReviewedBy(userId);
-                    event.setReviewedAt(LocalDateTime.now());
-                    event.setReviewNotes(null);
-
-                    return triggerEventRepository.save(event);
-                })
-                .flatMap(this::buildResponse);
-    }
-
-    public Mono<TriggerEventResponse> verify(
-            Long eventId,
-            String reviewNotes,
-            Long userId
-    ){
-        validateNotes(reviewNotes);
-
-        return findEvent(eventId)
-                .flatMap(event->{
-                    if(event.getStatus()!=
-                            TriggerEventStatus.UNDER_VALIDATION){
-                        return Mono.error(new ConflictException(
-                                "Only UNDER_VALIDATION trigger events can be verified"));
-                    }
-
-                    event.setStatus(TriggerEventStatus.VERIFIED);
-                    event.setReviewedBy(userId);
-                    event.setReviewedAt(LocalDateTime.now());
-                    event.setReviewNotes(reviewNotes.trim());
-
-                    return triggerEventRepository.save(event);
-                })
-                .flatMap(saved -> notificationService.notifyTriggerVerified(
-                        null, saved.getId(), saved.getEventReference()
-                ).then(Mono.justOrEmpty(saved.getProductId())
-                        .flatMap(productId->productTriggerClient==null
-                                ?Mono.empty()
-                                :productTriggerClient.notifyVerifiedTriggerEvent(
-                                        productId,saved.getId())
-                                        .onErrorResume(error->{
-                                            log.warn(
-                                                    "Product service claim creation hook failed for event {}: {}",
-                                                    saved.getId(),error.getMessage());
-                                            return Mono.empty();
-                                        }))
-                        .switchIfEmpty(Mono.empty()))
-                        .thenReturn(saved))
-                .flatMap(this::buildResponse);
-    }
-
-    public Mono<TriggerEventResponse> reject(
-            Long eventId,
-            String reviewNotes,
-            Long userId
-    ){
-        log.info("Reject [trigger event]: eventId={}, userId={}",eventId,userId);
-        validateNotes(reviewNotes);
-
-        return findEvent(eventId)
-                .flatMap(event->{
-                    if(event.getStatus()!=
-                            TriggerEventStatus.UNDER_VALIDATION){
-                        return Mono.error(new ConflictException(
-                                "Only UNDER_VALIDATION trigger events can be rejected"));
-                    }
-
-                    event.setStatus(TriggerEventStatus.REJECTED);
-                    event.setReviewedBy(userId);
-                    event.setReviewedAt(LocalDateTime.now());
-                    event.setReviewNotes(reviewNotes.trim());
-
-                    return triggerEventRepository.save(event);
-                })
-                .flatMap(saved -> notificationService.notifyTriggerRejected(
-                        null, saved.getId(), saved.getEventReference()
-                ).thenReturn(saved))
-                .flatMap(this::buildResponse);
-    }
-
-    public Mono<TriggerEventResponse> processEvent(
-            Long eventId,
-            String reviewNotes,
-            Long userId
-    ){
-        log.info("Process event [trigger event]: eventId={}, userId={}",eventId,userId);
-        validateNotes(reviewNotes);
-
-        return findEvent(eventId)
-                .flatMap(event->{
-                    if(event.getStatus()!=TriggerEventStatus.VERIFIED){
-                        return Mono.error(new ConflictException(
-                                "Only VERIFIED trigger events can be processed"));
-                    }
-
-                    String idempotencyKey=IdempotencyService.buildTriggerEventKey(
-                            event.getTriggerDefinitionId(),
-                            event.getWindowStart(),
-                            event.getWindowEnd());
-
-                    return idempotencyService.isDuplicate(idempotencyKey)
-                            .flatMap(isDuplicate->{
-                                if(isDuplicate){
-                                    return Mono.error(new ConflictException(
-                                            "This trigger event has already been processed"));
-                                }
-
-                                event.setStatus(TriggerEventStatus.PROCESSED);
-                                event.setReviewedBy(userId);
-                                event.setReviewedAt(LocalDateTime.now());
-                                event.setReviewNotes(reviewNotes.trim());
-
-                                return triggerEventRepository.save(event)
-                                        .flatMap(savedEvent->
-                                                idempotencyService.record(
-                                                        idempotencyKey,
-                                                        "PROCESSED_EVENT",
-                                                        savedEvent.getId())
-                                                        .map(r->savedEvent));
-                            });
-                })
-                .flatMap(this::buildResponse);
     }
 
     public Mono<Void> markEventProcessed(Long eventId){
@@ -255,15 +69,17 @@ public class TriggerEventService{
 
     private Mono<TriggerEventResponse> buildResponse(TriggerEvent event){
         Mono<TriggerDefinition> definitionMono=
-                triggerDefinitionRepository
-                        .findById(event.getTriggerDefinitionId())
+                // An event can have no definition or peril (e.g. a product without synced definitions).
+                Mono.justOrEmpty(event.getTriggerDefinitionId())
+                        .flatMap(triggerDefinitionRepository::findById)
                         .defaultIfEmpty(TriggerDefinition.builder()
                                 .id(event.getTriggerDefinitionId())
                                 .definitionCode("UNAVAILABLE")
                                 .definitionName("Unavailable")
                                 .build());
 
-        Mono<Peril> perilMono=perilRepository.findById(event.getPerilId())
+        Mono<Peril> perilMono=Mono.justOrEmpty(event.getPerilId())
+                .flatMap(perilRepository::findById)
                 .defaultIfEmpty(Peril.builder()
                         .id(event.getPerilId())
                         .perilCode("UNAVAILABLE")
@@ -288,8 +104,6 @@ public class TriggerEventService{
                                 tuple.getT1().getDefinitionCode())
                         .definitionName(
                                 tuple.getT1().getDefinitionName())
-                        .triggerEvaluationId(
-                                event.getTriggerEvaluationId())
                         .perilId(event.getPerilId())
                         .perilCode(tuple.getT2().getPerilCode())
                         .perilName(tuple.getT2().getPerilName())
@@ -309,32 +123,6 @@ public class TriggerEventService{
                         .reviewedAt(event.getReviewedAt())
                         .reviewNotes(event.getReviewNotes())
                         .build());
-    }
-
-    private TriggerEventStatus parseStatus(String value){
-        if(!StringUtils.hasText(value)){
-            throw new ValidationException(
-                    "Trigger event status is required");
-        }
-
-        try{
-            return TriggerEventStatus.valueOf(
-                    value.trim().toUpperCase(Locale.ROOT));
-        }catch(IllegalArgumentException exception){
-            throw new ValidationException(
-                    "Invalid trigger event status");
-        }
-    }
-
-    private void validateNotes(String reviewNotes){
-        if(!StringUtils.hasText(reviewNotes)){
-            throw new ValidationException("Review notes are required");
-        }
-
-        if(reviewNotes.trim().length()>500){
-            throw new ValidationException(
-                    "Review notes cannot exceed 500 characters");
-        }
     }
 
     private void validateId(Long id,String fieldName){

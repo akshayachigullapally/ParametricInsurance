@@ -49,7 +49,7 @@ class TriggerServiceClientTest{
     }
 
     @Test
-    void readsZonesEligibilityAndMeasurementsWithTheInternalKey(){
+    void readsZonesAndMeasurementsWithTheInternalKey(){
         List<ClientRequest> seen=new ArrayList<>();
         TriggerServiceClient zones=client(json(HttpStatus.OK,"[{\"id\":1},{\"id\":2}]",seen));
         TriggerServiceClient single=client(json(HttpStatus.OK,"{\"id\":1,\"eligible\":true}",seen));
@@ -57,13 +57,11 @@ class TriggerServiceClientTest{
         StepVerifier.create(zones.getActiveZonesList()).assertNext(list->assertThat(list).hasSize(2)).verifyComplete();
         StepVerifier.create(zones.getCurrentMeasurements()).expectNextCount(2).verifyComplete();
         StepVerifier.create(single.getZoneById(1L)).expectNextCount(1).verifyComplete();
-        StepVerifier.create(single.getPolicyEligibility(7L)).expectNextCount(1).verifyComplete();
 
         assertThat(seen).extracting(r->r.url().getPath()).containsExactly(
                 "/internal/triggers/zones/active",
                 "/internal/triggers/measurements/current",
-                "/internal/triggers/zones/1",
-                "/internal/triggers/policy/7/eligibility");
+                "/internal/triggers/zones/1");
         assertThat(seen).allSatisfy(r->assertThat(r.headers().getFirst(GatewayHeaders.GATEWAY_KEY)).isEqualTo("internal-key"));
     }
 
@@ -80,7 +78,6 @@ class TriggerServiceClientTest{
                 .expectErrorMessage("Trigger service is currently unavailable").verify();
         StepVerifier.create(down.syncProductDefinition(sync())).expectError(DependentServiceException.class).verify();
         StepVerifier.create(down.getCurrentMeasurements()).expectError(DependentServiceException.class).verify();
-        StepVerifier.create(down.getPolicyEligibility(7L)).expectError(DependentServiceException.class).verify();
         StepVerifier.create(down.syncProductDefinition(null))
                 .expectErrorMessage("Trigger synchronization payload is incomplete").verify();
     }

@@ -19,16 +19,7 @@ public class TriggerDefinitionRouter{
     ){
         return route()
                 .path("/api/triggers/definitions",builder->builder
-                        .GET("",accept(MediaType.APPLICATION_JSON),handler::getAll)
-                        .GET("/active",accept(MediaType.APPLICATION_JSON),handler::getActive)
-                        .GET("/peril/{perilId}",accept(MediaType.APPLICATION_JSON),handler::getByPerilId)
-                        .GET("/zone/{zoneId}",accept(MediaType.APPLICATION_JSON),handler::getByZoneId)
-                        .GET("/product/{productId}",accept(MediaType.APPLICATION_JSON),handler::getByProductId)
-                        .GET("/{definitionId}",accept(MediaType.APPLICATION_JSON),handler::getById)
-                        .POST("",contentType(MediaType.APPLICATION_JSON),handler::create)
-                        .PUT("/{definitionId}",contentType(MediaType.APPLICATION_JSON),handler::update)
-                        .PUT("/{definitionId}/status",contentType(MediaType.APPLICATION_JSON),handler::updateStatus)
-                        .DELETE("/{definitionId}",handler::archive))
+                        .GET("/{definitionId}",accept(MediaType.APPLICATION_JSON),handler::getById))
                 .path("/internal/triggers/products",builder->builder
                         .PUT("/{productId}/definition",
                                 contentType(MediaType.APPLICATION_JSON),

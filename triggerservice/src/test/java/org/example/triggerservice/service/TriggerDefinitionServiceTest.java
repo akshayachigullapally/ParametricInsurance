@@ -1,12 +1,12 @@
 package org.example.triggerservice.service;
 
-import org.example.triggerservice.dto.TriggerDefinitionRequest;
 import org.example.triggerservice.exception.ConflictException;
 import org.example.triggerservice.exception.ValidationException;
 import org.example.triggerservice.model.*;
 import org.example.triggerservice.repository.LocationZoneRepository;
 import org.example.triggerservice.repository.PerilRepository;
 import org.example.triggerservice.repository.TriggerDefinitionRepository;
+import org.example.triggerservice.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,35 +32,6 @@ class TriggerDefinitionServiceTest {
     @InjectMocks private TriggerDefinitionService service;
 
     @Test
-    void getAll_shouldReturnEnrichedDefinitions() {
-        mockResponseReferences();
-        when(triggerDefinitionRepository
-                .findAllByStatusNotOrderByDefinitionNameAsc(TriggerDefinitionStatus.ARCHIVED))
-                .thenReturn(Flux.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-
-        StepVerifier.create(service.getAll())
-                .assertNext(result->{
-                    assertThat(result.getDefinitionCode()).isEqualTo("DEF_1");
-                    assertThat(result.getPerilCode()).isEqualTo("FLOOD");
-                    assertThat(result.getZoneCode()).isEqualTo("ZONE_1");
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void getActive_shouldReturnActiveDefinitions() {
-        mockResponseReferences();
-        when(triggerDefinitionRepository
-                .findAllByStatusOrderByDefinitionNameAsc(TriggerDefinitionStatus.ACTIVE))
-                .thenReturn(Flux.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-
-        StepVerifier.create(service.getActive())
-                .assertNext(result->assertThat(result.getStatus())
-                        .isEqualTo(TriggerDefinitionStatus.ACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
     void getById_whenDefinitionExists_shouldReturnDefinition() {
         mockResponseReferences();
         when(triggerDefinitionRepository.findById(1L))
@@ -72,182 +43,45 @@ class TriggerDefinitionServiceTest {
     }
 
     @Test
-    void getByPerilId_shouldReturnDefinitions() {
-        when(perilRepository.findById(1L)).thenReturn(Mono.just(peril(PerilStatus.ACTIVE)));
-        when(triggerDefinitionRepository
-                .findAllByPerilIdAndStatusNotOrderByDefinitionNameAsc(
-                        1L,TriggerDefinitionStatus.ARCHIVED))
-                .thenReturn(Flux.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(LocationZoneStatus.ACTIVE)));
+    void getById_whenDefinitionArchived_shouldReturnNotFound() {
+        when(triggerDefinitionRepository.findById(2L))
+                .thenReturn(Mono.just(definition(2L,TriggerDefinitionStatus.ARCHIVED)));
 
-        StepVerifier.create(service.getByPerilId(1L))
-                .assertNext(result->assertThat(result.getPerilId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void getByLocationZoneId_shouldReturnDefinitions() {
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(LocationZoneStatus.ACTIVE)));
-        when(triggerDefinitionRepository
-                .findAllByLocationZoneIdAndStatusNotOrderByDefinitionNameAsc(
-                        1L,TriggerDefinitionStatus.ARCHIVED))
-                .thenReturn(Flux.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-        when(perilRepository.findById(1L)).thenReturn(Mono.just(peril(PerilStatus.ACTIVE)));
-
-        StepVerifier.create(service.getByLocationZoneId(1L))
-                .assertNext(result->assertThat(result.getLocationZoneId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void getByProductId_shouldReturnDefinitions() {
-        mockResponseReferences();
-        when(triggerDefinitionRepository
-                .findAllByProductIdAndStatusNotOrderByDefinitionNameAsc(
-                        1L,TriggerDefinitionStatus.ARCHIVED))
-                .thenReturn(Flux.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-
-        StepVerifier.create(service.getByProductId(1L))
-                .assertNext(result->assertThat(result.getProductId()).isEqualTo(1L))
-                .verifyComplete();
-    }
-
-    @Test
-    void create_shouldSaveDraftDefinition() {
-        TriggerDefinitionRequest request=request(" new def ");
-        mockActiveReferences();
-        when(triggerDefinitionRepository.existsByDefinitionCodeIgnoreCase("NEW_DEF"))
-                .thenReturn(Mono.just(false));
-        when(triggerDefinitionRepository.existsSimilarDefinition(1L,1L,1L,"RAINFALL"))
-                .thenReturn(Mono.just(false));
-        when(triggerDefinitionRepository.save(any(TriggerDefinition.class)))
-                .thenAnswer(invocation->{
-                    TriggerDefinition saved=invocation.getArgument(0);
-                    saved.setId(1L);
-                    return Mono.just(saved);
-                });
-
-        StepVerifier.create(service.create(request,10L))
-                .assertNext(result->{
-                    assertThat(result.getDefinitionCode()).isEqualTo("NEW_DEF");
-                    assertThat(result.getStatus()).isEqualTo(TriggerDefinitionStatus.DRAFT);
-                    assertThat(result.getMeasurementType()).isEqualTo(MeasurementType.RAINFALL);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void create_whenCodeExists_shouldReturnConflict() {
-        mockActiveReferences();
-        when(triggerDefinitionRepository.existsByDefinitionCodeIgnoreCase("DUPLICATE"))
-                .thenReturn(Mono.just(true));
-        when(triggerDefinitionRepository.existsSimilarDefinition(1L,1L,1L,"RAINFALL"))
-                .thenReturn(Mono.just(false));
-
-        StepVerifier.create(service.create(request("duplicate"),10L))
-                .expectError(ConflictException.class)
+        StepVerifier.create(service.getById(2L))
+                .expectError(NotFoundException.class)
                 .verify();
     }
 
     @Test
-    void create_whenSimilarDefinitionExists_shouldReturnConflict() {
-        mockActiveReferences();
-        when(triggerDefinitionRepository.existsByDefinitionCodeIgnoreCase("NEW_DEF"))
-                .thenReturn(Mono.just(false));
-        when(triggerDefinitionRepository.existsSimilarDefinition(1L,1L,1L,"RAINFALL"))
-                .thenReturn(Mono.just(true));
+    void getById_whenDefinitionMissing_shouldReturnNotFound() {
+        when(triggerDefinitionRepository.findById(3L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(service.create(request("new def"),10L))
-                .expectError(ConflictException.class)
+        StepVerifier.create(service.getById(3L))
+                .expectError(NotFoundException.class)
                 .verify();
     }
 
     @Test
-    void create_whenDatesAreInvalid_shouldReturnValidationError() {
-        TriggerDefinitionRequest request=request("new def");
-        request.setEffectiveFrom(LocalDate.now());
-        request.setEffectiveTo(LocalDate.now().minusDays(1));
-
-        StepVerifier.create(Mono.defer(()->service.create(request,10L)))
-                .expectError(ValidationException.class)
-                .verify();
-
-        verifyNoInteractions(triggerDefinitionRepository,perilRepository,locationZoneRepository);
-    }
-
-    @Test
-    void update_shouldUpdateInactiveDefinition() {
-        TriggerDefinition existing=definition(1L,TriggerDefinitionStatus.INACTIVE);
-        TriggerDefinitionRequest request=request("updated def");
-
-        when(triggerDefinitionRepository.findById(1L)).thenReturn(Mono.just(existing));
-        mockActiveReferences();
-        when(triggerDefinitionRepository.existsByDefinitionCodeAndIdNot("UPDATED_DEF",1L))
-                .thenReturn(Mono.just(false));
-        when(triggerDefinitionRepository.existsSimilarDefinitionAndIdNot(
-                1L,1L,1L,"RAINFALL",1L)).thenReturn(Mono.just(false));
-        when(triggerDefinitionRepository.save(any(TriggerDefinition.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(service.update(1L,request,20L))
-                .assertNext(result->{
-                    assertThat(result.getDefinitionCode()).isEqualTo("UPDATED_DEF");
-                    assertThat(result.getUpdatedBy()).isEqualTo(20L);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void update_whenDefinitionIsActive_shouldReturnConflict() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-
-        StepVerifier.create(service.update(1L,request("updated"),20L))
-                .expectError(ConflictException.class)
-                .verify();
-    }
-
-    @Test
-    void updateStatus_shouldActivateDraftDefinition() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.DRAFT)));
-        mockActiveReferences();
-        when(triggerDefinitionRepository.save(any(TriggerDefinition.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-
-        StepVerifier.create(service.updateStatus(1L,"ACTIVE",20L))
-                .assertNext(result->assertThat(result.getStatus())
-                        .isEqualTo(TriggerDefinitionStatus.ACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
-    void updateStatus_shouldDeactivateActiveDefinition() {
-        when(triggerDefinitionRepository.findById(1L))
-                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
-        when(triggerDefinitionRepository.save(any(TriggerDefinition.class)))
-                .thenAnswer(invocation->Mono.just(invocation.getArgument(0)));
-        mockResponseReferences();
-
-        StepVerifier.create(service.updateStatus(1L,"INACTIVE",20L))
-                .assertNext(result->assertThat(result.getStatus())
-                        .isEqualTo(TriggerDefinitionStatus.INACTIVE))
-                .verifyComplete();
-    }
-
-    @Test
-    void updateStatus_whenDraftRequested_shouldReturnValidationError() {
-        StepVerifier.create(service.updateStatus(1L,"DRAFT",20L))
+    void getById_whenIdInvalid_shouldReturnValidationError() {
+        StepVerifier.create(Mono.defer(()->service.getById(-1L)))
                 .expectError(ValidationException.class)
                 .verify();
     }
 
-    private void mockActiveReferences() {
-        when(perilRepository.findById(1L)).thenReturn(Mono.just(peril(PerilStatus.ACTIVE)));
-        when(locationZoneRepository.findById(1L))
-                .thenReturn(Mono.just(zone(LocationZoneStatus.ACTIVE)));
+    @Test
+    void getById_whenReferencesMissing_shouldUseUnavailablePlaceholders() {
+        when(triggerDefinitionRepository.findById(1L))
+                .thenReturn(Mono.just(definition(1L,TriggerDefinitionStatus.ACTIVE)));
+        when(perilRepository.findById(1L)).thenReturn(Mono.empty());
+        when(locationZoneRepository.findById(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.getById(1L))
+                .assertNext(result->{
+                    assertThat(result.getPerilCode()).isEqualTo("UNAVAILABLE");
+                    assertThat(result.getZoneName()).isEqualTo("Unavailable");
+                    assertThat(result.getThresholdValue()).isEqualByComparingTo("100.00");
+                })
+                .verifyComplete();
     }
 
     private void mockResponseReferences() {
@@ -279,16 +113,5 @@ class TriggerDefinitionServiceTest {
                 .effectiveFrom(LocalDate.now().minusDays(1))
                 .effectiveTo(LocalDate.now().plusDays(30)).createdBy(1L)
                 .createdAt(now).updatedBy(1L).updatedAt(now).build();
-    }
-
-    private TriggerDefinitionRequest request(String code) {
-        return TriggerDefinitionRequest.builder().definitionCode(code)
-                .definitionName(" Definition ").description(" Description ")
-                .perilId(1L).locationZoneId(1L).productId(1L)
-                .measurementType(" rainfall ").measurementUnit(" mm ")
-                .aggregationType(" sum ").comparisonOperator(" greater_than ")
-                .thresholdValue(new BigDecimal("100.00")).observationWindowHours(24)
-                .minimumObservationCount(1).effectiveFrom(LocalDate.now())
-                .effectiveTo(LocalDate.now().plusDays(30)).build();
     }
 }

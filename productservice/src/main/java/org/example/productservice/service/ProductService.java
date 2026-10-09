@@ -3,7 +3,6 @@ package org.example.productservice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.productservice.client.TriggerServiceClient;
-import org.example.productservice.client.ClaimsServiceClient;
 import org.example.productservice.client.FinancialServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.ConflictException;
@@ -34,7 +33,6 @@ public class ProductService{
     private final CoverageRepository coverageRepository;
     private final NotificationService notificationService;
     private final TriggerServiceClient triggerServiceClient;
-    private final ClaimsServiceClient claimsServiceClient;
     private final FinancialServiceClient financialServiceClient;
     private final PolicyRepository policyRepository;
         private final PolicyTriggerSnapshotRepository snapshotRepository;
@@ -463,71 +461,6 @@ public class ProductService{
                                     .message("Threshold updated and trigger definitions synchronized. Existing policies retain their captured trigger snapshot and are unaffected.")
                                     .build());
                 });
-    }
-
-    private Mono<Long> fetchAndCreateClaimsForEligiblePolicies(Long productId){
-        return policyRepository.findAllByProductIdAndStatus(productId,"ACTIVE")
-                .flatMap(policy->
-                        triggerServiceClient.getPolicyEligibility(policy.getId())
-                                .flatMap(eligibility->{
-                                    if(eligibility==null||
-                                            !eligibility.isEligible()||
-                                            eligibility.getTriggerEventId()==null){
-                                        return Mono.just(0L);
-                                    }
-
-                                    InternalClaimRequest claimReq=
-                                            InternalClaimRequest.builder()
-                                                    .policyId(policy.getId())
-                                                    .incidentType("PARAMETRIC_EVENT")
-                                                    .incidentDate(
-                                                            java.time.LocalDate.now())
-                                                    .incidentLocation("AUTO")
-                                                    .description("Automatic claim created from a verified trigger event")
-                                                    .claimedAmount(eligibility.getAggregatedValue()!=null
-                                                            ?eligibility.getAggregatedValue()
-                                                            :java.math.BigDecimal.ZERO)
-                                                    .triggerEventId(
-                                                            eligibility.getTriggerEventId())
-                                                    .claimSource("AUTO_TRIGGERED")
-                                                    .build();
-
-                                    return claimsServiceClient.createInternalClaim(claimReq)
-                                            .thenReturn(1L);
-                                })
-                                .onErrorResume(error->{
-                                    log.warn("Eligibility or claim creation failed for policy {}: {}",
-                                            policy.getId(),error.getMessage());
-                                    return Mono.just(0L);
-                                }))
-                .reduce(0L,Long::sum);
-    }
-
-    public Mono<VerifiedEventProcessingResponse> processVerifiedEvent(
-            VerifiedEventRequest request){
-        log.info("Process verified event [product]");
-        if(request==null||
-                request.getProductId()==null||
-                request.getEventId()==null){
-            return Mono.error(new ValidationException(
-                    "productId and eventId are required"
-            ));
-        }
-
-        return productRepository.findById(request.getProductId())
-                .switchIfEmpty(Mono.error(new NotFoundException(
-                        "Product not found for verified trigger event"
-                )))
-                .flatMap(product->fetchAndCreateClaimsForEligiblePolicies(
-                                product.getId())
-                        .map(created->VerifiedEventProcessingResponse.builder()
-                                .productId(product.getId())
-                                .eventId(request.getEventId())
-                                .claimsCreated(created)
-                                .message(created>0
-                                        ?created+" automatic claim(s) created for eligible policies"
-                                        :"No eligible policies matched the verified event")
-                                .build()));
     }
 
     public Flux<MeasurementStatusResponse> getMeasurementStatus(){

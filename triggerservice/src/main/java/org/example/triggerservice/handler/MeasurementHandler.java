@@ -24,12 +24,6 @@ public class MeasurementHandler{
             "ROLE_CUSTOMER"
     );
 
-    private static final Set<String> VIEW_ROLES=Set.of(
-            "ROLE_ADMIN",
-            "ROLE_UNDERWRITER",
-            "ROLE_CLAIMS_OFFICER"
-    );
-
     private final MeasurementService measurementService;
     private final RequestValidationUtil validationUtil;
     private final int manualHoldMinutes;
@@ -69,24 +63,6 @@ public class MeasurementHandler{
                 .flatMap(result->ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(result));
-    }
-
-    public Mono<ServerResponse> getMeasurementTypes(ServerRequest request){
-        return requireAnyRole(VIEW_ROLES)
-                .thenMany(measurementService.getMeasurementTypes())
-                .collectList()
-                .flatMap(types->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(types));
-    }
-
-    public Mono<ServerResponse> getCurrentMeasurements(ServerRequest request){
-        return requireAnyRole(VIEW_ROLES)
-                .thenMany(measurementService.getCurrentMeasurements())
-                .collectList()
-                .flatMap(measurements->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(measurements));
     }
 
     public Mono<ServerResponse> getCurrentMeasurementSnapshots(ServerRequest request){

@@ -19,31 +19,10 @@ public class TriggerEventRouter{
                 .path("/api/triggers/events",builder->builder
                         .GET("",accept(MediaType.APPLICATION_JSON),
                                 handler::getAll)
-                        .GET("/status/{status}",
-                                accept(MediaType.APPLICATION_JSON),
-                                handler::getByStatus)
-                        .GET("/definition/{definitionId}",
-                                accept(MediaType.APPLICATION_JSON),
-                                handler::getByDefinitionId)
-                        .GET("/product/{productId}",
-                                accept(MediaType.APPLICATION_JSON),
-                                handler::getByProductId)
-                        .GET("/zone/{zoneId}",
-                                accept(MediaType.APPLICATION_JSON),
-                                handler::getByZoneId)
-                        .GET("/{eventId}",
-                                accept(MediaType.APPLICATION_JSON),
-                                handler::getById)
-                        .PUT("/{eventId}/start-validation",
-                                handler::startValidation)
-                        .PUT("/{eventId}/verify",
-                                handler::verify)
-                        .PUT("/{eventId}/reject",
-                                handler::reject)
-                        .PUT("/{eventId}/process",
-                                handler::process))
-                .PUT(
-                        "/internal/triggers/events/{eventId}/processed",
+                        .GET("/{eventId}",accept(MediaType.APPLICATION_JSON),
+                                handler::getById))
+                // Financial service marks an event processed once its payouts are done.
+                .PUT("/internal/triggers/events/{eventId}/processed",
                         handler::markProcessed)
                 .build();
     }

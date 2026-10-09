@@ -28,7 +28,6 @@ import java.util.Locale;
 public class LocationZoneService{
     private final LocationZoneRepository locationZoneRepository;
     private final ProductTriggerClient productTriggerClient;
-    private final NotificationService notificationService;
 
     public Flux<LocationZoneResponse> getAll(String state){
         log.debug("Get all [location zone]: state={}",state);

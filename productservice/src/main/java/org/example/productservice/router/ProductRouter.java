@@ -35,9 +35,6 @@ public class ProductRouter{
                 )
                 .GET("/internal/products",handler::getInternalProducts)
                 .GET("/internal/products/{productId}",handler::getInternalProduct)
-                .POST("/internal/products/verified-event",
-                        RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        handler::processVerifiedEvent)
                 .build();
     }
 

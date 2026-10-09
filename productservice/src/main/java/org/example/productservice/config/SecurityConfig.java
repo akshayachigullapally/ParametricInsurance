@@ -47,10 +47,6 @@ public class SecurityConfig{
                                 "/internal/products/**"
                         ).permitAll()
 
-                        .pathMatchers(HttpMethod.POST,
-                                "/internal/products/verified-event"
-                        ).permitAll()
-
                         .pathMatchers(HttpMethod.GET,
                                 "/api/products",
                                 "/api/products/*",

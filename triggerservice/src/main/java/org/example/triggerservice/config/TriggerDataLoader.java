@@ -237,7 +237,7 @@ loadPeril(
                                         .thresholdValue(new BigDecimal("150.00"))
                                         .observationWindowHours(24)
                                         .minimumObservationCount(1)
-                                        .status(TriggerDefinitionStatus.DRAFT)
+                                        .status(TriggerDefinitionStatus.ACTIVE)
                                         .effectiveFrom(LocalDate.now())
                                         .effectiveTo(LocalDate.now().plusYears(1))
                                         .createdBy(SYSTEM_USER_ID)

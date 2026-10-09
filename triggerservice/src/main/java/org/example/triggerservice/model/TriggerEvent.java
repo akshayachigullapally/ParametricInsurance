@@ -25,9 +25,6 @@ public class TriggerEvent{
     @Column("trigger_definition_id")
     private Long triggerDefinitionId;
 
-    @Column("trigger_evaluation_id")
-    private Long triggerEvaluationId;
-
     @Column("peril_id")
     private Long perilId;
 

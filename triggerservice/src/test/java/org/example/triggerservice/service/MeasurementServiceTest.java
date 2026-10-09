@@ -56,7 +56,6 @@ class MeasurementServiceTest{
     @Mock private ClaimsServiceClient claimsServiceClient;
     @Mock private IdempotencyService idempotencyService;
     @Mock private TriggerEventRepository triggerEventRepository;
-    @Mock private NotificationService notificationService;
     @Mock private TriggerDefinitionRepository triggerDefinitionRepository;
     @Mock private PerilRepository perilRepository;
 

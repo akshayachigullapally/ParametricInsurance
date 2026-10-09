@@ -22,7 +22,6 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class PerilService{
     private final PerilRepository perilRepository;
-    private final NotificationService notificationService;
 
     public Flux<PerilResponse> getAll(){
         log.debug("Get all [peril]");

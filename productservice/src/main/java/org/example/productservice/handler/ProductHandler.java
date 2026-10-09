@@ -9,7 +9,6 @@ import org.example.productservice.dto.ProductRequest;
 import org.example.productservice.dto.ProductResponse;
 import org.example.productservice.dto.ProductThresholdUpdateRequest;
 import org.example.productservice.dto.UpdateProductStatusRequest;
-import org.example.productservice.dto.VerifiedEventRequest;
 import org.example.productservice.exception.ValidationException;
 import org.example.productservice.service.ProductService;
 import org.example.productservice.util.SecurityUtil;
@@ -193,17 +192,5 @@ public class ProductHandler{
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(productService.getPublicMeasurementStatus(),
                         MeasurementStatusResponse.class);
-    }
-
-    public Mono<ServerResponse> processVerifiedEvent(ServerRequest request){
-        return request.bodyToMono(VerifiedEventRequest.class)
-                .switchIfEmpty(Mono.error(new org.example.productservice.exception.ValidationException(
-                        "Request body is required"
-                )))
-                .flatMap(this::validate)
-                .flatMap(productService::processVerifiedEvent)
-                .flatMap(response->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
     }
 }

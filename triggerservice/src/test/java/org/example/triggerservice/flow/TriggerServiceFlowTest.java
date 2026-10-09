@@ -1,12 +1,13 @@
 package org.example.triggerservice.flow;
 
 import org.example.triggerservice.client.ClaimsServiceClient;
-import org.example.triggerservice.client.InternalNotificationClient;
 import org.example.triggerservice.client.ProductTriggerClient;
 import org.example.triggerservice.dto.ClaimCreationResponse;
-import org.example.triggerservice.dto.EligiblePolicyResponse;
+import org.example.triggerservice.dto.ActivePolicyForTriggerResponse;
 import org.example.triggerservice.dto.InternalProductConfig;
-import org.example.triggerservice.service.NotificationServiceClient;
+import org.example.triggerservice.model.TriggerDefinition;
+import org.example.triggerservice.model.TriggerDefinitionStatus;
+import org.example.triggerservice.repository.TriggerDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,28 +52,20 @@ class TriggerServiceFlowTest{
     private ProductTriggerClient productClient;
     @MockitoBean
     private ClaimsServiceClient claimsClient;
-    @MockitoBean
-    private InternalNotificationClient internalNotificationClient;
-    @MockitoBean
-    private NotificationServiceClient notificationClient;
+    @Autowired
+    private TriggerDefinitionRepository definitions;
 
     private WebTestClient admin;
 
     @BeforeEach
     void setUp() throws InterruptedException{
         admin=client("ROLE_ADMIN");
-        when(notificationClient.sendNotification(any())).thenReturn(Mono.empty());
-        when(internalNotificationClient.createInternalNotification(any())).thenReturn(Mono.empty());
-        when(productClient.notifyVerifiedTriggerEvent(any(),any())).thenReturn(Mono.empty());
         when(productClient.hasActivePoliciesForZone(anyLong())).thenReturn(Mono.just(false));
         when(productClient.getProduct(anyLong())).thenAnswer(call->Mono.just(InternalProductConfig.builder()
                 .productId(call.getArgument(0)).productCode("PRODUCT-"+call.getArgument(0)).status("ACTIVE")
                 .measurementType("TEMPERATURE").measurementUnit("CELSIUS").thresholdValue(new BigDecimal("45"))
                 .comparisonOperator("GREATER_THAN_OR_EQUAL").observationWindowHours(24).build()));
         when(productClient.getActivePolicies(any(),any())).thenReturn(Flux.empty());
-        when(productClient.getEligiblePoliciesForEvent(any(),any(),any(),any(),any())).thenReturn(Flux.just(
-                EligiblePolicyResponse.builder().policyId(11L).policyNumber("POL-11").customerId(3L).productId(1L)
-                        .sumInsured(new BigDecimal("50000")).status("ACTIVE").premiumPaid(true).build()));
         when(claimsClient.createClaimsFromTriggerEvent(any())).thenReturn(Mono.just(
                 ClaimCreationResponse.builder().claimsCreated(1).claimsFailed(0).results(List.of()).build()));
         waitForSeedData();
@@ -90,7 +83,7 @@ class TriggerServiceFlowTest{
     }
 
     private void waitForSeedData() throws InterruptedException{
-        for(int i=0;i<100&&list(HttpMethod.GET,"/api/triggers/definitions",null).size()<4;i++){
+        for(int i=0;i<100&&(definition("HYD_RAIN_150MM_24H")==null||definitions.count().block()<4);i++){
             Thread.sleep(100);
         }
     }
@@ -127,9 +120,13 @@ class TriggerServiceFlowTest{
                 .filter(z->code.equals(z.get("zoneCode"))).findFirst().orElseThrow();
     }
 
-    private Map<String,Object> definition(String code){
-        return list(HttpMethod.GET,"/api/triggers/definitions",null).stream()
-                .filter(d->code.equals(d.get("definitionCode"))).findFirst().orElseThrow();
+    private TriggerDefinition definition(String code){
+        return definitions.findByDefinitionCodeIgnoreCase(code).block();
+    }
+
+    private List<TriggerDefinition> productDefinitions(long productId){
+        return definitions.findAllByProductIdAndStatusNot(productId,TriggerDefinitionStatus.ARCHIVED)
+                .collectList().block();
     }
 
     private static Map<String,Object> sync(long productId,String status,BigDecimal threshold){
@@ -160,15 +157,10 @@ class TriggerServiceFlowTest{
         assertThat(list(HttpMethod.GET,"/api/triggers/zones/active",null)).isNotEmpty();
         assertThat(list(HttpMethod.GET,"/internal/triggers/zones/active",null)).isNotEmpty();
         assertThat(map(HttpMethod.GET,"/internal/triggers/zones/"+zoneId,null)).containsEntry("zoneCode","HYDERABAD_CENTRAL");
-        assertThat(list(HttpMethod.GET,"/api/triggers/measurements/types",null)).extracting(t->t.get("measurementType"))
-                .contains("RAINFALL","TEMPERATURE");
-        Map<String,Object> rain=definition("P1_NAGPUR_CENTRAL_RAINFALL");
-        assertThat(map(HttpMethod.GET,"/api/triggers/definitions/"+rain.get("id"),null)).containsEntry("productId",1);
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/active",null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/zone/"+zoneId,null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/peril/"+rain.get("perilId"),null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/product/2",null))
-                .allSatisfy(d->assertThat(d.get("measurementType")).isEqualTo("RIVER_LEVEL"));
+        TriggerDefinition rain=definition("HYD_RAIN_150MM_24H");
+        assertThat(map(HttpMethod.GET,"/api/triggers/definitions/"+rain.getId(),null))
+                .containsEntry("productId",1).containsEntry("perilCode","EXCESS_RAINFALL");
+        assertThat(productDefinitions(2)).allSatisfy(d->assertThat(d.getMeasurementType().name()).isEqualTo("RIVER_LEVEL"));
     }
 
     @Test
@@ -192,33 +184,8 @@ class TriggerServiceFlowTest{
         assertThat(map(HttpMethod.PUT,"/api/triggers/zones/"+zoneId+"/alert",Map.of("active",false))).containsEntry("weatherAlert",false);
         map(HttpMethod.PUT,"/api/triggers/zones/"+zoneId+"/exposure-cap",Map.of("maxExposure",5000000));
 
-        Map<String,Object> definitionBody=new LinkedHashMap<>();
-        definitionBody.put("definitionCode","TEST_HAIL_DEF");
-        definitionBody.put("definitionName","Test hail trigger");
-        definitionBody.put("description","Hail over 30 mm");
-        definitionBody.put("perilId",perilId);
-        definitionBody.put("locationZoneId",zoneId);
-        definitionBody.put("productId",900);
-        definitionBody.put("measurementType","RAINFALL");
-        definitionBody.put("measurementUnit","MM");
-        definitionBody.put("aggregationType","SUM");
-        definitionBody.put("comparisonOperator","GREATER_THAN_OR_EQUAL");
-        definitionBody.put("thresholdValue",30);
-        definitionBody.put("observationWindowHours",6);
-        definitionBody.put("minimumObservationCount",1);
-        definitionBody.put("effectiveFrom",LocalDate.now().toString());
-        long definitionId=id(map(HttpMethod.POST,"/api/triggers/definitions",definitionBody),"id");
-        definitionBody.put("thresholdValue",35);
-        assertThat(((Number)map(HttpMethod.PUT,"/api/triggers/definitions/"+definitionId,definitionBody).get("thresholdValue")).intValue()).isEqualTo(35);
-        assertThat(map(HttpMethod.PUT,"/api/triggers/definitions/"+definitionId+"/status",Map.of("status","ACTIVE"))).containsEntry("status","ACTIVE");
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/product/900",null)).hasSize(1);
-
-        send(HttpMethod.DELETE,"/api/triggers/definitions/"+definitionId,null).expectStatus().isEqualTo(HttpStatus.CONFLICT);
-        assertThat(map(HttpMethod.PUT,"/api/triggers/definitions/"+definitionId+"/status",Map.of("status","INACTIVE"))).containsEntry("status","INACTIVE");
-        send(HttpMethod.DELETE,"/api/triggers/definitions/"+definitionId,null).expectStatus().is2xxSuccessful();
         send(HttpMethod.DELETE,"/api/triggers/zones/"+zoneId,null).expectStatus().is2xxSuccessful();
         send(HttpMethod.DELETE,"/api/triggers/perils/"+perilId,null).expectStatus().is2xxSuccessful();
-        send(HttpMethod.GET,"/api/triggers/definitions/"+definitionId,null).expectStatus().isNotFound();
 
         // Archived items are listed separately and can be restored (they come back INACTIVE).
         assertThat(list(HttpMethod.GET,"/api/triggers/perils",null)).noneMatch(p->p.get("id").equals((int)perilId));
@@ -251,16 +218,16 @@ class TriggerServiceFlowTest{
         int zones=list(HttpMethod.GET,"/internal/triggers/zones/active",null).size();
 
         map(HttpMethod.PUT,"/internal/triggers/products/7/definition",sync(7,"ACTIVE",new BigDecimal("45")));
-        List<Map<String,Object>> created=list(HttpMethod.GET,"/api/triggers/definitions/product/7",null);
-        assertThat(created).hasSize(zones).allSatisfy(d->assertThat(d.get("measurementType")).isEqualTo("TEMPERATURE"));
+        assertThat(productDefinitions(7)).hasSize(zones)
+                .allSatisfy(d->assertThat(d.getMeasurementType().name()).isEqualTo("TEMPERATURE"));
 
         map(HttpMethod.PUT,"/internal/triggers/products/7/definition",sync(7,"ACTIVE",new BigDecimal("47")));
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/product/7",null))
-                .hasSize(zones).allSatisfy(d->assertThat(((Number)d.get("thresholdValue")).intValue()).isEqualTo(47));
+        assertThat(productDefinitions(7))
+                .hasSize(zones).allSatisfy(d->assertThat(d.getThresholdValue().intValue()).isEqualTo(47));
 
         map(HttpMethod.PUT,"/internal/triggers/products/7/definition",sync(7,"INACTIVE",new BigDecimal("47")));
-        assertThat(list(HttpMethod.GET,"/api/triggers/definitions/product/7",null))
-                .allSatisfy(d->assertThat(d.get("status")).isNotEqualTo("ACTIVE"));
+        assertThat(productDefinitions(7))
+                .allSatisfy(d->assertThat(d.getStatus()).isNotEqualTo(TriggerDefinitionStatus.ACTIVE));
 
         Map<String,Object> bad=sync(7,"ACTIVE",new BigDecimal("47"));
         bad.put("aggregationType","MEDIAN");
@@ -276,8 +243,6 @@ class TriggerServiceFlowTest{
         assertThat(((Number)result.get("value")).intValue()).isEqualTo(48);
         assertThat(((Number)result.get("zoneCount")).intValue()).isPositive();
 
-        assertThat(list(HttpMethod.GET,"/api/triggers/measurements/current",null))
-                .anySatisfy(m->assertThat(m.get("measurementType")).isEqualTo("TEMPERATURE"));
         assertThat(list(HttpMethod.GET,"/internal/triggers/measurements/current",null)).isNotEmpty();
         long zoneId=id(zone("SURAT_CENTRAL"),"id");
         map(HttpMethod.PUT,"/api/triggers/current-measurements",
@@ -288,111 +253,35 @@ class TriggerServiceFlowTest{
     }
 
     @Test
-    void simulatedEventsGoThroughReviewAndClaims(){
-        List<Map<String,Object>> simulated=list(HttpMethod.POST,"/api/triggers/demo/simulate",Map.of("productId",1));
-        assertThat(simulated).isNotEmpty();
+    void currentMeasurementCreatesVerifiedEventClaimsAndIsMarkedProcessed(){
+        long zoneId=id(zone("HYDERABAD_CENTRAL"),"id");
+        ActivePolicyForTriggerResponse.TriggerSnapshot snapshot=new ActivePolicyForTriggerResponse.TriggerSnapshot();
+        snapshot.setThresholdValue(new BigDecimal("45"));
+        snapshot.setComparisonOperator("GREATER_THAN_OR_EQUAL");
+        ActivePolicyForTriggerResponse paid=new ActivePolicyForTriggerResponse();
+        paid.setPolicyId(11L);
+        paid.setPolicyNumber("POL-11");
+        paid.setCustomerId(3L);
+        paid.setSumInsured(new BigDecimal("50000"));
+        paid.setPremiumPaid(true);
+        paid.setTriggerSnapshot(snapshot);
+        when(productClient.getActivePolicies(9L,zoneId)).thenReturn(Flux.just(paid));
 
-        List<Map<String,Object>> events=list(HttpMethod.GET,"/api/triggers/events/product/1",null);
-        assertThat(events).hasSizeGreaterThanOrEqualTo(2);
-        Map<String,Object> first=events.get(0);
-        long eventId=id(first,"id");
-        assertThat(map(HttpMethod.GET,"/api/triggers/events/"+eventId,null)).containsEntry("id",(int)eventId);
-        assertThat(list(HttpMethod.GET,"/api/triggers/events/status/"+first.get("status"),null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/events/definition/"+first.get("triggerDefinitionId"),null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/events/zone/"+first.get("locationZoneId"),null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/events",null)).isNotEmpty();
-
-        Map<String,Object> notes=Map.of("reviewNotes","Checked against the rain gauge");
-        long otherId=id(events.get(1),"id");
-        send(HttpMethod.PUT,"/api/triggers/events/"+eventId+"/start-validation",null);
-        send(HttpMethod.PUT,"/api/triggers/events/"+eventId+"/verify",notes);
-        send(HttpMethod.PUT,"/api/triggers/events/"+eventId+"/process",null);
-        send(HttpMethod.PUT,"/internal/triggers/events/"+eventId+"/processed",null);
-        send(HttpMethod.PUT,"/api/triggers/events/"+otherId+"/start-validation",null);
-        send(HttpMethod.PUT,"/api/triggers/events/"+otherId+"/reject",notes);
-
-        assertThat(map(HttpMethod.GET,"/api/triggers/events/"+otherId,null).get("status")).isEqualTo("REJECTED");
-        assertThat(map(HttpMethod.GET,"/api/triggers/events/"+eventId,null).get("status")).isNotEqualTo("REJECTED");
-    }
-
-    @Test
-    void demoObservationRunsTheWholePipeline(){
-        Map<String,Object> definition=definition("P2_KOCHI_CENTRAL_RIVER_LEVEL");
-        Map<String,Object> body=new LinkedHashMap<>();
-        body.put("productId",2);
-        body.put("triggerDefinitionId",definition.get("id"));
-        body.put("locationZoneId",definition.get("locationZoneId"));
-        body.put("measurementType","RIVER_LEVEL");
-        body.put("measurementUnit","METER");
-        body.put("observedValue",2.5);
-        body.put("observedAt",LocalDateTime.now().minusMinutes(5).toString());
-        body.put("sourceReference","demo-gauge-1");
-        body.put("validateImmediately",true);
-        body.put("evaluateImmediately",true);
-        body.put("autoVerifyMatchedEvent",true);
-        body.put("createAutomaticClaims",true);
-
-        Map<String,Object> result=map(HttpMethod.POST,"/api/triggers/demo/observations",body);
-        assertThat(result.toString()).contains("NOT_MATCHED");
-        assertThat(list(HttpMethod.GET,"/api/triggers/events/definition/"+definition.get("id"),null)).isEmpty();
-
-        body.put("measurementUnit","MM");
-        send(HttpMethod.POST,"/api/triggers/demo/observations",body).expectStatus().isBadRequest();
-        body.put("measurementUnit","METER");
-        body.put("productId",1);
-        send(HttpMethod.POST,"/api/triggers/demo/observations",body).expectStatus().isBadRequest();
-
-        // Above the 5 m threshold: one event is created, verified and claimed.
-        body.put("productId",2);
-        body.put("observedValue",6.5);
-        body.put("sourceReference","demo-gauge-2");
-        body.put("observedAt",LocalDateTime.now().minusMinutes(1).toString());
-        Map<String,Object> matched=map(HttpMethod.POST,"/api/triggers/demo/observations",body);
-        assertThat(matched.toString()).contains("MATCHED").doesNotContain("NOT_MATCHED");
-        assertThat(list(HttpMethod.GET,"/api/triggers/events/definition/"+definition.get("id"),null)).hasSize(1);
+        Map<String,Object> body=Map.of("productId",9,"locationZoneId",zoneId,"currentValue",47,"idempotencyKey","flow-claim-1");
+        Map<String,Object> result=map(HttpMethod.PUT,"/api/triggers/current-measurements",body);
+        assertThat(result).containsEntry("matched",true).containsEntry("triggerEventStatus","VERIFIED")
+                .containsEntry("claimsCreatedCount",1);
+        long eventId=id(result,"triggerEventId");
         verify(claimsClient,atLeastOnce()).createClaimsFromTriggerEvent(any());
-    }
 
-    @Test
-    void observationsAreRecordedValidatedAndRejected(){
-        long zoneId=id(zone("PUNE_CENTRAL"),"id");
-        Map<String,Object> reading=new LinkedHashMap<>(Map.of("locationZoneId",zoneId,"measurementType","RAINFALL",
-                "measurementUnit","MM","observedValue",12.5,"observedAt",LocalDateTime.now().minusMinutes(30).toString(),"source","MANUAL"));
-        long first=id(map(HttpMethod.POST,"/api/triggers/observations",reading),"id");
-        reading.put("observedValue",14);
-        long second=id(map(HttpMethod.POST,"/api/triggers/observations",reading),"id");
-        reading.put("observedValue",16);
-        map(HttpMethod.POST,"/api/triggers/observations",reading);
+        // The same request again returns the first event instead of creating another one.
+        assertThat(id(map(HttpMethod.PUT,"/api/triggers/current-measurements",body),"triggerEventId")).isEqualTo(eventId);
 
-        assertThat(map(HttpMethod.GET,"/api/triggers/observations/"+first,null)).containsEntry("locationZoneId",(int)zoneId);
-        assertThat(list(HttpMethod.GET,"/api/triggers/observations/zone/"+zoneId,null)).hasSizeGreaterThanOrEqualTo(3);
-        assertThat(list(HttpMethod.GET,"/api/triggers/observations/measurement/RAINFALL",null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/observations",null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/observations/validation/received",null)).hasSizeGreaterThanOrEqualTo(3);
-
-        assertThat(map(HttpMethod.PUT,"/api/triggers/observations/validation/"+first+"/validate",null)).containsEntry("status","VALIDATED");
-        assertThat(map(HttpMethod.PUT,"/api/triggers/observations/validation/"+second+"/reject",Map.of("reason","Gauge was blocked")))
-                .containsEntry("status","REJECTED");
-        assertThat(map(HttpMethod.POST,"/api/triggers/observations/validation/validate-all",null).get("message").toString())
-                .startsWith("Validated");
-
-        reading.put("source","WEATHER_API");
-        send(HttpMethod.POST,"/api/triggers/observations",reading).expectStatus().isBadRequest();
-    }
-
-    @Test
-    void definitionsCanBeEvaluatedAndMonitorRunsAreRecorded(){
-        Map<String,Object> definition=definition("P1_JAIPUR_CENTRAL_RAINFALL");
-        send(HttpMethod.POST,"/api/triggers/definitions/"+definition.get("id")+"/evaluate",
-                Map.of("evaluationEnd",LocalDateTime.now().toString())).expectStatus().is2xxSuccessful();
-        List<Map<String,Object>> evaluations=list(HttpMethod.GET,"/api/triggers/evaluations/definition/"+definition.get("id"),null);
-        assertThat(evaluations).isNotEmpty();
-        assertThat(map(HttpMethod.GET,"/api/triggers/evaluations/"+evaluations.get(0).get("id"),null)).isNotEmpty();
-        assertThat(list(HttpMethod.GET,"/api/triggers/evaluations",null)).isNotEmpty();
-
-        Map<String,Object> run=map(HttpMethod.POST,"/api/triggers/monitor-runs/scan",null);
-        assertThat(run).containsEntry("status","COMPLETED");
-        assertThat(map(HttpMethod.GET,"/api/triggers/monitor-runs/"+run.get("id"),null)).containsEntry("status","COMPLETED");
-        assertThat(list(HttpMethod.GET,"/api/triggers/monitor-runs",null)).isNotEmpty();
+        assertThat(list(HttpMethod.GET,"/api/triggers/events",null)).anyMatch(e->((Number)e.get("id")).longValue()==eventId);
+        assertThat(map(HttpMethod.GET,"/api/triggers/events/"+eventId,null)).containsEntry("status","VERIFIED");
+        send(HttpMethod.PUT,"/internal/triggers/events/"+eventId+"/processed",null).expectStatus().isOk();
+        assertThat(map(HttpMethod.GET,"/api/triggers/events/"+eventId,null)).containsEntry("status","PROCESSED");
+        send(HttpMethod.PUT,"/internal/triggers/events/"+eventId+"/processed",null).expectStatus().isEqualTo(HttpStatus.CONFLICT);
+        send(HttpMethod.GET,"/api/triggers/events/999999",null).expectStatus().isNotFound();
     }
 }

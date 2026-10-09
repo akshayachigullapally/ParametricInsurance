@@ -19,10 +19,6 @@ public class MeasurementRouter{
     ){
         return route()
                 .path("/api/triggers/measurements",builder->builder
-                        .GET("/types",accept(MediaType.APPLICATION_JSON),
-                                handler::getMeasurementTypes)
-                        .GET("/current",accept(MediaType.APPLICATION_JSON),
-                                handler::getCurrentMeasurements)
                         .PUT("/current",contentType(MediaType.APPLICATION_JSON),
                                 handler::recordManualReading))
                 .PUT("/api/triggers/current-measurements",

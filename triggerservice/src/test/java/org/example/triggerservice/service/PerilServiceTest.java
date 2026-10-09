@@ -22,7 +22,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PerilServiceTest {
     @Mock private PerilRepository perilRepository;
-    @Mock private NotificationService notificationService;
     @InjectMocks private PerilService perilService;
 
     @Test

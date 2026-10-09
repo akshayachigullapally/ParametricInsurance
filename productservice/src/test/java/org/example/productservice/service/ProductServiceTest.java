@@ -1,6 +1,5 @@
 package org.example.productservice.service;
 
-import org.example.productservice.client.ClaimsServiceClient;
 import org.example.productservice.client.TriggerServiceClient;
 import org.example.productservice.dto.*;
 import org.example.productservice.exception.*;
@@ -26,7 +25,6 @@ class ProductServiceTest{
     @Mock private NotificationService notificationService;
     @Mock private TriggerServiceClient triggerServiceClient;
     @Mock private ProductThresholdHistoryRepository thresholdHistoryRepository;
-    @Mock private ClaimsServiceClient claimsServiceClient;
     @Mock private PolicyRepository policyRepository;
     @Mock private PolicyTriggerSnapshotRepository snapshotRepository;
     @InjectMocks private ProductService productService;

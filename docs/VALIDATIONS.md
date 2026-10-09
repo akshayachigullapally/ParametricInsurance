@@ -143,33 +143,12 @@ Rules that need stored data (ownership, limits, duplicates, status order) cannot
 | Peril | perilCode | required, max 50 |
 | | perilName | required, max 100 |
 | | description | required, max 500 |
-| Trigger definition | code ≤ 75, name ≤ 150, description ≤ 500 | all required |
-| | perilId, locationZoneId, productId | required, greater than 0 |
-| | measurement type / unit / aggregation / operator | required |
-| | thresholdValue | required, 0 or more |
-| | observationWindowHours | required, 1–720 |
-| | minimumObservationCount | required, greater than 0 |
-| | effectiveFrom | required; effectiveTo cannot be before it |
-| Definition status | status | DRAFT, ACTIVE, INACTIVE or ARCHIVED |
-| Observation | locationZoneId | required, greater than 0 |
-| | measurementType ≤ 50, measurementUnit ≤ 40 | required |
-| | observedValue | required, not below −273.15 |
-| | observedAt | required, not in the future |
-| | source | required, MOCK, MANUAL, WEATHER_API or SENSOR |
-| | sourceReference | optional, max 150 |
-| Reject an observation | reason | required, max 500 |
-| Trigger event verify / reject | reviewNotes | required, max 500 |
 | Trigger simulator | productId, locationZoneId | required, greater than 0 |
 | | currentValue | required, 0 to 100,000 |
 | | idempotencyKey | required, max 200 |
 | Update live value (header panel) | measurementType | required, max 50 |
 | | value | required, −273.15 to 100,000; not negative unless the measurement is TEMPERATURE; HUMIDITY and SOIL_MOISTURE at most 100 |
 | | productIds | at most 200 |
-| Demo observation | productId, triggerDefinitionId, locationZoneId | required, greater than 0 |
-| | measurementType, measurementUnit, observedValue | required |
-| | observedAt | required, not in the future |
-| Demo simulation | productId | required, greater than 0 |
-| Evaluate a definition | evaluationEnd | optional, not in the future |
 | Product sync (internal) | productId (> 0), productCode (≤ 50) | required |
 
 ### 1.8 Notification Service
@@ -212,7 +191,7 @@ These depend on stored data, so they live in the service code rather than on the
 | | One claim per policy per trigger event | — |
 | Payouts | Claim must be APPROVED with an amount > 0; one payout per claim; only FAILED payouts can be retried | "Payout already exists for claim" |
 | Measurements | Unit must suit the measurement (e.g. rainfall in mm) | — |
-| | Observations: humidity and soil moisture 0–100 %; temperature −100 to 100 °C; others not negative (the live-value request has the same rule on its DTO) | "A percentage cannot be more than 100", "Value cannot be negative" |
+| | Readings: humidity and soil moisture 0–100 %; temperature −100 to 100 °C; others not negative (the live-value request has the same rule on its DTO) | "A percentage cannot be more than 100", "Value cannot be negative" |
 | | Product and zone must be ACTIVE; the same idempotency key is never processed twice | — |
 | Pricing | A quote needs an active pricing rule for the product | "No active pricing rule found for product" |
 | Users | Status must be ACTIVE, INACTIVE or SUSPENDED | — |
