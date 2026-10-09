@@ -30,6 +30,29 @@ public class PerilService{
                 .map(this::toResponse);
     }
 
+    /** Archived perils, so an admin can restore one. */
+    public Flux<PerilResponse> getArchived(){
+        return perilRepository.findAllByStatusOrderByPerilNameAsc(PerilStatus.ARCHIVED)
+                .map(this::toResponse);
+    }
+
+    /** Brings an archived peril back as INACTIVE; the admin activates it when ready. */
+    public Mono<PerilResponse> restore(Long perilId,Long userId){
+        log.info("Restore [peril]: perilId={}, userId={}",perilId,userId);
+        return perilRepository.findById(perilId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Peril not found")))
+                .flatMap(peril->{
+                    if(peril.getStatus()!=PerilStatus.ARCHIVED){
+                        return Mono.error(new ConflictException("Peril is not archived"));
+                    }
+                    peril.setStatus(PerilStatus.INACTIVE);
+                    peril.setUpdatedBy(userId);
+                    peril.setUpdatedAt(LocalDateTime.now());
+                    return perilRepository.save(peril);
+                })
+                .map(this::toResponse);
+    }
+
     public Flux<PerilResponse> getActive(){
         log.debug("Get active [peril]");
         return perilRepository.findAllByStatusOrderByPerilNameAsc(PerilStatus.ACTIVE)

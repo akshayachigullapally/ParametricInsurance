@@ -46,6 +46,30 @@ public class LocationZoneService{
                 .map(this::toResponse);
     }
 
+    /** Archived zones, so an admin can restore one. */
+    public Flux<LocationZoneResponse> getArchived(){
+        return locationZoneRepository
+                .findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ARCHIVED)
+                .map(this::toResponse);
+    }
+
+    /** Brings an archived zone back as INACTIVE; the admin activates it when ready. */
+    public Mono<LocationZoneResponse> restore(Long zoneId,Long userId){
+        log.info("Restore [location zone]: zoneId={}, userId={}",zoneId,userId);
+        return locationZoneRepository.findById(zoneId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Location zone not found")))
+                .flatMap(zone->{
+                    if(zone.getStatus()!=LocationZoneStatus.ARCHIVED){
+                        return Mono.error(new ConflictException("Location zone is not archived"));
+                    }
+                    zone.setStatus(LocationZoneStatus.INACTIVE);
+                    zone.setUpdatedBy(userId);
+                    zone.setUpdatedAt(LocalDateTime.now());
+                    return locationZoneRepository.save(zone);
+                })
+                .map(this::toResponse);
+    }
+
     public Flux<LocationZoneResponse> getActive(){
         return locationZoneRepository
                 .findAllByStatusOrderByZoneNameAsc(LocationZoneStatus.ACTIVE)

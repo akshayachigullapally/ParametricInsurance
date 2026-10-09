@@ -100,6 +100,26 @@ public class LocationZoneHandler{
                         .bodyValue(response));
     }
 
+    public Mono<ServerResponse> getArchived(ServerRequest request){
+        return requireAdmin()
+                .thenMany(locationZoneService.getArchived())
+                .collectList()
+                .flatMap(zones->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(zones));
+    }
+
+    public Mono<ServerResponse> restore(ServerRequest request){
+        return requireAdmin()
+                .then(SecurityUtil.getUserId())
+                .switchIfEmpty(Mono.error(new ForbiddenException("Authenticated user ID is unavailable")))
+                .zipWith(parseId(request,"zoneId"))
+                .flatMap(tuple->locationZoneService.restore(tuple.getT2(),tuple.getT1()))
+                .flatMap(zone->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(zone));
+    }
+
     public Mono<ServerResponse> archive(ServerRequest request){
         return requireAdmin()
                 .then(SecurityUtil.getUserId())

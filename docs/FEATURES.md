@@ -723,7 +723,9 @@ These work in the backend but have no screen yet. They can be shown with an API 
 | Claim | Submitted → Under review → Approved → Settled (automatic) · Under review → Rejected · Submitted → Cancelled |
 | Payout | Created → Success (instantly) · Failed → retried → Success |
 | Trigger event | Verified on creation → Processed when the payout succeeds |
-| Zone | Active ↔ Inactive · Archived · weather alert on/off · cap set/removed |
+| Zone | Active ↔ Inactive · Archived → Restore → Inactive · weather alert on/off · cap set/removed |
+| Peril | Active ↔ Inactive · Archived → Restore → Inactive |
+| Pricing rule | Draft → Active ↔ Inactive · Inactive → Archived → Restore → Inactive |
 | User profile | Active ↔ Inactive ↔ Suspended (admin) · Inactive and Suspended cannot log in · a customer closing their account becomes Inactive |
 
 ---

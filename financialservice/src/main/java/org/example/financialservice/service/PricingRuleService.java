@@ -283,10 +283,12 @@ public class PricingRuleService{
             return Mono.just(rule);
         }
 
-        if(rule.getStatus()==PricingRuleStatus.ARCHIVED){
+        // An archived rule can only be restored, and it comes back INACTIVE.
+        if(rule.getStatus()==PricingRuleStatus.ARCHIVED&&
+                target!=PricingRuleStatus.INACTIVE){
             return Mono.error(
                     new ConflictException(
-                            "Archived pricing rule cannot change status"
+                            "Restore the archived pricing rule (to INACTIVE) before changing its status"
                     )
             );
         }

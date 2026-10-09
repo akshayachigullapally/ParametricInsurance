@@ -293,6 +293,26 @@ class PricingRuleServiceTest{
     }
 
     @Test
+    void archivedRuleCanBeRestoredAsInactive(){
+        PricingRule rule=rule(1L,1L,null,PricingRuleStatus.ARCHIVED);
+        when(repository.findById(1L)).thenReturn(Mono.just(rule));
+        saveReturnsArgument();
+
+        StepVerifier.create(TestAuth.admin(
+                service.updateStatus(
+                        1L,
+                        org.example.financialservice.dto
+                                .UpdatePricingRuleStatusRequest.builder()
+                                .status(PricingRuleStatus.INACTIVE)
+                                .build()
+                ),
+                1L
+        ))
+                .assertNext(response->assertThat(response.getStatus()).isEqualTo(PricingRuleStatus.INACTIVE))
+                .verifyComplete();
+    }
+
+    @Test
     void archivedRuleCannotBeEdited(){
         PricingRule rule=rule(1L,1L,null,PricingRuleStatus.ARCHIVED);
         when(productServiceClient.findProduct(anyLong()))

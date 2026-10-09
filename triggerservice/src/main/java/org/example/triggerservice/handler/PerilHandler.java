@@ -86,6 +86,26 @@ public class PerilHandler{
                         .bodyValue(response));
     }
 
+    public Mono<ServerResponse> getArchived(ServerRequest request){
+        return requireAdmin()
+                .thenMany(perilService.getArchived())
+                .collectList()
+                .flatMap(perils->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(perils));
+    }
+
+    public Mono<ServerResponse> restore(ServerRequest request){
+        return requireAdmin()
+                .then(SecurityUtil.getUserId())
+                .switchIfEmpty(Mono.error(new ForbiddenException("Authenticated user ID is unavailable")))
+                .zipWith(parseId(request,"perilId"))
+                .flatMap(tuple->perilService.restore(tuple.getT2(),tuple.getT1()))
+                .flatMap(peril->ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(peril));
+    }
+
     public Mono<ServerResponse> archive(ServerRequest request){
         return requireAdmin()
                 .then(SecurityUtil.getUserId())

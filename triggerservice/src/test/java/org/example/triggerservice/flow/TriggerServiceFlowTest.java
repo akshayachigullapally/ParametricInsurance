@@ -219,6 +219,17 @@ class TriggerServiceFlowTest{
         send(HttpMethod.DELETE,"/api/triggers/zones/"+zoneId,null).expectStatus().is2xxSuccessful();
         send(HttpMethod.DELETE,"/api/triggers/perils/"+perilId,null).expectStatus().is2xxSuccessful();
         send(HttpMethod.GET,"/api/triggers/definitions/"+definitionId,null).expectStatus().isNotFound();
+
+        // Archived items are listed separately and can be restored (they come back INACTIVE).
+        assertThat(list(HttpMethod.GET,"/api/triggers/perils",null)).noneMatch(p->p.get("id").equals((int)perilId));
+        assertThat(list(HttpMethod.GET,"/api/triggers/perils/archived",null)).anyMatch(p->p.get("id").equals((int)perilId));
+        assertThat(list(HttpMethod.GET,"/api/triggers/zones/archived",null)).anyMatch(z->z.get("id").equals((int)zoneId));
+        assertThat(map(HttpMethod.PUT,"/api/triggers/perils/"+perilId+"/restore",null)).containsEntry("status","INACTIVE");
+        assertThat(map(HttpMethod.PUT,"/api/triggers/zones/"+zoneId+"/restore",null)).containsEntry("status","INACTIVE");
+        assertThat(list(HttpMethod.GET,"/api/triggers/perils",null)).anyMatch(p->p.get("id").equals((int)perilId));
+        assertThat(list(HttpMethod.GET,"/api/triggers/zones",null)).anyMatch(z->z.get("id").equals((int)zoneId));
+        send(HttpMethod.PUT,"/api/triggers/perils/"+perilId+"/restore",null).expectStatus().isEqualTo(HttpStatus.CONFLICT);
+        send(HttpMethod.PUT,"/api/triggers/zones/"+zoneId+"/restore",null).expectStatus().isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test

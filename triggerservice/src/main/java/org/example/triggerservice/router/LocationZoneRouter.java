@@ -30,6 +30,11 @@ public class LocationZoneRouter{
                                 handler::getActive
                         )
                         .GET(
+                                "/archived",
+                                accept(MediaType.APPLICATION_JSON),
+                                handler::getArchived
+                        )
+                        .GET(
                                 "/{zoneId:[0-9]+}",
                                 accept(MediaType.APPLICATION_JSON),
                                 handler::getById
@@ -58,6 +63,10 @@ public class LocationZoneRouter{
                                 "/{zoneId:[0-9]+}/exposure-cap",
                                 contentType(MediaType.APPLICATION_JSON),
                                 handler::updateExposureCap
+                        )
+                        .PUT(
+                                "/{zoneId:[0-9]+}/restore",
+                                handler::restore
                         )
                         .DELETE(
                                 "/{zoneId:[0-9]+}",
