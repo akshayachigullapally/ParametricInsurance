@@ -19,7 +19,7 @@ import java.util.List;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GatewayAuthenticationFilter implements WebFilter{
 private final String internalKey;
-public GatewayAuthenticationFilter(@Value("${gateway.internal-key:cityshield-local-gateway-key}")String internalKey){this.internalKey=internalKey;}
+public GatewayAuthenticationFilter(@Value("${gateway.internal-key:climatesure-local-gateway-key}")String internalKey){this.internalKey=internalKey;}
 @Override public Mono<Void> filter(ServerWebExchange exchange,WebFilterChain chain){
 String path=exchange.getRequest().getPath().value();
 if(path.equals("/actuator")||path.startsWith("/actuator/"))return chain.filter(exchange);

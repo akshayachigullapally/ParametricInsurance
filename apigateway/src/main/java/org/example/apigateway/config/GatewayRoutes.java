@@ -17,9 +17,7 @@ public class GatewayRoutes{
                 .route("product-policy-service-route",r->r
                         .path(
                                 "/api/products/**",
-                                "/api/policies/**",
-                                "/internal/products/**",
-                                "/internal/policies/**"
+                                "/api/policies/**"
                         )
                         .uri("lb://PRODUCT-SERVICE"))
                 .route("claims-service-route",r->r

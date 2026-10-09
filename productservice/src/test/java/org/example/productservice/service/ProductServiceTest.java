@@ -628,22 +628,6 @@ class ProductServiceTest{
     }
 
     @Test
-    void getInternalProductByCode_whenFound_shouldMapTriggerFields(){
-        when(productRepository.findByProductCodeIgnoreCase("WEATHER-01"))
-                .thenReturn(Mono.just(product));
-
-        StepVerifier.create(productService.getInternalProductByCode(" WEATHER-01 "))
-                .assertNext(response->{
-                    assertThat(response.getProductCode()).isEqualTo("WEATHER-01");
-                    assertThat(response.getPerilCode()).isEqualTo("EXCESS_RAINFALL");
-                    assertThat(response.getMeasurementUnit()).isEqualTo("mm");
-                    assertThat(response.getThresholdValue())
-                            .isEqualByComparingTo(new BigDecimal("150.00"));
-                })
-                .verifyComplete();
-    }
-
-    @Test
     void getActiveProduct_whenTriggerComplete_shouldIncludeTriggerFields(){
         product.setStatus(ProductStatus.ACTIVE.name());
 

@@ -24,7 +24,7 @@ public class StaffDataLoader implements ApplicationRunner{
     public void run(ApplicationArguments args){
         List<UserCredential> staff=List.of(
                 createUser(
-                        "CityShield Admin",
+                        "ClimateSure Admin",
                         "admin@gmail.com",
                         "admin@123",
                         "ROLE_ADMIN"

@@ -16,7 +16,7 @@
     <artifactId>apigateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>apigateway</name>
-    <description>CityShield reactive API Gateway</description>
+    <description>ClimateSure reactive API Gateway</description>
 
     <properties>
         <java.version>17</java.version>

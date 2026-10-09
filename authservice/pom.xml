@@ -16,7 +16,7 @@
     <artifactId>authservice</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>authservice</name>
-    <description>CityShield reactive authentication service</description>
+    <description>ClimateSure reactive authentication service</description>
 
     <properties>
         <java.version>17</java.version>

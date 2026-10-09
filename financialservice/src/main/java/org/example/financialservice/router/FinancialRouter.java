@@ -140,10 +140,6 @@ public class FinancialRouter{
                         payoutHandler::createInternal
                 )
                 .GET(
-                        "/internal/financial/payouts/claim/{claimId}",
-                        payoutHandler::findByClaim
-                )
-                .GET(
                         "/api/financial/admin/metrics",
                         metricsHandler::metrics
                 )

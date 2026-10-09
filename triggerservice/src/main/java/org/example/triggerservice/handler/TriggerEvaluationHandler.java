@@ -2,7 +2,6 @@ package org.example.triggerservice.handler;
 
 import lombok.RequiredArgsConstructor;
 import org.example.triggerservice.dto.EvaluateTriggerRequest;
-import org.example.triggerservice.dto.ProductTriggerSyncRequest;
 import org.example.triggerservice.exception.ForbiddenException;
 import org.example.triggerservice.exception.ValidationException;
 import org.example.triggerservice.service.TriggerEvaluationService;
@@ -55,29 +54,6 @@ public class TriggerEvaluationHandler{
     }
 
     public Mono<ServerResponse> evaluate(ServerRequest request){
-        // support both definition-based evaluation and internal product-based override evaluation
-        String path=request.path();
-        if(path.contains("/internal/triggers/products/")){
-            // internal product evaluation: expect productId path variable and admin-provided payload
-            return parseId(request,"productId")
-                    .flatMap(productId->request
-                            .bodyToMono(ProductTriggerSyncRequest.class)
-                            .flatMap(body->{
-                                Long acceptedBy=body.getUpdatedBy();
-                                if(acceptedBy==null){
-                                    return Mono.error(new ValidationException(
-                                            "updatedBy is required for internal product evaluation"));
-                                }
-                                return triggerEvaluationService.evaluateProductOverride(
-                                        productId,
-                                        body,
-                                        acceptedBy);
-                            }))
-                    .flatMap(result->ServerResponse.status(201)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(result));
-        }
-
         return requireAdmin()
                 .then(requireUserId())
                 .zipWith(parseId(request,"definitionId"))

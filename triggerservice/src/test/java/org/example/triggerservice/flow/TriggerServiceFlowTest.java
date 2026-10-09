@@ -277,21 +277,6 @@ class TriggerServiceFlowTest{
     }
 
     @Test
-    void productOverrideEvaluationUsesTheGivenThresholdWithoutSavingIt(){
-        map(HttpMethod.PUT,"/internal/triggers/products/9/definition",sync(9,"ACTIVE",new BigDecimal("60")));
-        map(HttpMethod.PUT,"/api/triggers/measurements/current",Map.of("measurementType","TEMPERATURE","value",41,"productIds",List.of(9)));
-
-        Map<String,Object> override=sync(9,"ACTIVE",new BigDecimal("40"));
-        override.put("aggregationType","MAXIMUM");
-        Map<String,Object> evaluation=map(HttpMethod.POST,"/internal/triggers/products/9/evaluate",override);
-        assertThat(((Number)evaluation.get("thresholdValue")).intValue()).isEqualTo(40);
-        assertThat(evaluation).containsEntry("result","INSUFFICIENT_OBSERVATIONS").containsEntry("measurementType","TEMPERATURE");
-
-        override.put("updatedBy",null);
-        send(HttpMethod.POST,"/internal/triggers/products/9/evaluate",override).expectStatus().isBadRequest();
-    }
-
-    @Test
     void simulatedEventsGoThroughReviewAndClaims(){
         List<Map<String,Object>> simulated=list(HttpMethod.POST,"/api/triggers/demo/simulate",Map.of("productId",1));
         assertThat(simulated).isNotEmpty();

@@ -22,7 +22,7 @@ public class FinancialServiceClient{
     @org.springframework.beans.factory.annotation.Qualifier("financialServiceWebClient")
     private final WebClient financialServiceWebClient;
 
-    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
+    @Value("${gateway.internal-key:climatesure-local-gateway-key}")
     private String internalKey;
 
     public Mono<InternalQuoteResponse> validateQuote(

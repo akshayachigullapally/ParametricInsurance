@@ -17,7 +17,7 @@ class SecurityIntegrationTest{
     @Autowired
     private WebTestClient webClient;
 
-    private static final String KEY="cityshield-local-gateway-key";
+    private static final String KEY="climatesure-local-gateway-key";
 
     @Test
     void invalidGatewayKeyIsRejectedWithNoBasicChallenge(){

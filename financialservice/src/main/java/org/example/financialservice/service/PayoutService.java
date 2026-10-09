@@ -114,13 +114,6 @@ public class PayoutService{
                 .map(this::response);
     }
 
-    public Flux<PayoutResponse> findByClaim(Long claimId){
-        log.debug("Find by claim [payout]: claimId={}",claimId);
-        return payoutRepository
-                .findAllByClaimIdOrderByCreatedAtDesc(claimId)
-                .map(this::response);
-    }
-
     /**
      * Admin retry of a failed payout: the transfer is attempted again straight away.
      */

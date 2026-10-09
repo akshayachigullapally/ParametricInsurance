@@ -52,7 +52,7 @@ class FinancialRoutesIntegrationTest{
     private NotificationServiceClient notificationServiceClient;
 
     private static final String KEY=
-            "cityshield-local-gateway-key";
+            "climatesure-local-gateway-key";
 
     private static final String ADMIN=
             "X-Gateway-Key: "+KEY+"\r\n"+
@@ -686,15 +686,6 @@ class FinancialRoutesIntegrationTest{
         // Paid straight away, no admin step
         assertThat(payout.getStatus()).isEqualTo(PayoutStatus.SUCCESS);
         assertThat(payout.getExternalReference()).startsWith("AUTO-");
-
-        // Internal by claim
-        webClient.get()
-                .uri("/internal/financial/payouts/claim/10")
-                .header("X-Gateway-Key",KEY)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$[0].status").isEqualTo("SUCCESS");
 
         // Underwriter denied from payout creation
         underwriterHeaders(webClient.post()

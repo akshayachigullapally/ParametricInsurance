@@ -44,8 +44,6 @@ class PayoutHandlerTest{
                 .GET("/api/financial/payouts/me",handler::findMine)
                 .GET("/api/financial/payouts/{payoutId}",handler::findById)
                 .GET("/api/financial/payouts/admin/all",handler::findAll)
-                .GET("/internal/financial/payouts/claim/{claimId}",
-                        handler::findByClaim)
                 .PUT("/api/financial/payouts/{payoutId}/retry",handler::retry)
                 .build();
 

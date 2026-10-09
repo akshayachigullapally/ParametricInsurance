@@ -18,7 +18,7 @@ spring:
       fetch-registry: false
 
 gateway:
-  internal-key: cityshield-local-gateway-key
+  internal-key: climatesure-local-gateway-key
 
 management:
   endpoints:

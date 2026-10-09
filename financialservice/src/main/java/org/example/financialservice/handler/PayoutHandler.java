@@ -57,12 +57,6 @@ public class PayoutHandler{
                 .body(service.findAll(),Object.class);
     }
 
-    public Mono<ServerResponse> findByClaim(ServerRequest request){
-        return ServerResponse.ok()
-                .body(service.findByClaim(claimId(request)),
-                        Object.class);
-    }
-
     public Mono<ServerResponse> retry(ServerRequest request){
         return actionBody(request)
                 .flatMap(body->service.retry(
@@ -93,18 +87,6 @@ public class PayoutHandler{
         }catch(NumberFormatException exception){
             throw new ValidationException(
                     "Invalid payout ID"
-            );
-        }
-    }
-
-    private Long claimId(ServerRequest request){
-        try{
-            return Long.valueOf(
-                    request.pathVariable("claimId")
-            );
-        }catch(NumberFormatException exception){
-            throw new ValidationException(
-                    "Invalid claim ID"
             );
         }
     }

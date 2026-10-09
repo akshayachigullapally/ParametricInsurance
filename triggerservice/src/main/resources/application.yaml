@@ -33,7 +33,7 @@ eureka:
     hostname: localhost
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
 
 demo:
   feed:
@@ -59,7 +59,7 @@ management:
 
 info:
   application:
-    name: CityShield Trigger Service
+    name: ClimateSure Trigger Service
     description: Parametric trigger definition, observation and event evaluation service
     version: 1.0.0
 

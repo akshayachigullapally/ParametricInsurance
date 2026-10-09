@@ -29,7 +29,7 @@ eureka:
     hostname: localhost
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
   require-gateway-key: ${GATEWAY_REQUIRE_KEY:false}
 
 
@@ -47,7 +47,7 @@ management:
 
 info:
   application:
-    name: CityShield Product Service
+    name: ClimateSure Product Service
     description: Insurance product and policy management service
     version: 1.0.0
 

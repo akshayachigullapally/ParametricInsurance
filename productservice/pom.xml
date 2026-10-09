@@ -16,7 +16,7 @@
     <artifactId>productservice</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>productservice</name>
-    <description>CityShield reactive insurance product service</description>
+    <description>ClimateSure reactive insurance product service</description>
 
     <properties>
         <java.version>17</java.version>

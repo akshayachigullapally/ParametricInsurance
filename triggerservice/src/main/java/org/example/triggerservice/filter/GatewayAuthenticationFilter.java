@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class GatewayAuthenticationFilter implements WebFilter{
-    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
+    @Value("${gateway.internal-key:climatesure-local-gateway-key}")
     private String internalKey;
 
     @Override

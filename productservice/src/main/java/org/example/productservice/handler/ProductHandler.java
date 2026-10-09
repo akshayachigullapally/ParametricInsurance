@@ -144,15 +144,6 @@ public class ProductHandler{
                 .body(productService.getAllInternalProducts(),InternalProductResponse.class);
     }
 
-    public Mono<ServerResponse> getInternalProductByCode(ServerRequest request){
-        String productCode=request.pathVariable("productCode");
-
-        return productService.getInternalProductByCode(productCode)
-                .flatMap(response->ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
-    }
-
     public Mono<ServerResponse> updateThreshold(ServerRequest request){
         return SecurityUtil.getUserId(request)
                 .flatMap(adminId->parseProductId(request)

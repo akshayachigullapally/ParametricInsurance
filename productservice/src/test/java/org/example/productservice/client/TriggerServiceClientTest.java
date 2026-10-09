@@ -76,19 +76,12 @@ class TriggerServiceClientTest{
 
         StepVerifier.create(rejected.syncProductDefinition(sync()))
                 .expectErrorMessage("Trigger service rejected the product threshold definition").verify();
-        StepVerifier.create(rejected.evaluateProductWithOverride(4L,sync()))
-                .expectErrorMessage("Trigger service rejected the product evaluation request").verify();
         StepVerifier.create(broken.syncProductDefinition(sync()))
                 .expectErrorMessage("Trigger service is currently unavailable").verify();
-        StepVerifier.create(broken.evaluateProductWithOverride(4L,sync()))
-                .expectErrorMessage("Trigger service is currently unavailable").verify();
         StepVerifier.create(down.syncProductDefinition(sync())).expectError(DependentServiceException.class).verify();
-        StepVerifier.create(down.evaluateProductWithOverride(4L,sync())).expectError(DependentServiceException.class).verify();
         StepVerifier.create(down.getCurrentMeasurements()).expectError(DependentServiceException.class).verify();
         StepVerifier.create(down.getPolicyEligibility(7L)).expectError(DependentServiceException.class).verify();
         StepVerifier.create(down.syncProductDefinition(null))
                 .expectErrorMessage("Trigger synchronization payload is incomplete").verify();
-        StepVerifier.create(down.evaluateProductWithOverride(null,sync()))
-                .expectErrorMessage("Trigger evaluation payload is incomplete").verify();
     }
 }

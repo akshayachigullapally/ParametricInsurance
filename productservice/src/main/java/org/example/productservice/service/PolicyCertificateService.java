@@ -109,7 +109,7 @@ public class PolicyCertificateService{
         }
 
         SimplePdfDocument document=new SimplePdfDocument("Certificate of insurance",
-                "Parametric cover issued by CityShield")
+                "Parametric cover issued by ClimateSure")
                 .section("Policy",policyRows)
                 .section("Insured location",zoneRows);
 
@@ -132,7 +132,7 @@ public class PolicyCertificateService{
 
         return document
                 .note("This is a parametric policy. The sum insured is paid when the trigger condition above "
-                        +"is met in the insured zone during the period of cover, as verified by CityShield. "
+                        +"is met in the insured zone during the period of cover, as verified by ClimateSure. "
                         +"No loss assessment is required.")
                 .render();
     }

@@ -27,7 +27,7 @@ public class TriggerServiceClient{
     @Qualifier("triggerServiceWebClient")
     private final WebClient triggerServiceWebClient;
 
-    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
+    @Value("${gateway.internal-key:climatesure-local-gateway-key}")
     private String internalKey;
 
     public Flux<InternalZoneResponse> getActiveZones(){
@@ -114,33 +114,5 @@ public class TriggerServiceClient{
                                 "Trigger service is currently unavailable"
                         )
                 );
-    }
-
-    public Mono<Void> evaluateProductWithOverride(Long productId, ProductTriggerSyncRequest request){
-        log.debug("Evaluate product with override [trigger service]: productId={}",productId);
-        if(productId==null||request==null){
-            return Mono.error(new org.example.productservice.exception.DependentServiceException(
-                    "Trigger evaluation payload is incomplete"
-            ));
-        }
-
-        return triggerServiceWebClient.post()
-                .uri("/internal/triggers/products/{productId}/evaluate", productId)
-                .header(GatewayHeaders.GATEWAY_KEY, internalKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .retrieve()
-                .onStatus(HttpStatusCode::is5xxServerError, response ->
-                        Mono.error(new org.example.productservice.exception.DependentServiceException(
-                                "Trigger service is currently unavailable"
-                        ))
-                )
-                .onStatus(status -> status.is4xxClientError(), response -> Mono.error(new org.example.productservice.exception.DependentServiceException(
-                        "Trigger service rejected the product evaluation request"
-                )))
-                .bodyToMono(Void.class)
-                .onErrorMap(WebClientRequestException.class, exception -> new org.example.productservice.exception.DependentServiceException(
-                        "Trigger service is currently unavailable"
-                ));
     }
 }

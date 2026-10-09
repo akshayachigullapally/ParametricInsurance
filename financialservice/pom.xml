@@ -16,7 +16,7 @@
     <artifactId>financialservice</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>financialservice</name>
-    <description>CityShield Financial Service</description>
+    <description>ClimateSure Financial Service</description>
 
     <properties>
         <java.version>17</java.version>

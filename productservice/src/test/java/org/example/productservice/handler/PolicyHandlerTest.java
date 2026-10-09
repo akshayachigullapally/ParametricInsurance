@@ -36,7 +36,7 @@ class PolicyHandlerTest{
                 .defaultHeader(GatewayHeaders.USER_ROLE,role)
                 .defaultHeader(GatewayHeaders.USER_ID,id)
                 .defaultHeader(GatewayHeaders.USER_EMAIL,
-                        ("CUSTOMER".equals(role)?"customer":"staff")+"@cityshield.test")
+                        ("CUSTOMER".equals(role)?"customer":"staff")+"@climatesure.test")
                 .build();
     }
 

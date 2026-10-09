@@ -92,7 +92,7 @@ public class PayoutReceiptService{
                 .section("Payment",paymentRows)
                 .section("Claim",claimRows)
                 .note("This payout was made under a parametric policy: it is paid because the "
-                        +"insured trigger condition was met for your location zone, as verified by CityShield.")
+                        +"insured trigger condition was met for your location zone, as verified by ClimateSure.")
                 .note("Keep this receipt for your records. For questions, contact support quoting the receipt number.")
                 .render();
     }

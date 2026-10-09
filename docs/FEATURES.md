@@ -1,4 +1,4 @@
-# ClimateSure (CityShield) — Complete Feature List
+# ClimateSure (ClimateSure) — Complete Feature List
 
 Every feature in the project, frontend and backend, explained in plain words with a small example.
 

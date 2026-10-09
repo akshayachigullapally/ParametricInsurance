@@ -16,7 +16,7 @@
     <artifactId>eureka-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>eureka-server</name>
-    <description>CityShield Eureka Service Discovery Server</description>
+    <description>ClimateSure Eureka Service Discovery Server</description>
 
     <properties>
         <java.version>17</java.version>

@@ -29,10 +29,10 @@ spring:
       schema-locations: classpath:schema.sql
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
 
 jwt:
-  secret: ${JWT_SECRET:CityShieldAuthServiceDevelopmentSecretKeyMinimum32Characters123456}
+  secret: ${JWT_SECRET:ClimateSureAuthServiceDevelopmentSecretKeyMinimum32Characters123456}
   access-expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
@@ -62,7 +62,7 @@ management:
 
 info:
   application:
-    name: CityShield Auth Service
+    name: ClimateSure Auth Service
     description: Reactive JWT authentication service
     version: 1.0.0
 

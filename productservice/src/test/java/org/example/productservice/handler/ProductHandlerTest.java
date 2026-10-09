@@ -35,7 +35,7 @@ class ProductHandlerTest{
                 .defaultHeader(GatewayHeaders.USER_ROLE,role)
                 .defaultHeader(GatewayHeaders.USER_ID,id)
                 .defaultHeader(GatewayHeaders.USER_EMAIL,
-                        ("CUSTOMER".equals(role)?"customer":"staff")+"@cityshield.test")
+                        ("CUSTOMER".equals(role)?"customer":"staff")+"@climatesure.test")
                 .build();
     }
 
@@ -246,24 +246,6 @@ class ProductHandlerTest{
         authClient("ADMIN","1").post()
                 .uri("/api/products/admin/{productId}/sync-trigger",10)
                 .exchange().expectStatus().is5xxServerError();
-    }
-
-    @Test
-    void getInternalProductByCode_shouldReturn200(){
-        InternalProductResponse response=InternalProductResponse.builder()
-                .productId(10L)
-                .productCode("WEATHER-01")
-                .perilCode("EXCESS_RAINFALL")
-                .build();
-
-        when(productService.getInternalProductByCode("WEATHER-01"))
-                .thenReturn(Mono.just(response));
-
-        webTestClient.get()
-                .uri("/internal/products/code/{productCode}","WEATHER-01")
-                .exchange().expectStatus().isOk()
-                .expectBody(InternalProductResponse.class)
-                .value(resp->assertThat(resp.getProductCode()).isEqualTo("WEATHER-01"));
     }
 
     private ProductThresholdUpdateRequest threshRequest(){

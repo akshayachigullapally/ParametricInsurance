@@ -30,12 +30,12 @@ eureka:
     hostname: localhost
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
 
 app:
   uploads:
     # Claim evidence files (photos / PDFs). Metadata is in claim_documents.
-    dir: ${CITYSHIELD_UPLOAD_DIR:${user.home}/.cityshield/uploads}
+    dir: ${CLIMATESURE_UPLOAD_DIR:${user.home}/.climatesure/uploads}
 
 management:
   endpoints:
@@ -51,7 +51,7 @@ management:
 
 info:
   application:
-    name: CityShield Claims Service
+    name: ClimateSure Claims Service
     description: Reactive insurance claim management service
     version: 1.0.0
 

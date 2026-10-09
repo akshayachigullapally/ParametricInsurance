@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Small, dependency-free builder for the one-page documents CityShield issues
+ * Small, dependency-free builder for the one-page documents ClimateSure issues
  * (policy certificates, payout receipts): a header band, a title, label/value
  * sections and closing notes. Writes PDF 1.4 directly using the standard
  * Helvetica fonts, so no PDF library is needed on the classpath.
@@ -77,7 +77,7 @@ public class SimplePdfDocument{
 
         // header band
         fillRect(MARGIN_X,y-36,CONTENT_WIDTH,36,BRAND);
-        text("CityShield Parametric Insurance",MARGIN_X+12,y-23,Font.BOLD,12,WHITE);
+        text("ClimateSure Parametric Insurance",MARGIN_X+12,y-23,Font.BOLD,12,WHITE);
         y-=36+30;
 
         text(title,MARGIN_X,y,Font.BOLD,20,BLACK);

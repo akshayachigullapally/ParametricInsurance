@@ -55,7 +55,7 @@ public class ClaimDocumentService{
             ClaimRepository claimRepository,
             ClaimDocumentRepository documentRepository,
             NotificationService notificationService,
-            @Value("${app.uploads.dir:${java.io.tmpdir}/cityshield-uploads}") String uploadDir){
+            @Value("${app.uploads.dir:${java.io.tmpdir}/climatesure-uploads}") String uploadDir){
         this.claimRepository=claimRepository;
         this.documentRepository=documentRepository;
         this.notificationService=notificationService;

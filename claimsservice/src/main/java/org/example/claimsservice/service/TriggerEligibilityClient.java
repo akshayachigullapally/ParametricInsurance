@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 public class TriggerEligibilityClient{
     private final WebClient.Builder loadBalancedWebClientBuilder;
 
-    @Value("${gateway.internal-key:cityshield-local-gateway-key}")
+    @Value("${gateway.internal-key:climatesure-local-gateway-key}")
     private String internalKey;
 
     public Mono<PolicyTriggerEligibilityResponse> getEligibility(Long policyId){

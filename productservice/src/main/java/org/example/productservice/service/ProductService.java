@@ -1346,17 +1346,6 @@ public class ProductService{
                 .map(this::toInternalResponse);
     }
 
-    public Mono<InternalProductResponse> getInternalProductByCode(String productCode){
-        log.debug("Get internal product by code");
-        if(productCode==null||productCode.isBlank()){
-            return Mono.error(new ValidationException("Product code is required"));
-        }
-
-        return productRepository.findByProductCodeIgnoreCase(productCode.trim())
-                .switchIfEmpty(Mono.error(new NotFoundException("Product not found")))
-                .map(this::toInternalResponse);
-    }
-
     private InternalProductResponse toInternalResponse(Product product){
         return InternalProductResponse.builder()
                 .productId(product.getId())

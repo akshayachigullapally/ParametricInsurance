@@ -27,7 +27,7 @@ eureka:
     hostname: localhost
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
 
 
 management:
@@ -44,7 +44,7 @@ management:
 
 info:
   application:
-    name: CityShield Notification Service
+    name: ClimateSure Notification Service
     description: Notifications and delivery service
     version: 1.0.0
 

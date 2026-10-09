@@ -45,7 +45,7 @@ public class GatewayJwtFilter implements WebFilter{
     private final String internalGatewayKey;
 
     public GatewayJwtFilter(JwtUtil jwtUtil,ObjectMapper objectMapper,
-                            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalGatewayKey){
+                            @Value("${gateway.internal-key:climatesure-local-gateway-key}") String internalGatewayKey){
         this.jwtUtil=jwtUtil;
         this.objectMapper=objectMapper;
         this.internalGatewayKey=internalGatewayKey;
@@ -62,8 +62,8 @@ public class GatewayJwtFilter implements WebFilter{
             return chain.filter(addGatewayKey(sanitizedExchange));
         }
 
-        boolean webSocket=
-                sanitizedRequest.getPath().value().startsWith("/ws/");
+        // Browsers cannot set headers on an EventSource, so the notification
+        // stream sends its token as a query parameter instead.
         boolean sseStream=
                 sanitizedRequest.getPath().value().equals("/api/notifications/me/stream");
 
@@ -73,11 +73,8 @@ public class GatewayJwtFilter implements WebFilter{
         String token;
         if(authorization!=null&&authorization.startsWith("Bearer ")){
             token=authorization.substring(7).trim();
-        }else if(webSocket||sseStream){
-            token=queryParam(
-                    sanitizedRequest.getURI().getQuery(),
-                    sseStream?"access_token":"token"
-            );
+        }else if(sseStream){
+            token=queryParam(sanitizedRequest.getURI().getQuery(),"access_token");
         }else{
             token=null;
         }

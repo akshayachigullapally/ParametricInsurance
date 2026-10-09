@@ -16,7 +16,7 @@
     <artifactId>claimsservice</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>claimsservice</name>
-    <description>CityShield reactive Claims Service</description>
+    <description>ClimateSure reactive Claims Service</description>
 
     <properties>
         <java.version>17</java.version>

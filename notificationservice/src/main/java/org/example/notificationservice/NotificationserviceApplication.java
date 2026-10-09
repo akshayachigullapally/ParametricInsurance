@@ -25,7 +25,7 @@ public class NotificationserviceApplication {
             "eureka.client.service-url.defaultZone", "http://localhost:8761/eureka/",
             "eureka.instance.hostname", "localhost",
             "eureka.instance.prefer-ip-address", "false",
-            "gateway.internal-key", "cityshield-local-gateway-key"
+            "gateway.internal-key", "climatesure-local-gateway-key"
     );
 
     public static void main(String[] args) {

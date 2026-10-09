@@ -30,7 +30,7 @@ management:
 
 info:
   application:
-    name: CityShield Eureka Server
+    name: ClimateSure Eureka Server
     description: Service discovery registry
     version: 1.0.0
 

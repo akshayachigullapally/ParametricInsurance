@@ -32,7 +32,7 @@ eureka:
     hostname: localhost
 
 gateway:
-  internal-key: ${GATEWAY_INTERNAL_KEY:cityshield-local-gateway-key}
+  internal-key: ${GATEWAY_INTERNAL_KEY:climatesure-local-gateway-key}
 
 financial:
   quote:
@@ -53,7 +53,7 @@ management:
 
 info:
   application:
-    name: CityShield Financial Service
+    name: ClimateSure Financial Service
     description: Quotes, payments, payouts and pricing service
     version: 1.0.0
 

@@ -19,7 +19,7 @@ public class ProductTriggerClient{
 
     public ProductTriggerClient(
             WebClient.Builder builder,
-            @Value("${gateway.internal-key:cityshield-local-gateway-key}") String internalKey
+            @Value("${gateway.internal-key:climatesure-local-gateway-key}") String internalKey
     ){
         this.webClient=builder.baseUrl("http://PRODUCT-SERVICE")
                 .defaultHeader(GatewayHeaders.GATEWAY_KEY,internalKey)
